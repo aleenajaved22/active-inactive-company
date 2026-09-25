@@ -329,7 +329,7 @@ export function SwitchCompanyModal({
           </ModalFormRow>
 
           <ModalFormRow
-            label="Effective Date - Company Association Switched"
+            label="Company Effective Date - Association Switched"
             description="On the Effective Date, this property is associated with the selected company and becomes active. A new company cannot be associated while the current company has active contracts"
             required
           >
@@ -353,7 +353,7 @@ export function SwitchCompanyModal({
           </ModalFormRow>
 
           <ModalFormRow
-            label="Association End Date - Company Association Removed"
+            label="Company Association End Date - Association Removed"
             description="On the Association End Date, the current company is dissociated from this property. A company with active contracts cannot be dissociated, close or complete them first"
           >
             <ModalDateInput

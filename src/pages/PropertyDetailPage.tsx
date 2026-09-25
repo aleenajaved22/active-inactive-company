@@ -87,11 +87,7 @@ export function PropertyDetailPage({
                 </button>
                 <VerticalTabDivider />
                 <button type="button" className="text-sm font-medium leading-5 text-[#262527]">
-                  Make Deal
-                </button>
-                <VerticalTabDivider />
-                <button type="button" className="text-sm font-medium leading-5 text-[#262527]">
-                  Close
+                  Make a Deal
                 </button>
               </div>
               <div className="flex flex-col gap-2 rounded-lg bg-[#f5f5f6] p-3">
