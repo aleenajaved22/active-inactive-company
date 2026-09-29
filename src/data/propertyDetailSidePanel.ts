@@ -2,7 +2,6 @@ export type DetailSectionId = 'propertyDetails' | 'company' | 'franchiseAssociat
 
 export const propertyDetailSectionOrder: DetailSectionId[] = [
   'propertyDetails',
-  'company',
   'franchiseAssociated',
   'attachments',
 ]

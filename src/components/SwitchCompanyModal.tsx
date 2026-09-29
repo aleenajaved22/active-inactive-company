@@ -354,7 +354,7 @@ export function SwitchCompanyModal({
 
           <ModalFormRow
             label="Company Association End Date - Association Removed"
-            description="On the Association End Date, the current company is dissociated from this property. A company with active contracts cannot be dissociated, close or complete them first"
+            description="On the Association End Date, the selected company is dissociated from this property. A company with active contracts cannot be dissociated, close or complete them first"
           >
             <ModalDateInput
               id="switch-company-cut-off-date"

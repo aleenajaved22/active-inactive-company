@@ -113,7 +113,6 @@ function CompanySidebarDetails({
   return (
     <div className="flex flex-col gap-3 px-3 pb-3 pt-1">
       <div className="flex flex-col gap-0 text-sm leading-6 tracking-[0.25px]">
-        <DetailLabelValueRow label="Owner" value={company.companyOwner} />
         <DetailLabelValueRow label="Phone" value={company.phone} />
         <DetailLabelValueRow label="SP Status" value={company.spStatus} />
         {showScore ? <DetailLabelValueRow label="Score" value={company.score} /> : null}

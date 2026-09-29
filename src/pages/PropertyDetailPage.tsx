@@ -11,6 +11,7 @@ import detailStageApprovedReadonly from '../assets/detail-stage-approved-readonl
 import detailStageDefault from '../assets/detail-stage-default.svg'
 import detailStageLast from '../assets/detail-stage-last.svg'
 import { AppHeader } from '../components/AppHeader'
+import { CompanyListingPanel } from '../components/CompanyListingPanel'
 import { EditDealDrawer } from '../components/EditDealDrawer'
 import { PropertyDetailSideSections } from '../components/PropertyDetailSideSections'
 import { PropertyDetailCompanyHeader } from '../components/PropertyDetailCompanyHeader'
@@ -67,7 +68,7 @@ export function PropertyDetailPage({
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <AppHeader propertyName={property.name} onNavigateProperties={onBack} />
         <main className="flex min-h-0 flex-1 overflow-hidden">
-          <aside className="flex w-[400px] shrink-0 flex-col overflow-y-auto border-r border-[#e6e6e7] bg-white py-6">
+          <aside className="flex w-[25vw] shrink-0 flex-col overflow-y-auto border-r border-[#e6e6e7] bg-white py-6">
             <div className="flex flex-col gap-5 px-8">
               <div className="flex items-center gap-2">
                 <img alt="" className="size-[50px] shrink-0 rounded object-cover" height={50} src={detailPropertyPhoto} width={50} />
@@ -152,6 +153,12 @@ export function PropertyDetailPage({
               onPropertyModalChange={onPropertyModalChange}
             />
           </aside>
+
+          <CompanyListingPanel
+            selectedCompanyId={companySelection.companyId}
+            selectedListStatus={companySelection.listStatus}
+            onSelectCompany={setCompanySelection}
+          />
 
           <section className="flex min-w-0 flex-1 flex-col overflow-y-auto border-l border-[#e6e6e7]">
             {companySelection.listStatus === 'Pending' ? (
