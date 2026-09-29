@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { createPortal } from 'react-dom'
 import detailDealOpen from '../assets/detail-deal-open.svg'
+import detailFollowupRepeat from '../assets/detail-followup-repeat.svg'
 import detailEdit2 from '../assets/detail-edit-2.svg'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
 import tablePlus from '../assets/table-plus.svg'
 import tableSearch from '../assets/table-search.svg'
-import type { CompanyDealCard, PropertyCompany } from '../data/propertyCompanies'
+import type { CompanyDealCard, DealFollowUp, PropertyCompany } from '../data/propertyCompanies'
 import { mainPanelLinkClass, mainPanelPrimaryButtonClass } from './mainPanelReadOnlyStyles'
 
 const stageFilterOptions = [
@@ -110,6 +112,71 @@ function stageBadgeClass(stage: string): string {
   return 'bg-[#f5f5f6] text-[#5b5b5f]'
 }
 
+/** Blue follow-up badge beside a deal name; hovering or focusing it shows the follow-up details. */
+function DealFollowUpIndicator({ dealName, followUp }: { dealName: string; followUp: DealFollowUp }) {
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const [visible, setVisible] = useState(false)
+  const [style, setStyle] = useState<CSSProperties>({})
+  const tooltipId = `deal-follow-up-${dealName.replace(/\W+/g, '-').toLowerCase()}`
+
+  useLayoutEffect(() => {
+    if (!visible || !triggerRef.current) return
+    const updatePosition = () => {
+      const trigger = triggerRef.current
+      if (!trigger) return
+      const rect = trigger.getBoundingClientRect()
+      setStyle({ position: 'fixed', left: rect.left + rect.width / 2, top: rect.top - 8, zIndex: 80 })
+    }
+    updatePosition()
+    window.addEventListener('scroll', updatePosition, true)
+    window.addEventListener('resize', updatePosition)
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true)
+      window.removeEventListener('resize', updatePosition)
+    }
+  }, [visible])
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-label={`Follow-up on ${followUp.date}`}
+        aria-describedby={visible ? tooltipId : undefined}
+        onMouseEnter={() => setVisible(true)}
+        onMouseLeave={() => setVisible(false)}
+        onFocus={() => setVisible(true)}
+        onBlur={() => setVisible(false)}
+        className="flex size-4 shrink-0 items-center justify-center rounded bg-primary"
+      >
+        <span className="relative size-2.5">
+          <img alt="" className="absolute inset-0 block size-full max-w-none" src={detailFollowupRepeat} />
+        </span>
+      </button>
+      {visible &&
+        createPortal(
+          <div
+            id={tooltipId}
+            role="tooltip"
+            style={style}
+            className="pointer-events-none w-max max-w-[280px] -translate-x-1/2 -translate-y-full rounded-lg bg-[#262527] px-3 py-2 text-sm leading-5 text-white shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
+          >
+            <p className="font-medium">
+              Follow-up • {followUp.date}
+            </p>
+            <p className="text-xs leading-[18px] text-[#e6e6e7]">{followUp.time}</p>
+            <p className="mt-1 whitespace-normal text-xs leading-[18px] text-[#e6e6e7]">{followUp.note}</p>
+            <span
+              aria-hidden
+              className="absolute left-1/2 top-full size-2.5 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-[#262527]"
+            />
+          </div>,
+          document.body,
+        )}
+    </>
+  )
+}
+
 type DealsTabPanelProps = {
   company: PropertyCompany
   readOnly?: boolean
@@ -154,7 +221,12 @@ export function DealsTabPanel({ company, readOnly = false }: DealsTabPanelProps)
           <tbody>
             {filteredDeals.map((deal) => (
               <tr key={deal.id} className="border-t border-[#e6e6e7] hover:bg-[#f5f5f6]">
-                <td className="whitespace-nowrap px-4 py-3 font-medium text-[#262527]">{deal.name}</td>
+                <td className="whitespace-nowrap px-4 py-3 font-medium text-[#262527]">
+                  <span className="flex items-center gap-2">
+                    {deal.name}
+                    {deal.followUp && <DealFollowUpIndicator dealName={deal.name} followUp={deal.followUp} />}
+                  </span>
+                </td>
                 <td className="whitespace-nowrap px-4 py-3 text-[#86868b]">{deal.amount}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-[#86868b]">{deal.date}</td>
                 <td className="px-4 py-3">

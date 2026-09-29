@@ -1,4 +1,4 @@
-export type DetailSectionId = 'propertyDetails' | 'company' | 'franchiseAssociated' | 'attachments'
+export type DetailSectionId = 'propertyDetails' | 'franchiseAssociated' | 'attachments'
 
 export const propertyDetailSectionOrder: DetailSectionId[] = [
   'propertyDetails',
@@ -8,7 +8,6 @@ export const propertyDetailSectionOrder: DetailSectionId[] = [
 
 export const propertyDetailSectionTitles: Record<DetailSectionId, string> = {
   propertyDetails: 'Property Details',
-  company: 'Company',
   franchiseAssociated: 'Franchise Associated',
   attachments: 'Attachments • 00',
 }

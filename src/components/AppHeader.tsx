@@ -8,9 +8,12 @@ import { formatPropertyTitle } from '../data/properties'
 type AppHeaderProps = {
   propertyName?: string
   onNavigateProperties?: () => void
+  /** Adds a third breadcrumb level; the property crumb then links back to it. */
+  companyName?: string
+  onNavigateProperty?: () => void
 }
 
-export function AppHeader({ propertyName, onNavigateProperties }: AppHeaderProps) {
+export function AppHeader({ propertyName, onNavigateProperties, companyName, onNavigateProperty }: AppHeaderProps) {
   const breadcrumbTitle = propertyName ? formatPropertyTitle(propertyName) : null
 
   return (
@@ -32,7 +35,21 @@ export function AppHeader({ propertyName, onNavigateProperties }: AppHeaderProps
                 Properties
               </button>
               <span className="shrink-0 text-[#86868b]">//</span>
-              <span className="truncate font-normal text-[#86868b]">{breadcrumbTitle}</span>
+              {companyName ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={onNavigateProperty}
+                    className="min-w-0 truncate font-normal text-[#262527] hover:text-[#146dff]"
+                  >
+                    {breadcrumbTitle}
+                  </button>
+                  <span className="shrink-0 text-[#86868b]">//</span>
+                  <span className="truncate font-normal text-[#86868b]">{companyName}</span>
+                </>
+              ) : (
+                <span className="truncate font-normal text-[#86868b]">{breadcrumbTitle}</span>
+              )}
             </div>
           ) : (
             <p className="text-sm font-bold leading-5 text-[#262527]">Properties</p>

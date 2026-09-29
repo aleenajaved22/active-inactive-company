@@ -1,9 +1,7 @@
 import { useState } from 'react'
 import detailChevronSm from '../assets/detail-chevron-sm.svg'
 import detailDividerH from '../assets/detail-divider-h.svg'
-import detailDividerV from '../assets/detail-divider-v.svg'
 import detailEdit from '../assets/detail-edit.svg'
-import detailFollowupRepeat from '../assets/detail-followup-repeat.svg'
 import detailPlus from '../assets/detail-plus.svg'
 import detailPropertyPhoto from '../assets/detail-property-photo.png'
 import detailStageApproved from '../assets/detail-stage-approved.svg'
@@ -11,6 +9,7 @@ import detailStageApprovedReadonly from '../assets/detail-stage-approved-readonl
 import detailStageDefault from '../assets/detail-stage-default.svg'
 import detailStageLast from '../assets/detail-stage-last.svg'
 import { AppHeader } from '../components/AppHeader'
+import { CompaniesPanelToggle } from '../components/CompaniesPanelToggle'
 import { CompanyListingPanel } from '../components/CompanyListingPanel'
 import { EditDealDrawer } from '../components/EditDealDrawer'
 import { PropertyDetailSideSections } from '../components/PropertyDetailSideSections'
@@ -18,11 +17,9 @@ import { PropertyDetailCompanyHeader } from '../components/PropertyDetailCompany
 import { mainPanelLinkClass } from '../components/mainPanelReadOnlyStyles'
 import { PropertyLeadActivities } from '../components/PropertyLeadActivities'
 import { SidebarNavigation } from '../components/SidebarNavigation'
-import {
-  defaultPropertyCompanyId,
-  getPropertyCompany,
-  type PropertyCompanySelection,
-} from '../data/propertyCompanies'
+import { getPropertyCompany } from '../data/propertyCompanies'
+import { initialSpaceAssociations, spaceLabelOf, type SpaceAssociation } from '../data/propertySpaceAssociations'
+import { affiliationsToBadges } from '../components/switchCompanyTypes'
 import type { PropertyModal } from '../prototype/screenLinks'
 import { formatPropertyTitle, type PropertyRow } from '../data/properties'
 
@@ -33,16 +30,8 @@ type PropertyDetailPageProps = {
   propertyModal?: PropertyModal
   onBack: () => void
   onPropertyModalChange?: (modal?: PropertyModal) => void
-}
-
-function VerticalTabDivider() {
-  return (
-    <div className="flex h-[33px] w-0 shrink-0 items-center justify-center">
-      <div className="h-0 w-[33px] rotate-90">
-        <img alt="" className="block size-full max-w-none" src={detailDividerV} />
-      </div>
-    </div>
-  )
+  companyHref?: (companyId: string) => string
+  parentCompanyHref?: (parentName: string) => string
 }
 
 export function PropertyDetailPage({
@@ -50,17 +39,20 @@ export function PropertyDetailPage({
   propertyModal,
   onBack,
   onPropertyModalChange,
+  companyHref,
+  parentCompanyHref,
 }: PropertyDetailPageProps) {
   const title = formatPropertyTitle(property.name)
-  const [companySelection, setCompanySelection] = useState<PropertyCompanySelection>(() => {
-    const company = getPropertyCompany(defaultPropertyCompanyId)
-    return { companyId: company.id, listStatus: company.listStatus ?? 'Active' }
-  })
-  const selectedCompany = getPropertyCompany(companySelection.companyId)
+  const [associations, setAssociations] = useState<SpaceAssociation[]>(initialSpaceAssociations)
+  const [selectedAssociationId, setSelectedAssociationId] = useState(initialSpaceAssociations[0].id)
+  const selectedAssociation =
+    associations.find((item) => item.id === selectedAssociationId) ?? associations[0]
+  const listStatus = selectedAssociation.status
+  const selectedCompany = getPropertyCompany(selectedAssociation.companyId)
   const [editDealOpen, setEditDealOpen] = useState(false)
-  const mainPanelReadOnly =
-    companySelection.listStatus === 'Inactive' || companySelection.listStatus === 'Pending'
-  const mainPanelEmptyStates = companySelection.listStatus === 'Pending'
+  const [companiesPanelOpen, setCompaniesPanelOpen] = useState(true)
+  const mainPanelReadOnly = listStatus === 'Inactive' || listStatus === 'Pending'
+  const mainPanelEmptyStates = listStatus === 'Pending'
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-white">
@@ -68,50 +60,23 @@ export function PropertyDetailPage({
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <AppHeader propertyName={property.name} onNavigateProperties={onBack} />
         <main className="flex min-h-0 flex-1 overflow-hidden">
-          <aside className="flex w-[25vw] shrink-0 flex-col overflow-y-auto border-r border-[#e6e6e7] bg-white py-6">
+          <aside className="flex w-[22.5vw] shrink-0 flex-col overflow-y-auto border-r border-[#e6e6e7] bg-white py-6">
             <div className="flex flex-col gap-5 px-8">
-              <div className="flex items-center gap-2">
+              <div className="flex items-start gap-2">
                 <img alt="" className="size-[50px] shrink-0 rounded object-cover" height={50} src={detailPropertyPhoto} width={50} />
-                <h1 className="text-xl font-bold leading-7 text-[#262527]">{title}</h1>
+                <h1 className="min-w-0 flex-1 text-xl font-bold leading-7 text-[#262527]">{title}</h1>
+                <button
+                  type="button"
+                  aria-label="Edit property"
+                  onClick={() => setEditDealOpen(true)}
+                  className="flex size-8 shrink-0 items-center justify-center rounded-lg hover:bg-[#f5f5f6]"
+                >
+                  <img alt="" className="size-4 max-w-none" src={detailEdit} />
+                </button>
               </div>
               <div className="flex flex-col gap-2 text-sm leading-5 text-[#6a6a70]">
                 <p>{property.address}</p>
                 <p>{property.metaLine}</p>
-              </div>
-              <div className="flex w-fit max-w-full items-center gap-3 self-start rounded-md border border-[#e6e6e7] bg-[#f5f5f6] px-3 py-2">
-                <button
-                  type="button"
-                  className="text-sm font-medium leading-5 text-[#262527]"
-                  onClick={() => setEditDealOpen(true)}
-                >
-                  Edit
-                </button>
-                <VerticalTabDivider />
-                <button type="button" className="text-sm font-medium leading-5 text-[#262527]">
-                  Make a Deal
-                </button>
-              </div>
-              <div className="flex flex-col gap-2 rounded-lg bg-[#f5f5f6] p-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex flex-col gap-1.5">
-                    <p className="text-sm font-medium leading-5 text-[#262527]">Follow-up added</p>
-                    <div className="flex items-center gap-1">
-                      <span className="flex size-4 items-center justify-center rounded bg-primary">
-                        <span className="relative size-2.5">
-                          <img alt="" className="absolute inset-0 block size-full max-w-none" src={detailFollowupRepeat} />
-                        </span>
-                      </span>
-                      <span className="text-xs font-medium leading-[18px] text-primary">24-02-2024 • 11:30a - 2:30p</span>
-                    </div>
-                  </div>
-                  <button type="button" aria-label="Edit follow-up" className="relative size-4 shrink-0">
-                    <img alt="" className="absolute inset-0 block size-full max-w-none" src={detailEdit} />
-                  </button>
-                </div>
-                <p className="text-xs leading-4 text-[#262527]">
-                  Arrived at location but unable to meet with the location representative.{' '}
-                  <span className="text-primary">See more</span>
-                </p>
               </div>
             </div>
             <div className="my-4 px-8">
@@ -146,22 +111,23 @@ export function PropertyDetailPage({
             <div className="my-4 px-8">
               <img alt="" className="block w-full max-w-none" src={detailDividerH} />
             </div>
-            <PropertyDetailSideSections
-              selectedCompanyId={companySelection.companyId}
-              onSelectCompany={setCompanySelection}
-              propertyModal={propertyModal}
-              onPropertyModalChange={onPropertyModalChange}
-            />
+            <PropertyDetailSideSections />
           </aside>
 
           <CompanyListingPanel
-            selectedCompanyId={companySelection.companyId}
-            selectedListStatus={companySelection.listStatus}
-            onSelectCompany={setCompanySelection}
+            associations={associations}
+            onAssociationsChange={setAssociations}
+            selectedAssociationId={selectedAssociation.id}
+            onSelectAssociation={setSelectedAssociationId}
+            propertyModal={propertyModal}
+            onPropertyModalChange={onPropertyModalChange}
+            collapsed={!companiesPanelOpen}
+            companyHref={companyHref}
           />
+          <CompaniesPanelToggle open={companiesPanelOpen} onToggle={() => setCompaniesPanelOpen((open) => !open)} />
 
           <section className="flex min-w-0 flex-1 flex-col overflow-y-auto border-l border-[#e6e6e7]">
-            {companySelection.listStatus === 'Pending' ? (
+            {listStatus === 'Pending' ? (
               <div
                 className="flex items-start gap-2 border-b border-primary/20 bg-[#e5f6ff] px-8 py-3"
                 role="status"
@@ -184,11 +150,17 @@ export function PropertyDetailPage({
             ) : null}
             <PropertyDetailCompanyHeader
               companyName={selectedCompany.name}
-              listStatus={companySelection.listStatus}
+              companyHref={companyHref?.(selectedCompany.id)}
+              spaceLabel={spaceLabelOf(selectedAssociation)}
+              listStatus={listStatus}
               ownerName={selectedCompany.companyOwner}
-              affiliations={companySelection.affiliationBadges ?? selectedCompany.affiliations}
-              pendingEffectiveDate={companySelection.pendingEffectiveDate}
-              pendingTooltipId={companySelection.pendingTooltipId}
+              parentCompany={selectedCompany.parentCompany}
+              parentCompanyHref={
+                selectedCompany.parentCompany ? parentCompanyHref?.(selectedCompany.parentCompany) : undefined
+              }
+              affiliations={affiliationsToBadges(selectedAssociation.affiliations)}
+              pendingEffectiveDate={listStatus === 'Pending' ? selectedAssociation.effectiveDate : undefined}
+              pendingTooltipId={`pending-effective-date-header-${selectedAssociation.id}`}
             />
             <div className="border-b border-[#e6e6e7] px-8 py-5">
               <div className="mb-2 flex items-start justify-between">
@@ -249,7 +221,7 @@ export function PropertyDetailPage({
 
             <div className="flex min-h-0 flex-1 flex-col px-8 pb-5 pt-6">
               <PropertyLeadActivities
-                key={`${selectedCompany.id}-${companySelection.listStatus}`}
+                key={selectedAssociation.id}
                 company={selectedCompany}
                 readOnly={mainPanelReadOnly}
                 showEmptyStates={mainPanelEmptyStates}

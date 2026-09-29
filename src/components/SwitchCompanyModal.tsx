@@ -7,17 +7,21 @@ import tableAlertCircleWarn from '../assets/table-alert-circle-warn.svg'
 import { CreateCompanyModal } from './CreateCompanyModal'
 import { ModalDateInput } from './ModalDateInput'
 import { propertyCompanies } from '../data/propertyCompanies'
+import { parseMMDDYYYY } from '../data/propertySpaceAssociations'
 import {
   propertyAffiliationOptions,
   type PropertyAffiliation,
   type SwitchCompanyFormValues,
   type SwitchCompanySubmitPayload,
+  type SwitchSpaceOption,
 } from './switchCompanyTypes'
 
 type SwitchCompanyModalProps = {
   open: boolean
   mode?: 'switch' | 'edit'
-  selectedCompanyId: string
+  spaces: SwitchSpaceOption[]
+  /** Pre-selects and locks the space, e.g. when switching from a company's row menu. */
+  initialSpaceKey?: string
   initialForm?: SwitchCompanyFormValues
   initialCreateCompany?: boolean
   associationId?: string
@@ -52,10 +56,109 @@ function ModalFormRow({
   )
 }
 
+function ModalFieldError({ children }: { children: ReactNode }) {
+  return (
+    <p className="mt-1.5 flex items-start gap-1.5 text-sm leading-5 text-[#b32318]">
+      <span className="relative mt-0.5 size-4 shrink-0" aria-hidden>
+        <img alt="" className="absolute inset-0 block size-full max-w-none" src={tableAlertCircleWarn} />
+      </span>
+      <span>{children}</span>
+    </p>
+  )
+}
+
+function SpaceSelect({
+  spaces,
+  value,
+  onChange,
+  open,
+  onOpenChange,
+  invalid,
+}: {
+  spaces: SwitchSpaceOption[]
+  value: string
+  onChange: (key: string) => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  invalid?: boolean
+}) {
+  const rootRef = useRef<HTMLDivElement>(null)
+  const selected = spaces.find((space) => space.key === value)
+
+  useEffect(() => {
+    if (!open) return
+    const closeOnOutside = (event: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) onOpenChange(false)
+    }
+    document.addEventListener('mousedown', closeOnOutside)
+    return () => document.removeEventListener('mousedown', closeOnOutside)
+  }, [open, onOpenChange])
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        id="switch-company-space"
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => onOpenChange(!open)}
+        className={`flex h-10 w-full items-center justify-between gap-2 rounded-lg border bg-white px-3.5 text-left text-sm leading-5 ${
+          invalid ? 'border-[#b32318]' : 'border-[#e6e6e7]'
+        }`}
+      >
+        <span className={`min-w-0 truncate ${selected ? 'text-[#262527]' : 'text-[#6a6a70]'}`}>
+          {selected ? selected.label : 'Select suite, unit or floor'}
+          {selected?.currentCompanyName && <span className="text-[#86868b]"> · {selected.currentCompanyName}</span>}
+        </span>
+        <span className="relative size-4 shrink-0">
+          <img
+            alt=""
+            className={`absolute inset-0 block size-full max-w-none transition-transform ${open ? 'rotate-180' : ''}`}
+            src={questionsChevronDown}
+          />
+        </span>
+      </button>
+      {open && (
+        <ul
+          role="listbox"
+          aria-label="Space"
+          className="absolute left-0 right-0 top-full z-10 mt-1 max-h-[220px] overflow-y-auto rounded-lg border border-[#e6e6e7] bg-white py-1 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
+        >
+          {spaces.map((space) => {
+            const isSelected = space.key === value
+            return (
+              <li key={space.key} role="option" aria-selected={isSelected}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onChange(space.key)
+                    onOpenChange(false)
+                  }}
+                  className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm leading-5 ${
+                    isSelected ? 'bg-primary-subtle text-primary' : 'text-[#262527] hover:bg-[#f5f5f6]'
+                  }`}
+                >
+                  <span className="font-medium">{space.label}</span>
+                  <span className="truncate text-xs text-[#86868b]">
+                    {space.pendingCompanyName
+                      ? `Pending switch to ${space.pendingCompanyName}`
+                      : (space.currentCompanyName ?? 'No active company')}
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 export function SwitchCompanyModal({
   open,
   mode = 'switch',
-  selectedCompanyId,
+  spaces,
+  initialSpaceKey,
   initialForm,
   initialCreateCompany = false,
   associationId,
@@ -66,11 +169,13 @@ export function SwitchCompanyModal({
 }: SwitchCompanyModalProps) {
   const isEditMode = mode === 'edit'
   const [query, setQuery] = useState('')
-  const [pendingId, setPendingId] = useState(selectedCompanyId)
+  const [spaceKey, setSpaceKey] = useState('')
+  const [spaceMenuOpen, setSpaceMenuOpen] = useState(false)
+  const [submitAttempted, setSubmitAttempted] = useState(false)
+  const [pendingId, setPendingId] = useState('')
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [pendingAffiliations, setPendingAffiliations] = useState<Set<PropertyAffiliation>>(new Set())
   const [effectiveDate, setEffectiveDate] = useState('')
-  const [effectiveDateSelectionCount, setEffectiveDateSelectionCount] = useState(0)
   const [cutOffDate, setCutOffDate] = useState('')
   const [createCompanyOpen, setCreateCompanyOpen] = useState(false)
   const [pendingSubmit, setPendingSubmit] = useState<SwitchCompanySubmitPayload | null>(null)
@@ -94,23 +199,26 @@ export function SwitchCompanyModal({
   useEffect(() => {
     if (!open) return
     if (isEditMode && initialForm) {
+      setSpaceKey(initialForm.spaceKey)
       setPendingId(initialForm.companyId)
       setEffectiveDate(initialForm.effectiveDate)
       setCutOffDate(initialForm.cutOffDate)
       setPendingAffiliations(new Set(initialForm.affiliations))
     } else {
+      setSpaceKey(initialSpaceKey ?? '')
       setPendingId('')
       setEffectiveDate('')
       setCutOffDate('')
       setPendingAffiliations(new Set())
     }
-    setEffectiveDateSelectionCount(0)
+    setSubmitAttempted(false)
+    setSpaceMenuOpen(false)
     setQuery('')
     setDropdownOpen(false)
     setCreateCompanyOpen(initialCreateCompany)
     setPendingSubmit(null)
     setRevertConfirmOpen(false)
-  }, [open, isEditMode, initialForm, selectedCompanyId, initialCreateCompany])
+  }, [open, isEditMode, initialForm, initialSpaceKey, initialCreateCompany])
 
   useEffect(() => {
     if (!open) return
@@ -126,8 +234,9 @@ export function SwitchCompanyModal({
           event.stopPropagation()
           return
         }
-        if (dropdownOpen) {
+        if (dropdownOpen || spaceMenuOpen) {
           setDropdownOpen(false)
+          setSpaceMenuOpen(false)
           event.stopPropagation()
           return
         }
@@ -136,7 +245,7 @@ export function SwitchCompanyModal({
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [open, dropdownOpen, pendingSubmit, revertConfirmOpen, onClose])
+  }, [open, dropdownOpen, spaceMenuOpen, pendingSubmit, revertConfirmOpen, onClose])
 
   useEffect(() => {
     if (!dropdownOpen) return
@@ -158,17 +267,39 @@ export function SwitchCompanyModal({
 
   const inputValue = dropdownOpen ? query : pendingId ? (pendingCompany?.name ?? '') : ''
 
-  const isCompleteEffectiveDate = (value: string) => /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(value.trim())
+  const selectedSpace = spaces.find((space) => space.key === spaceKey)
+  const spaceLocked = isEditMode || Boolean(initialSpaceKey)
+  const effective = parseMMDDYYYY(effectiveDate)
+  const end = cutOffDate.trim() ? parseMMDDYYYY(cutOffDate) : null
+  const contractEnd = selectedSpace?.currentContractEndDate
+    ? parseMMDDYYYY(selectedSpace.currentContractEndDate)
+    : null
 
-  const handleEffectiveDateChange = (next: string) => {
-    if (isCompleteEffectiveDate(next) && next !== effectiveDate) {
-      setEffectiveDateSelectionCount((count) => count + 1)
-    }
-    setEffectiveDate(next)
-  }
-
-  const showEffectiveDateError =
-    effectiveDateSelectionCount === 1 && isCompleteEffectiveDate(effectiveDate)
+  const spaceError = !selectedSpace
+    ? 'Choose the suite, unit or floor whose company is changing.'
+    : !isEditMode && selectedSpace.pendingCompanyName
+      ? `${selectedSpace.label} already has a pending switch to ${selectedSpace.pendingCompanyName}. Edit that switch instead.`
+      : null
+  const companyError = !pendingId
+    ? 'Choose a company.'
+    : selectedSpace && pendingId === selectedSpace.currentCompanyId
+      ? `${pendingCompany?.name} is already the active company for ${selectedSpace.label}.`
+      : null
+  const effectiveDateError = !effectiveDate.trim()
+    ? 'Enter the effective date.'
+    : !effective
+      ? 'Enter a valid date (MM/DD/YYYY).'
+      : contractEnd && effective <= contractEnd
+        ? `Effective Date must be after ${selectedSpace?.currentCompanyName}'s contract ends on ${selectedSpace?.currentContractEndDate}.`
+        : null
+  const endDateError =
+    cutOffDate.trim() && !end
+      ? 'Enter a valid date (MM/DD/YYYY).'
+      : end && effective && end <= effective
+        ? 'End Date must be after the Effective Date.'
+        : null
+  const hasErrors = Boolean(spaceError || companyError || effectiveDateError || endDateError)
+  const showErrors = submitAttempted
 
   const closeModal = () => {
     setPendingSubmit(null)
@@ -179,6 +310,7 @@ export function SwitchCompanyModal({
   const buildSubmitPayload = (): SwitchCompanySubmitPayload => ({
     mode: isEditMode ? 'edit' : 'switch',
     associationId: isEditMode ? associationId : undefined,
+    spaceKey,
     companyId: pendingId,
     effectiveDate,
     cutOffDate,
@@ -234,6 +366,33 @@ export function SwitchCompanyModal({
 
         <div className="flex flex-col">
           <ModalFormRow
+            label="Space"
+            description="The suite, unit or floor whose company is changing. The current company stays active until the effective date."
+            required
+          >
+            {spaceLocked && selectedSpace ? (
+              <div className="flex h-10 items-center rounded-lg border border-[#e6e6e7] bg-[#f5f5f6] px-3.5 text-sm leading-5 text-[#262527]">
+                <span className="truncate">
+                  {selectedSpace.label}
+                  {selectedSpace.currentCompanyName && (
+                    <span className="text-[#86868b]"> · Current: {selectedSpace.currentCompanyName}</span>
+                  )}
+                </span>
+              </div>
+            ) : (
+              <SpaceSelect
+                spaces={spaces}
+                value={spaceKey}
+                onChange={setSpaceKey}
+                open={spaceMenuOpen}
+                onOpenChange={setSpaceMenuOpen}
+                invalid={showErrors && Boolean(spaceError)}
+              />
+            )}
+            {showErrors && spaceError && <ModalFieldError>{spaceError}</ModalFieldError>}
+          </ModalFormRow>
+
+          <ModalFormRow
             label="Company"
             description="Select the company that should be associated with this property."
             required
@@ -257,7 +416,11 @@ export function SwitchCompanyModal({
                 </button>
               </div>
               <div className="relative min-w-0">
-                <div className="flex h-10 items-center gap-2 rounded-lg border border-[#e6e6e7] bg-white px-3.5">
+                <div
+                  className={`flex h-10 items-center gap-2 rounded-lg border bg-white px-3.5 ${
+                    showErrors && companyError ? 'border-[#b32318]' : 'border-[#e6e6e7]'
+                  }`}
+                >
                   <input
                     id="switch-company-combobox"
                     type="text"
@@ -325,6 +488,7 @@ export function SwitchCompanyModal({
                   </ul>
                 )}
               </div>
+              {showErrors && companyError && <ModalFieldError>{companyError}</ModalFieldError>}
             </div>
           </ModalFormRow>
 
@@ -334,21 +498,8 @@ export function SwitchCompanyModal({
             required
           >
             <div className="flex flex-col gap-1.5">
-              <ModalDateInput
-                id="switch-company-effective-date"
-                value={effectiveDate}
-                onChange={handleEffectiveDateChange}
-              />
-              {showEffectiveDateError && (
-                <p className="flex items-start gap-1.5 text-sm leading-5 text-[#b32318]">
-                  <span className="relative mt-0.5 size-4 shrink-0" aria-hidden>
-                    <img alt="" className="absolute inset-0 block size-full max-w-none" src={tableAlertCircleWarn} />
-                  </span>
-                  <span>
-                    Effective Date cannot fall within an active contract period for the current company
-                  </span>
-                </p>
-              )}
+              <ModalDateInput id="switch-company-effective-date" value={effectiveDate} onChange={setEffectiveDate} />
+              {showErrors && effectiveDateError && <ModalFieldError>{effectiveDateError}</ModalFieldError>}
             </div>
           </ModalFormRow>
 
@@ -356,11 +507,8 @@ export function SwitchCompanyModal({
             label="Company Association End Date - Association Removed"
             description="On the Association End Date, the selected company is dissociated from this property. A company with active contracts cannot be dissociated, close or complete them first"
           >
-            <ModalDateInput
-              id="switch-company-cut-off-date"
-              value={cutOffDate}
-              onChange={setCutOffDate}
-            />
+            <ModalDateInput id="switch-company-cut-off-date" value={cutOffDate} onChange={setCutOffDate} />
+            {showErrors && endDateError && <ModalFieldError>{endDateError}</ModalFieldError>}
           </ModalFormRow>
 
           <ModalFormRow
@@ -413,6 +561,8 @@ export function SwitchCompanyModal({
             <button
               type="button"
               onClick={() => {
+                setSubmitAttempted(true)
+                if (hasErrors) return
                 const payload = buildSubmitPayload()
                 if (isEditMode) {
                   completeSubmit(payload)
@@ -503,11 +653,11 @@ export function SwitchCompanyModal({
                   Switch company?
                 </h3>
                 <p className="mt-2 text-sm leading-5 text-[#6a6a70]">
-                  You are about to associate this property with{' '}
-                  <span className="font-medium text-[#262527]">
-                    {confirmTargetCompany?.name ?? 'the selected company'}
-                  </span>
-                  . The change will be pending until the effective date. Do you want to continue?
+                  <span className="font-medium text-[#262527]">{confirmTargetCompany?.name}</span> will take over{' '}
+                  <span className="font-medium text-[#262527]">{selectedSpace?.label}</span> on{' '}
+                  {pendingSubmit.effectiveDate}.
+                  {selectedSpace?.currentCompanyName ? ` ${selectedSpace.currentCompanyName} stays active until then.` : ''}{' '}
+                  Do you want to continue?
                 </p>
               </div>
             </div>

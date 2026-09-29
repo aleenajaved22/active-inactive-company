@@ -9,8 +9,14 @@ import type { ReactNode } from 'react'
 
 type PropertyDetailCompanyHeaderProps = {
   companyName: string
+  /** Opens the company detail page when set. */
+  companyHref?: string
+  /** The suite, unit or floor this company holds on the property. */
+  spaceLabel?: string
   listStatus: PropertyCompanyListStatus
   ownerName: string
+  parentCompany?: string
+  parentCompanyHref?: string
   affiliations: CompanyAffiliationBadge[]
   pendingEffectiveDate?: string
   pendingTooltipId?: string
@@ -27,9 +33,17 @@ function ownerAvatarSrc(ownerName: string) {
   return ownerAvatarByName[ownerName] ?? contactAvatarJohn
 }
 
-function HeaderLabeledBlock({ label, children }: { label: string; children: ReactNode }) {
+function HeaderLabeledBlock({
+  label,
+  children,
+  className = 'shrink-0',
+}: {
+  label: string
+  children: ReactNode
+  className?: string
+}) {
   return (
-    <div className="flex w-fit flex-col items-start gap-1">
+    <div className={`flex min-w-0 flex-col items-start gap-1 ${className}`}>
       <span className="text-xs leading-[18px] text-[#86868b]">{label}</span>
       {children}
     </div>
@@ -61,8 +75,12 @@ function CompanySitePlaceholderIcon({ className }: { className?: string }) {
 
 export function PropertyDetailCompanyHeader({
   companyName,
+  companyHref,
+  spaceLabel,
   listStatus,
   ownerName,
+  parentCompany,
+  parentCompanyHref,
   affiliations,
   pendingEffectiveDate,
   pendingTooltipId,
@@ -70,12 +88,40 @@ export function PropertyDetailCompanyHeader({
   return (
     <div className="shrink-0 border-b border-[#e6e6e7] bg-[rgb(245_245_246/0.5)]">
       <div className="flex items-start px-8 py-4">
-        <div className="flex min-w-0 flex-1 items-center gap-1.5">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-6">
+          <div className="flex min-w-[180px] flex-1 items-center gap-3">
             <CompanySitePlaceholderIcon className="size-12 shrink-0" />
-            <div className="flex min-w-0 flex-col gap-1">
-              <p className="truncate text-xl font-bold leading-7 text-[#262527]">{companyName}</p>
-              <p className="flex min-w-0 items-center gap-1 text-xs leading-[18px] text-[#86868b]">
+            <div className="flex min-w-0 flex-1 flex-col gap-1 overflow-hidden">
+              {companyHref ? (
+                <a
+                  href={companyHref}
+                  title={`Open ${companyName}`}
+                  className="group flex min-w-0 items-center gap-1 text-xl font-bold leading-7 text-[#262527] hover:text-primary"
+                >
+                  <span className="truncate group-hover:underline">{companyName}</span>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    aria-hidden
+                    className="shrink-0 text-[#86868b] group-hover:text-primary"
+                  >
+                    <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </a>
+              ) : (
+                <p className="truncate text-xl font-bold leading-7 text-[#262527]">{companyName}</p>
+              )}
+              <p className="flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap text-xs leading-[18px] text-[#86868b]">
+                {spaceLabel && (
+                  <>
+                    <span className="shrink-0 font-medium text-[#262527]">{spaceLabel}</span>
+                    <span className="shrink-0" aria-hidden>
+                      ·
+                    </span>
+                  </>
+                )}
                 <span className="shrink-0">Owner :</span>
                 <span className="inline-flex min-w-0 items-center gap-1">
                   <img
@@ -89,8 +135,41 @@ export function PropertyDetailCompanyHeader({
             </div>
           </div>
 
-          <div className="flex shrink-0 items-stretch gap-4">
-            <HeaderLabeledBlock label="Affiliation">
+          <div className="flex min-w-0 shrink items-stretch gap-4">
+            {parentCompany && (
+              <>
+                <HeaderLabeledBlock label="Parent Company" className="min-w-[72px] max-w-[180px] shrink">
+                  {parentCompanyHref ? (
+                    <a
+                      href={parentCompanyHref}
+                      title={`Open ${parentCompany}`}
+                      className="group flex h-[22px] max-w-full items-center gap-0.5 text-sm font-medium leading-[22px] text-[#262527] hover:text-primary"
+                    >
+                      <span className="truncate group-hover:underline">{parentCompany}</span>
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        aria-hidden
+                        className="shrink-0 text-[#86868b] group-hover:text-primary"
+                      >
+                        <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </a>
+                  ) : (
+                    <span
+                      className="block h-[22px] max-w-full truncate text-sm font-medium leading-[22px] text-[#262527]"
+                      title={parentCompany}
+                    >
+                      {parentCompany}
+                    </span>
+                  )}
+                </HeaderLabeledBlock>
+                <div className="w-px shrink-0 self-stretch bg-[#e6e6e7]" aria-hidden />
+              </>
+            )}
+            <HeaderLabeledBlock label="Affiliation" className="min-w-[96px] shrink">
               <div className="flex max-w-[320px] flex-wrap gap-1.5">
                 {affiliations.map((badge) => (
                   <span

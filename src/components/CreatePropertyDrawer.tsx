@@ -1,10 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import createPropertyMap from '../assets/create-property-map.png'
 import detailPlus from '../assets/detail-plus.svg'
 import modalClose from '../assets/modal-close.svg'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
 import tableSearch from '../assets/table-search.svg'
+import { companyParents, findSpaceConflict, spaceTypes, type SpaceType } from '../data/propertySpaces'
 import { CreateCompanyModal } from './CreateCompanyModal'
 import { ModalDateInput } from './ModalDateInput'
 
@@ -195,17 +196,213 @@ function DrawerTextInput({
   )
 }
 
+function SectionHeading({ title, description }: { title: string; description?: string }) {
+  return (
+    <div>
+      <p className="text-base font-bold leading-6 text-[#262527]">{title}</p>
+      {description && <p className="mt-1 text-sm leading-5 text-[#6a6a70]">{description}</p>}
+    </div>
+  )
+}
+
+function SectionDivider() {
+  return <div className="h-px w-full shrink-0 bg-[#e6e6e7]" />
+}
+
+function SpaceTypeMenu({
+  value,
+  onChange,
+  errorId,
+  invalid,
+}: {
+  value: SpaceType | ''
+  onChange: (value: SpaceType) => void
+  errorId?: string
+  invalid?: boolean
+}) {
+  const rootRef = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  useEffect(() => {
+    if (!open) return
+    const closeOnOutside = (event: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', closeOnOutside)
+    return () => document.removeEventListener('mousedown', closeOnOutside)
+  }, [open])
+
+  const openMenu = () => {
+    setActiveIndex(value ? spaceTypes.indexOf(value) : 0)
+    setOpen(true)
+  }
+
+  const choose = (option: SpaceType) => {
+    onChange(option)
+    setOpen(false)
+  }
+
+  const onKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === 'Escape' && open) {
+      // Keep Escape from also closing the drawer.
+      event.stopPropagation()
+      setOpen(false)
+      return
+    }
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      if (!open) return openMenu()
+      const step = event.key === 'ArrowDown' ? 1 : -1
+      setActiveIndex((index) => (index + step + spaceTypes.length) % spaceTypes.length)
+      return
+    }
+    if ((event.key === 'Enter' || event.key === ' ') && open) {
+      event.preventDefault()
+      choose(spaceTypes[activeIndex])
+    }
+  }
+
+  return (
+    <div ref={rootRef} className="relative w-[136px] shrink-0">
+      <button
+        id="create-property-space-type"
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls="create-property-space-type-listbox"
+        aria-activedescendant={open ? `create-property-space-type-option-${activeIndex}` : undefined}
+        aria-label={value ? `Space type: ${value}` : 'Space type'}
+        aria-describedby={errorId}
+        aria-invalid={invalid || undefined}
+        onClick={() => (open ? setOpen(false) : openMenu())}
+        onKeyDown={onKeyDown}
+        className={`flex h-full w-full items-center justify-between gap-2 rounded-l-lg bg-white pl-3.5 pr-3 text-left text-base leading-6 outline-none ${
+          value ? 'text-[#262527]' : 'text-[#ccc]'
+        }`}
+      >
+        {value || 'Type'}
+        <span className="relative size-5 shrink-0" aria-hidden>
+          <img
+            alt=""
+            className={`absolute inset-0 block size-full max-w-none transition-transform ${open ? 'rotate-180' : ''}`}
+            src={questionsChevronDown}
+          />
+        </span>
+      </button>
+      {open && (
+        <ul
+          id="create-property-space-type-listbox"
+          role="listbox"
+          aria-label="Space type"
+          className="absolute -left-px top-full z-10 mt-1 w-[calc(100%+2px)] overflow-y-auto rounded-lg border border-[#e6e6e7] bg-white py-1 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
+        >
+          {spaceTypes.map((option, index) => {
+            const selected = value === option
+            return (
+              <li
+                key={option}
+                id={`create-property-space-type-option-${index}`}
+                role="option"
+                aria-selected={selected}
+                onMouseDown={(event) => event.preventDefault()}
+                onMouseEnter={() => setActiveIndex(index)}
+                onClick={() => choose(option)}
+                className={`flex cursor-pointer items-center justify-between px-4 py-2.5 text-sm leading-5 text-[#262527] ${
+                  index === activeIndex ? 'bg-[#f5f5f6]' : ''
+                } ${selected ? 'font-medium' : ''}`}
+              >
+                {option}
+                {selected && (
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="text-primary">
+                    <path d="M13.3334 4L6.00008 11.3333L2.66675 8" stroke="currentColor" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+/** Space type and number as one joined field, read left to right like "Floor 5". */
+function SpaceField({
+  type,
+  number,
+  onTypeChange,
+  onNumberChange,
+  numberRef,
+  errorId,
+  invalid,
+}: {
+  type: SpaceType | ''
+  number: string
+  onTypeChange: (value: SpaceType) => void
+  onNumberChange: (value: string) => void
+  numberRef: RefObject<HTMLInputElement | null>
+  errorId?: string
+  invalid?: boolean
+}) {
+  return (
+    <div
+      className={`flex h-11 rounded-lg border bg-white ${
+        invalid ? 'border-[#d92d20]' : 'border-[#e6e6e7] focus-within:border-primary'
+      }`}
+    >
+      <SpaceTypeMenu value={type} onChange={onTypeChange} errorId={errorId} invalid={invalid} />
+      <div className="my-2.5 w-px shrink-0 bg-[#e6e6e7]" aria-hidden />
+      <input
+        ref={numberRef}
+        id="create-property-space-number"
+        type="text"
+        aria-label={type ? `${type} number` : 'Space number'}
+        aria-describedby={errorId}
+        aria-invalid={invalid || undefined}
+        value={number}
+        onChange={(event) => onNumberChange(event.target.value)}
+        placeholder={type === 'Floor' ? '5' : '210B'}
+        className="min-w-0 flex-1 rounded-r-lg bg-transparent px-3.5 text-base leading-6 text-[#262527] outline-none placeholder:text-[#ccc]"
+      />
+    </div>
+  )
+}
+
+function FieldError({ id, children }: { id: string; children: ReactNode }) {
+  return (
+    <p id={id} className="mt-1 flex items-start gap-1.5 text-sm leading-5 text-[#d92d20]">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="mt-0.5 shrink-0">
+        <path
+          d="M8 5.33333V8M8 10.6667H8.00667M14.6667 8C14.6667 11.6819 11.6819 14.6667 8 14.6667C4.3181 14.6667 1.33333 11.6819 1.33333 8C1.33333 4.3181 4.3181 1.33333 8 1.33333C11.6819 1.33333 14.6667 4.3181 14.6667 8Z"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <span>{children}</span>
+    </p>
+  )
+}
+
 export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProps) {
+  const [address, setAddress] = useState('')
+  const [spaceType, setSpaceType] = useState<SpaceType | ''>('')
+  const [spaceNumber, setSpaceNumber] = useState('')
   const [propertyName, setPropertyName] = useState('')
-  const [parentCompany, setParentCompany] = useState('')
-  const [hubspotStage, setHubspotStage] = useState('')
+  const [addressNotes, setAddressNotes] = useState('')
+  const [company, setCompany] = useState('Costco Wholesale')
+  const [parentCompany, setParentCompany] = useState(companyParents['Costco Wholesale'] ?? '')
   const [cutOffDate, setCutOffDate] = useState('')
+  const [hubspotStage, setHubspotStage] = useState('')
+  const [affiliations, setAffiliations] = useState<Set<Affiliation>>(new Set(['Headquarters', 'Managed']))
   const [assignee, setAssignee] = useState('')
   const [assignSupervisor, setAssignSupervisor] = useState(false)
-  const [address, setAddress] = useState('')
-  const [addressNotes, setAddressNotes] = useState('')
-  const [affiliations, setAffiliations] = useState<Set<Affiliation>>(new Set(['Headquarters', 'Managed']))
+  const [submitAttempted, setSubmitAttempted] = useState(false)
   const [createCompanyOpen, setCreateCompanyOpen] = useState(false)
+  const spaceFieldRef = useRef<HTMLDivElement>(null)
+  const spaceNumberRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!open) return
@@ -226,15 +423,19 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
 
   useEffect(() => {
     if (open) return
+    setAddress('')
+    setSpaceType('')
+    setSpaceNumber('')
     setPropertyName('')
-    setParentCompany('')
-    setHubspotStage('')
+    setAddressNotes('')
+    setCompany('Costco Wholesale')
+    setParentCompany(companyParents['Costco Wholesale'] ?? '')
     setCutOffDate('')
+    setHubspotStage('')
+    setAffiliations(new Set(['Headquarters', 'Managed']))
     setAssignee('')
     setAssignSupervisor(false)
-    setAddress('')
-    setAddressNotes('')
-    setAffiliations(new Set(['Headquarters', 'Managed']))
+    setSubmitAttempted(false)
     setCreateCompanyOpen(false)
   }, [open])
 
@@ -245,6 +446,34 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
       else next.add(label)
       return next
     })
+  }
+
+  const selectCompany = (value: string) => {
+    setCompany(value)
+    setParentCompany(companyParents[value] ?? '')
+  }
+
+  const spaceConflict = findSpaceConflict(address, spaceType, spaceNumber)
+  const spaceError = spaceConflict
+    ? `${spaceType} ${spaceNumber.trim()} is already assigned to ${spaceConflict} at this address.`
+    : !submitAttempted
+      ? null
+      : !spaceType
+        ? 'Choose suite, unit, floor, flat, or apartment.'
+        : !spaceNumber.trim()
+          ? `Enter the ${spaceType.toLowerCase()} number.`
+          : null
+
+  const handleCreate = () => {
+    setSubmitAttempted(true)
+    if (!spaceType || !spaceNumber.trim() || spaceConflict) {
+      spaceFieldRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      if (spaceType) spaceNumberRef.current?.focus()
+      else document.getElementById('create-property-space-type')?.focus()
+      return
+    }
+    window.alert('Property created (prototype)')
+    onClose()
   }
 
   if (!open) return null
@@ -278,185 +507,126 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto">
-              <div className="flex flex-col gap-5">
-                <div className="grid grid-cols-2 gap-6">
+              <div className="flex flex-col gap-6 pb-4">
+                <section className="flex flex-col gap-4">
+                  <SectionHeading title="Address" />
                   <div className="flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <DrawerLabel required>Company</DrawerLabel>
-                      <button
-                        type="button"
-                        onClick={() => setCreateCompanyOpen(true)}
-                        className="flex items-center gap-1 text-sm font-medium text-primary"
-                      >
-                        <span className="relative size-5 shrink-0" aria-hidden>
-                          <img alt="" className="absolute inset-0 block size-full max-w-none" src={detailPlus} />
-                        </span>
-                        Create New
-                      </button>
-                    </div>
-                    <DrawerSelect
-                      id="create-property-company"
-                      value="Costco Wholesale"
-                      onChange={() => {}}
-                      options={['Costco Wholesale', '7 Eleven']}
-                    />
-                    <div className="mt-1 flex items-center gap-1.5">
-                      <span className="text-xs leading-[18px] text-[#86868b]">Strategic Partnership Status:</span>
-                      <span className="rounded-2xl bg-[#eff8ef] px-2 py-0.5 text-xs font-medium leading-[18px] text-[#2e964b]">
-                        SP - Active
+                    <DrawerLabel required>Address</DrawerLabel>
+                    <div className="flex h-11 items-center gap-2 rounded-lg border border-[#e6e6e7] bg-white px-3.5 focus-within:border-primary">
+                      <span className="relative size-5 shrink-0" aria-hidden>
+                        <img alt="" className="block size-full max-w-none" src={tableSearch} />
                       </span>
+                      <input
+                        id="create-property-address"
+                        type="text"
+                        value={address}
+                        onChange={(event) => setAddress(event.target.value)}
+                        placeholder="Type Address"
+                        className="min-w-0 flex-1 bg-transparent text-base leading-6 text-[#262527] outline-none placeholder:text-[#ccc]"
+                      />
                     </div>
                   </div>
+                  <div className="grid grid-cols-2 items-start gap-6">
+                    <div ref={spaceFieldRef} className="flex flex-col gap-1.5">
+                      <label htmlFor="create-property-space-type" className="text-sm font-medium leading-5 text-[#86868b]">
+                        Suite / Unit / Floor<span className="text-[#b32318]"> *</span>
+                      </label>
+                      <SpaceField
+                        type={spaceType}
+                        number={spaceNumber}
+                        onTypeChange={setSpaceType}
+                        onNumberChange={setSpaceNumber}
+                        numberRef={spaceNumberRef}
+                        errorId={spaceError ? 'create-property-space-error' : undefined}
+                        invalid={Boolean(spaceError)}
+                      />
+                      {spaceError && <FieldError id="create-property-space-error">{spaceError}</FieldError>}
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <DrawerLabel required>Location / Property Name</DrawerLabel>
+                      <DrawerTextInput
+                        id="create-property-name"
+                        value={propertyName}
+                        onChange={setPropertyName}
+                        placeholder="Add Location / Property Name"
+                      />
+                    </div>
+                  </div>
+                  <div className="relative h-[270px] overflow-hidden rounded-lg border border-[#e6e6e7]">
+                    <img alt="" className="size-full object-cover" src={createPropertyMap} />
+                  </div>
                   <div className="flex flex-col gap-1.5">
-                    <DrawerLabel>Parent Company</DrawerLabel>
-                    <DrawerTextInput
-                      id="create-property-parent-company"
-                      value={parentCompany}
-                      onChange={setParentCompany}
-                      placeholder="Parent Company"
+                    <DrawerLabel>Address Notes</DrawerLabel>
+                    <textarea
+                      id="create-property-address-notes"
+                      value={addressNotes}
+                      onChange={(event) => setAddressNotes(event.target.value)}
+                      placeholder="e.g. blue building next to the pharmacy, enter from the rear gate"
+                      rows={3}
+                      className="w-full resize-none rounded-lg border border-[#e6e6e7] bg-white px-3.5 py-2.5 text-base leading-6 text-[#262527] outline-none placeholder:text-[#ccc]"
                     />
                   </div>
-                </div>
+                </section>
 
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="flex flex-col gap-1.5">
-                    <DrawerLabel required>Location / Property Name</DrawerLabel>
-                    <DrawerTextInput
-                      id="create-property-name"
-                      value={propertyName}
-                      onChange={setPropertyName}
-                      placeholder="Add Location / Property Name"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <DrawerLabel required>Property Source</DrawerLabel>
-                    <DrawerSelect
-                      id="create-property-source"
-                      value="Referred"
-                      onChange={() => {}}
-                      options={['Referred', 'Inbound', 'Outbound']}
-                    />
-                  </div>
-                </div>
+                <SectionDivider />
 
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="flex flex-col gap-1.5">
-                    <DrawerLabel>Associated Franchise</DrawerLabel>
-                    <DrawerSelect
-                      id="create-property-franchise"
-                      value="402 - Central Valencia"
-                      onChange={() => {}}
-                      options={['402 - Central Valencia', '420 - Automation']}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <DrawerLabel required>Choose a Hubspot Stage to Map</DrawerLabel>
-                    <DrawerSelect
-                      id="create-property-hubspot"
-                      value={hubspotStage}
-                      onChange={setHubspotStage}
-                      options={['Discovery', 'Qualified', 'Needs Assessment']}
-                      placeholder="Choose Stage"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex w-full max-w-[359px] flex-col gap-1.5">
-                  <DrawerLabelWithInfo required tooltip={CUT_OFF_DATE_HELP} tooltipId="create-property-cut-off-date-help">
-                    Company Association End Date
-                  </DrawerLabelWithInfo>
-                  <ModalDateInput
-                    id="create-property-cut-off-date"
-                    variant="drawer"
-                    value={cutOffDate}
-                    onChange={setCutOffDate}
-                  />
-                </div>
-
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
-                  <p className="shrink-0 text-base font-bold leading-6 text-[#262527]">Affiliation</p>
-                  <div className="flex flex-wrap gap-2">
-                    {affiliationOptions.map((label) => {
-                      const selected = affiliations.has(label)
-                      return (
+                <section className="flex flex-col gap-4">
+                  <SectionHeading title="Company" />
+                  <div className="grid grid-cols-2 items-start gap-6">
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <DrawerLabel required>Company</DrawerLabel>
                         <button
-                          key={label}
                           type="button"
-                          aria-pressed={selected}
-                          onClick={() => toggleAffiliation(label)}
-                          className={`rounded-[40px] border px-3 py-1.5 text-sm leading-5 ${
-                            selected
-                              ? 'border-[1.5px] border-primary bg-white text-[#262527]'
-                              : 'border border-[#e6e6e7] bg-white text-[#262527]'
-                          }`}
+                          onClick={() => setCreateCompanyOpen(true)}
+                          className="flex items-center gap-1 text-sm font-medium text-primary"
                         >
-                          {label}
+                          <span className="relative size-5 shrink-0" aria-hidden>
+                            <img alt="" className="absolute inset-0 block size-full max-w-none" src={detailPlus} />
+                          </span>
+                          Create New
                         </button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                <div className="h-px w-full bg-[#e6e6e7]" />
-
-                <div className="flex flex-col gap-3">
-                  <p className="text-base font-bold leading-6 text-[#262527]">Assign to</p>
-                  <div className="max-w-[354px] flex flex-col gap-1.5">
-                    <p className="text-sm font-medium leading-5 text-[#5b5b5f]">Select Assignee</p>
-                    <DrawerSelect
-                      id="create-property-assignee"
-                      value={assignee}
-                      onChange={setAssignee}
-                      options={['Jeff Zolos', 'Henry Micheal']}
-                      placeholder="Select Assignee"
-                    />
-                  </div>
-                  <label className="flex max-w-[354px] cursor-pointer items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={assignSupervisor}
-                      onChange={(event) => setAssignSupervisor(event.target.checked)}
-                      className="size-4 rounded border border-[#6a6a70] accent-primary"
-                    />
-                    <span className="text-sm leading-5 text-[#262527]">Assign Supervisor</span>
-                  </label>
-                </div>
-
-                <div className="h-px w-full bg-[#e6e6e7]" />
-
-                <div className="flex flex-col gap-3">
-                  <p className="text-base font-bold leading-6 text-[#262527]">Referred by</p>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="flex flex-col gap-1.5">
-                      <DrawerLabel required>Property</DrawerLabel>
+                      </div>
                       <DrawerSelect
-                        id="create-property-referred-property"
-                        value="402 - Central Valencia"
-                        onChange={() => {}}
-                        options={['402 - Central Valencia']}
+                        id="create-property-company"
+                        value={company}
+                        onChange={selectCompany}
+                        options={Object.keys(companyParents)}
                       />
+                      <div className="mt-1 flex items-center gap-1.5">
+                        <span className="text-xs leading-[18px] text-[#86868b]">Strategic Partnership Status:</span>
+                        <span className="rounded-2xl bg-[#eff8ef] px-2 py-0.5 text-xs font-medium leading-[18px] text-[#2e964b]">
+                          SP - Active
+                        </span>
+                      </div>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <DrawerLabel required>Contact</DrawerLabel>
-                      <DrawerSelect
-                        id="create-property-referred-contact"
-                        value="Jerome Bell"
-                        onChange={() => {}}
-                        options={['Jerome Bell', 'Henry Micheal']}
+                      <DrawerLabel>Parent Company</DrawerLabel>
+                      <DrawerTextInput
+                        id="create-property-parent-company"
+                        value={parentCompany}
+                        onChange={setParentCompany}
+                        placeholder="Parent Company"
                       />
                     </div>
                   </div>
-                </div>
-
-                <div className="h-px w-full bg-[#e6e6e7]" />
-
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <p className="text-base font-bold leading-6 text-[#262527]">Contact Details</p>
-                    <p className="mt-1 text-sm leading-5 text-[#6a6a70]">
-                      Please add the contact against following label
-                    </p>
+                  <div className="flex w-full max-w-[359px] flex-col gap-1.5">
+                    <DrawerLabelWithInfo required tooltip={CUT_OFF_DATE_HELP} tooltipId="create-property-cut-off-date-help">
+                      Company Association End Date
+                    </DrawerLabelWithInfo>
+                    <ModalDateInput
+                      id="create-property-cut-off-date"
+                      variant="drawer"
+                      value={cutOffDate}
+                      onChange={setCutOffDate}
+                    />
                   </div>
+                </section>
+
+                <SectionDivider />
+
+                <section className="flex flex-col gap-4">
+                  <SectionHeading title="Associated Contacts" description="Please add the contact against following label" />
                   <div className="overflow-hidden rounded-none border border-[#e6e6e7]">
                     <div className="grid grid-cols-[172px_1fr]">
                       <div className="border-r border-[#e6e6e7] bg-[#f9f9f9] px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f]">
@@ -491,43 +661,119 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                       ))}
                     </div>
                   </div>
-                </div>
+                </section>
 
-                <div className="h-px w-full bg-[#e6e6e7]" />
+                <SectionDivider />
 
-                <div className="flex flex-col gap-4 pb-4">
-                  <p className="text-base font-bold leading-6 text-[#262527]">Address</p>
-                  <div className="flex flex-col gap-1.5">
-                    <DrawerLabel required>Address</DrawerLabel>
-                    <div className="flex h-11 items-center gap-2 rounded-lg border border-[#e6e6e7] bg-white px-3.5">
-                      <span className="relative size-5 shrink-0" aria-hidden>
-                        <img alt="" className="block size-full max-w-none" src={tableSearch} />
-                      </span>
-                      <input
-                        id="create-property-address"
-                        type="text"
-                        value={address}
-                        onChange={(event) => setAddress(event.target.value)}
-                        placeholder="Type Address"
-                        className="min-w-0 flex-1 bg-transparent text-base leading-6 text-[#262527] outline-none placeholder:text-[#ccc]"
+                <section className="flex flex-col gap-4">
+                  <SectionHeading title="Property Details" description="Where this property came from and how it maps to HubSpot" />
+                  <div className="grid grid-cols-3 items-start gap-4">
+                    <div className="flex min-w-0 flex-col gap-1.5">
+                      <DrawerLabel required>Property Source</DrawerLabel>
+                      <DrawerSelect
+                        id="create-property-source"
+                        value="Referred"
+                        onChange={() => {}}
+                        options={['Referred', 'Inbound', 'Outbound']}
+                      />
+                    </div>
+                    <div className="flex min-w-0 flex-col gap-1.5">
+                      <DrawerLabel>Associated Franchise</DrawerLabel>
+                      <DrawerSelect
+                        id="create-property-franchise"
+                        value="402 - Central Valencia"
+                        onChange={() => {}}
+                        options={['402 - Central Valencia', '420 - Automation']}
+                      />
+                    </div>
+                    <div className="flex min-w-0 flex-col gap-1.5">
+                      <DrawerLabel required>Hubspot Stage</DrawerLabel>
+                      <DrawerSelect
+                        id="create-property-hubspot"
+                        value={hubspotStage}
+                        onChange={setHubspotStage}
+                        options={['Discovery', 'Qualified', 'Needs Assessment']}
+                        placeholder="Choose Stage"
                       />
                     </div>
                   </div>
-                  <div className="relative h-[270px] overflow-hidden rounded-lg border border-[#e6e6e7]">
-                    <img alt="" className="size-full object-cover" src={createPropertyMap} />
+                  <div className="flex flex-col gap-2">
+                    <DrawerLabel>Affiliation</DrawerLabel>
+                    <div className="flex flex-wrap gap-2">
+                      {affiliationOptions.map((label) => {
+                        const selected = affiliations.has(label)
+                        return (
+                          <button
+                            key={label}
+                            type="button"
+                            aria-pressed={selected}
+                            onClick={() => toggleAffiliation(label)}
+                            className={`rounded-[40px] border px-3 py-1.5 text-sm leading-5 ${
+                              selected
+                                ? 'border-[1.5px] border-primary bg-white text-[#262527]'
+                                : 'border border-[#e6e6e7] bg-white text-[#262527]'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <DrawerLabel>Address Notes</DrawerLabel>
-                    <textarea
-                      id="create-property-address-notes"
-                      value={addressNotes}
-                      onChange={(event) => setAddressNotes(event.target.value)}
-                      placeholder="e.g. blue building next to the pharmacy, enter from the rear gate"
-                      rows={3}
-                      className="w-full resize-none rounded-lg border border-[#e6e6e7] bg-white px-3.5 py-2.5 text-base leading-6 text-[#262527] outline-none placeholder:text-[#ccc]"
-                    />
+                </section>
+
+                <SectionDivider />
+
+                <section className="flex flex-col gap-4">
+                  <SectionHeading title="Referred by" description="The property and contact that referred this property" />
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="flex flex-col gap-1.5">
+                      <DrawerLabel required>Property</DrawerLabel>
+                      <DrawerSelect
+                        id="create-property-referred-property"
+                        value="402 - Central Valencia"
+                        onChange={() => {}}
+                        options={['402 - Central Valencia']}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <DrawerLabel required>Contact</DrawerLabel>
+                      <DrawerSelect
+                        id="create-property-referred-contact"
+                        value="Jerome Bell"
+                        onChange={() => {}}
+                        options={['Jerome Bell', 'Henry Micheal']}
+                      />
+                    </div>
                   </div>
-                </div>
+                </section>
+
+                <SectionDivider />
+
+                <section className="flex flex-col gap-4">
+                  <SectionHeading title="Assign to" description="The team member who owns this property" />
+                  <div className="grid grid-cols-2 items-end gap-6">
+                    <div className="flex flex-col gap-1.5">
+                      <DrawerLabel>Assignee</DrawerLabel>
+                      <DrawerSelect
+                        id="create-property-assignee"
+                        value={assignee}
+                        onChange={setAssignee}
+                        options={['Jeff Zolos', 'Henry Micheal']}
+                        placeholder="Select Assignee"
+                      />
+                    </div>
+                    <label className="flex h-11 cursor-pointer items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={assignSupervisor}
+                        onChange={(event) => setAssignSupervisor(event.target.checked)}
+                        className="size-4 rounded border border-[#6a6a70] accent-primary"
+                      />
+                      <span className="text-sm leading-5 text-[#262527]">Assign Supervisor</span>
+                    </label>
+                  </div>
+                </section>
               </div>
             </div>
           </div>
@@ -543,10 +789,7 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  window.alert('Property created (prototype)')
-                  onClose()
-                }}
+                onClick={handleCreate}
                 className="rounded-lg border border-primary bg-primary px-3.5 py-2 text-sm font-medium leading-5 text-white"
               >
                 Create Property

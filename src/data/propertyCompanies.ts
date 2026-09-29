@@ -1,12 +1,19 @@
 import type { TaskItem } from './leadActivities'
 import type { CompanyAffiliationBadge } from './propertyDetailSidePanel'
 
+export type DealFollowUp = {
+  date: string
+  time: string
+  note: string
+}
+
 export type CompanyDealCard = {
   id: string
   name: string
   amount: string
   date: string
   stage: string
+  followUp?: DealFollowUp
 }
 
 export type PropertyCompanyListStatus = 'Active' | 'Inactive' | 'Pending'
@@ -25,6 +32,8 @@ export type PropertyCompany = {
   name: string
   /** Shown beside the name in the company picker. */
   listStatus?: 'Active' | 'Inactive'
+  /** The corporate parent that owns this company. */
+  parentCompany?: string
   companyOwner: string
   phone: string
   spStatus: string
@@ -85,6 +94,19 @@ const defaultUsDeal: CompanyDealCard = {
   stage: 'Discovery',
 }
 
+const followUpUsDeal: CompanyDealCard = {
+  id: 'default-2',
+  name: 'Night Patrol Coverage',
+  amount: '$48,500',
+  date: '02-12-2024',
+  stage: 'Negotiation',
+  followUp: {
+    date: '03-25-2024',
+    time: '11:30a - 2:30p',
+    note: 'Arrived at location but unable to meet with the location representative.',
+  },
+}
+
 function usCompany(
   id: string,
   name: string,
@@ -99,7 +121,10 @@ function usCompany(
     score: '75%',
     affiliations: defaultAffiliations,
     questionnaireCompanyName: name,
-    deals: [{ ...defaultUsDeal, id: `${id}-deal-1` }],
+    deals: [
+      { ...followUpUsDeal, id: `${id}-deal-2` },
+      { ...defaultUsDeal, id: `${id}-deal-1` },
+    ],
     tasks: defaultCompanyTasks,
     billingAddress: {
       contact: 'Account Manager',
@@ -118,6 +143,7 @@ export const propertyCompanies: PropertyCompany[] = [
     id: 'automation-edge',
     name: '7 Eleven',
     listStatus: 'Active',
+    parentCompany: 'Seven & i Holdings',
     companyOwner: 'John Doe',
     phone: 'N/A',
     spStatus: 'N/A',
@@ -162,6 +188,18 @@ export const propertyCompanies: PropertyCompany[] = [
         date: '12-02-2023',
         stage: 'Closed Won',
       },
+      {
+        id: 'ae-3',
+        name: 'Store Perimeter Patrols',
+        amount: '$18,400',
+        date: '02-20-2024',
+        stage: 'Negotiation',
+        followUp: {
+          date: '03-25-2024',
+          time: '11:30a - 2:30p',
+          note: 'Walk the perimeter with the store manager and confirm patrol hours.',
+        },
+      },
     ],
     billingAddress: {
       contact: 'Aleena Javed',
@@ -176,6 +214,7 @@ export const propertyCompanies: PropertyCompany[] = [
     id: 'costco',
     name: 'Costco',
     listStatus: 'Inactive',
+    parentCompany: 'Costco Wholesale Corporation',
     companyOwner: 'Mike Smith',
     phone: '719-345-9821',
     spStatus: 'SP - Active',
@@ -228,6 +267,11 @@ export const propertyCompanies: PropertyCompany[] = [
         amount: '$236,745',
         date: '09-01-2023',
         stage: 'Terminated',
+        followUp: {
+          date: '03-25-2024',
+          time: '10:00a - 11:00a',
+          note: 'Call to discuss restarting the patrol contract.',
+        },
       },
     ],
     billingAddress: {
@@ -239,8 +283,9 @@ export const propertyCompanies: PropertyCompany[] = [
       zipcode: '64030',
     },
   },
-  usCompany('target', 'Target'),
+  usCompany('target', 'Target', { parentCompany: 'Target Corporation' }),
   usCompany('walmart', 'Walmart', {
+    parentCompany: 'Walmart Inc.',
     companyOwner: 'Trachise Withrow',
     billingAddress: {
       contact: 'Trachise Withrow',
@@ -252,6 +297,7 @@ export const propertyCompanies: PropertyCompany[] = [
     },
   }),
   usCompany('home-depot', 'Home Depot', {
+    parentCompany: 'The Home Depot, Inc.',
     billingAddress: {
       contact: 'Store Operations',
       address: '2455 Paces Ferry Rd, Atlanta, Georgia, 30339',
@@ -262,6 +308,7 @@ export const propertyCompanies: PropertyCompany[] = [
     },
   }),
   usCompany('kroger', 'Kroger', {
+    parentCompany: 'The Kroger Co.',
     billingAddress: {
       contact: 'Facilities Team',
       address: '1014 Vine St, Cincinnati, Ohio, 45202',
@@ -272,6 +319,7 @@ export const propertyCompanies: PropertyCompany[] = [
     },
   }),
   usCompany('cvs', 'CVS Health', {
+    parentCompany: 'CVS Health Corporation',
     billingAddress: {
       contact: 'Regional Director',
       address: '1 CVS Dr, Woonsocket, Rhode Island, 02895',
@@ -282,6 +330,7 @@ export const propertyCompanies: PropertyCompany[] = [
     },
   }),
   usCompany('walgreens', 'Walgreens', {
+    parentCompany: 'Walgreens Boots Alliance',
     billingAddress: {
       contact: 'Property Manager',
       address: '108 Wilmot Rd, Deerfield, Illinois, 60015',
@@ -292,6 +341,7 @@ export const propertyCompanies: PropertyCompany[] = [
     },
   }),
   usCompany('amazon', 'Amazon', {
+    parentCompany: 'Amazon.com, Inc.',
     billingAddress: {
       contact: 'Site Lead',
       address: '410 Terry Ave N, Seattle, Washington, 98109',
@@ -302,6 +352,7 @@ export const propertyCompanies: PropertyCompany[] = [
     },
   }),
   usCompany('mcdonalds', "McDonald's", {
+    parentCompany: "McDonald's Corporation",
     billingAddress: {
       contact: 'Franchise Owner',
       address: '110 N Carpenter St, Chicago, Illinois, 60607',
@@ -312,6 +363,7 @@ export const propertyCompanies: PropertyCompany[] = [
     },
   }),
   usCompany('starbucks', 'Starbucks', {
+    parentCompany: 'Starbucks Corporation',
     billingAddress: {
       contact: 'District Manager',
       address: '2401 Utah Ave S, Seattle, Washington, 98134',

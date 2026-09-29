@@ -3,6 +3,8 @@ export type PropertyModal = 'switch-company' | 'create-company'
 export type PrototypeScreen =
   | { screen: 'listing' }
   | { screen: 'property'; propertyIndex: number; modal?: PropertyModal }
+  | { screen: 'company'; propertyIndex: number; companyId: string }
+  | { screen: 'parent-company'; propertyIndex: number; parentName: string }
 
 export const prototypeScreenCatalog: { label: string; screen: PrototypeScreen }[] = [
   { label: 'Location listing', screen: { screen: 'listing' } },
@@ -13,6 +15,10 @@ export const prototypeScreenCatalog: { label: string; screen: PrototypeScreen }[
 
 export function prototypeScreenToHash(screen: PrototypeScreen): string {
   if (screen.screen === 'listing') return '#/listing'
+  if (screen.screen === 'company') return `#/property/${screen.propertyIndex}/company/${screen.companyId}`
+  if (screen.screen === 'parent-company') {
+    return `#/property/${screen.propertyIndex}/parent/${encodeURIComponent(screen.parentName)}`
+  }
   const base = `#/property/${screen.propertyIndex}`
   if (!screen.modal) return base
   return `${base}/${screen.modal}`
@@ -22,6 +28,20 @@ export function parsePrototypeHash(rawHash: string): PrototypeScreen {
   const hash = rawHash.replace(/^#\/?/, '').trim()
   if (!hash || hash === 'listing') {
     return { screen: 'listing' }
+  }
+
+  const companyMatch = /^property\/(\d+)\/company\/([\w-]+)\/?$/.exec(hash)
+  if (companyMatch) {
+    return { screen: 'company', propertyIndex: Number(companyMatch[1]), companyId: companyMatch[2] }
+  }
+
+  const parentMatch = /^property\/(\d+)\/parent\/([^/]+)\/?$/.exec(hash)
+  if (parentMatch) {
+    return {
+      screen: 'parent-company',
+      propertyIndex: Number(parentMatch[1]),
+      parentName: decodeURIComponent(parentMatch[2]),
+    }
   }
 
   const match = /^property\/(\d+)(?:\/(switch-company|create-company))?\/?$/.exec(hash)
