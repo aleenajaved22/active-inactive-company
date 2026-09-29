@@ -221,6 +221,7 @@ export function CompanyListingPanel({
   const [inactiveQuery, setInactiveQuery] = useState('')
   const [inactivePage, setInactivePage] = useState(0)
   const [switchSpaceKey, setSwitchSpaceKey] = useState<string | undefined>()
+  const [switchTargetCompanyId, setSwitchTargetCompanyId] = useState<string | undefined>()
   const [editPendingId, setEditPendingId] = useState<string | null>(null)
   const [editAffiliationsId, setEditAffiliationsId] = useState<string | null>(null)
 
@@ -269,14 +270,16 @@ export function CompanyListingPanel({
 
   const switchModalOpen = propertyModal !== undefined || editPendingId !== null
 
-  const openSwitch = (spaceKey?: string) => {
+  const openSwitch = (spaceKey?: string, targetCompanyId?: string) => {
     setSwitchSpaceKey(spaceKey)
+    setSwitchTargetCompanyId(targetCompanyId)
     onPropertyModalChange?.('switch-company')
   }
 
   const closeSwitch = () => {
     setEditPendingId(null)
     setSwitchSpaceKey(undefined)
+    setSwitchTargetCompanyId(undefined)
     onPropertyModalChange?.(undefined)
   }
 
@@ -445,7 +448,13 @@ export function CompanyListingPanel({
                     selected={association.id === selectedAssociationId}
                     onSelect={() => onSelectAssociation(association.id)}
                     companyHref={companyHref?.(association.companyId)}
-                    menuItems={[]}
+                    menuItems={[
+                      // Bring a past company back onto the space it used to hold.
+                      {
+                        label: 'Switch to this company',
+                        onSelect: () => openSwitch(spaceKeyOf(association), association.companyId),
+                      },
+                    ]}
                     showStatus={false}
                   />
                 ))}
@@ -494,6 +503,7 @@ export function CompanyListingPanel({
         mode={editingPending ? 'edit' : 'switch'}
         spaces={spaceOptions}
         initialSpaceKey={editingPending ? undefined : switchSpaceKey}
+        targetCompanyId={editingPending ? undefined : switchTargetCompanyId}
         initialForm={pendingInitialForm}
         initialCreateCompany={propertyModal === 'create-company'}
         associationId={editPendingId ?? undefined}

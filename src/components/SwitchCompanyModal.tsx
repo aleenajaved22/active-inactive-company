@@ -22,6 +22,8 @@ type SwitchCompanyModalProps = {
   spaces: SwitchSpaceOption[]
   /** Pre-selects and locks the space, e.g. when switching from a company's row menu. */
   initialSpaceKey?: string
+  /** Pre-selects the company to switch to when opening in switch mode. */
+  targetCompanyId?: string
   initialForm?: SwitchCompanyFormValues
   initialCreateCompany?: boolean
   associationId?: string
@@ -159,6 +161,7 @@ export function SwitchCompanyModal({
   mode = 'switch',
   spaces,
   initialSpaceKey,
+  targetCompanyId,
   initialForm,
   initialCreateCompany = false,
   associationId,
@@ -206,7 +209,7 @@ export function SwitchCompanyModal({
       setPendingAffiliations(new Set(initialForm.affiliations))
     } else {
       setSpaceKey(initialSpaceKey ?? '')
-      setPendingId('')
+      setPendingId(targetCompanyId ?? '')
       setEffectiveDate('')
       setCutOffDate('')
       setPendingAffiliations(new Set())
@@ -218,7 +221,7 @@ export function SwitchCompanyModal({
     setCreateCompanyOpen(initialCreateCompany)
     setPendingSubmit(null)
     setRevertConfirmOpen(false)
-  }, [open, isEditMode, initialForm, initialSpaceKey, initialCreateCompany])
+  }, [open, isEditMode, initialForm, initialSpaceKey, targetCompanyId, initialCreateCompany])
 
   useEffect(() => {
     if (!open) return
