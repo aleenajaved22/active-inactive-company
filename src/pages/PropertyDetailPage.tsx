@@ -58,6 +58,22 @@ export function PropertyDetailPage({
   })
   const selectedCompany = getPropertyCompany(companySelection.companyId)
   const [editDealOpen, setEditDealOpen] = useState(false)
+  const [switchTargetCompanyId, setSwitchTargetCompanyId] = useState<string | undefined>()
+
+  const handleListingCompanyPress = (companyId: string) => {
+    const company = getPropertyCompany(companyId)
+    const listStatus = company.listStatus === 'Inactive' ? 'Inactive' : 'Active'
+    const alreadySelected =
+      companySelection.companyId === companyId && companySelection.listStatus === listStatus
+
+    if (alreadySelected) {
+      setCompanySelection({ companyId, listStatus })
+      return
+    }
+
+    setSwitchTargetCompanyId(companyId)
+    onPropertyModalChange?.('switch-company')
+  }
   const mainPanelReadOnly =
     companySelection.listStatus === 'Inactive' || companySelection.listStatus === 'Pending'
   const mainPanelEmptyStates = companySelection.listStatus === 'Pending'
@@ -151,6 +167,8 @@ export function PropertyDetailPage({
               onSelectCompany={setCompanySelection}
               propertyModal={propertyModal}
               onPropertyModalChange={onPropertyModalChange}
+              switchTargetCompanyId={switchTargetCompanyId}
+              onClearSwitchTarget={() => setSwitchTargetCompanyId(undefined)}
             />
           </aside>
 
@@ -158,6 +176,7 @@ export function PropertyDetailPage({
             selectedCompanyId={companySelection.companyId}
             selectedListStatus={companySelection.listStatus}
             onSelectCompany={setCompanySelection}
+            onSwitchCompany={handleListingCompanyPress}
           />
 
           <section className="flex min-w-0 flex-1 flex-col overflow-y-auto border-l border-[#e6e6e7]">

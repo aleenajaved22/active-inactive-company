@@ -18,6 +18,8 @@ type SwitchCompanyModalProps = {
   open: boolean
   mode?: 'switch' | 'edit'
   selectedCompanyId: string
+  /** Pre-selects the company to switch to when opening in switch mode. */
+  targetCompanyId?: string
   initialForm?: SwitchCompanyFormValues
   initialCreateCompany?: boolean
   associationId?: string
@@ -56,6 +58,7 @@ export function SwitchCompanyModal({
   open,
   mode = 'switch',
   selectedCompanyId,
+  targetCompanyId,
   initialForm,
   initialCreateCompany = false,
   associationId,
@@ -99,7 +102,7 @@ export function SwitchCompanyModal({
       setCutOffDate(initialForm.cutOffDate)
       setPendingAffiliations(new Set(initialForm.affiliations))
     } else {
-      setPendingId('')
+      setPendingId(targetCompanyId ?? '')
       setEffectiveDate('')
       setCutOffDate('')
       setPendingAffiliations(new Set())
@@ -110,7 +113,7 @@ export function SwitchCompanyModal({
     setCreateCompanyOpen(initialCreateCompany)
     setPendingSubmit(null)
     setRevertConfirmOpen(false)
-  }, [open, isEditMode, initialForm, selectedCompanyId, initialCreateCompany])
+  }, [open, isEditMode, initialForm, selectedCompanyId, targetCompanyId, initialCreateCompany])
 
   useEffect(() => {
     if (!open) return

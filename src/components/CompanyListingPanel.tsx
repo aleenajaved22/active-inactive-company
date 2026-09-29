@@ -11,6 +11,7 @@ type CompanyListingPanelProps = {
   selectedCompanyId: string
   selectedListStatus: PropertyCompanyListStatus
   onSelectCompany: (selection: PropertyCompanySelection) => void
+  onSwitchCompany: (companyId: string) => void
 }
 
 function statusOf(company: PropertyCompany): 'Active' | 'Inactive' {
@@ -32,6 +33,7 @@ export function CompanyListingPanel({
   selectedCompanyId,
   selectedListStatus,
   onSelectCompany,
+  onSwitchCompany,
 }: CompanyListingPanelProps) {
   const [query, setQuery] = useState('')
 
@@ -76,6 +78,7 @@ export function CompanyListingPanel({
               selectedCompanyId={selectedCompanyId}
               selectedListStatus={selectedListStatus}
               onSelectCompany={onSelectCompany}
+              onSwitchCompany={onSwitchCompany}
             />
             <CompanyGroup
               title="Inactive"
@@ -83,6 +86,7 @@ export function CompanyListingPanel({
               selectedCompanyId={selectedCompanyId}
               selectedListStatus={selectedListStatus}
               onSelectCompany={onSelectCompany}
+              onSwitchCompany={onSwitchCompany}
             />
           </>
         )}
@@ -97,12 +101,14 @@ function CompanyGroup({
   selectedCompanyId,
   selectedListStatus,
   onSelectCompany,
+  onSwitchCompany,
 }: {
   title: 'Active' | 'Inactive'
   companies: PropertyCompany[]
   selectedCompanyId: string
   selectedListStatus: PropertyCompanyListStatus
   onSelectCompany: (selection: PropertyCompanySelection) => void
+  onSwitchCompany: (companyId: string) => void
 }) {
   if (companies.length === 0) return null
 
@@ -120,7 +126,13 @@ function CompanyGroup({
             <li key={company.id}>
               <button
                 type="button"
-                onClick={() => onSelectCompany({ companyId: company.id, listStatus: status })}
+                onClick={() => {
+                  if (selected) {
+                    onSelectCompany({ companyId: company.id, listStatus: status })
+                    return
+                  }
+                  onSwitchCompany(company.id)
+                }}
                 className={`flex w-full items-center justify-between gap-2 px-2.5 py-2.5 text-left ${
                   selected ? 'bg-blue-50' : 'bg-white hover:bg-[#f5f5f6]'
                 }`}

@@ -37,6 +37,8 @@ type PropertyDetailSideSectionsProps = {
   onSelectCompany: (selection: PropertyCompanySelection) => void
   propertyModal?: PropertyModal
   onPropertyModalChange?: (modal?: PropertyModal) => void
+  switchTargetCompanyId?: string
+  onClearSwitchTarget?: () => void
 }
 
 function SectionChevron({ expanded }: { expanded: boolean }) {
@@ -453,6 +455,8 @@ export function PropertyDetailSideSections({
   onSelectCompany,
   propertyModal,
   onPropertyModalChange,
+  switchTargetCompanyId,
+  onClearSwitchTarget,
 }: PropertyDetailSideSectionsProps) {
   const [openSections, setOpenSections] = useState(createDefaultOpen)
   const [pendingAssociations, setPendingAssociations] = useState<CompanyAssociation[]>([])
@@ -475,6 +479,7 @@ export function PropertyDetailSideSections({
 
   const closeCompanyModal = () => {
     setEditAssociationId(null)
+    onClearSwitchTarget?.()
     onPropertyModalChange?.(undefined)
   }
 
@@ -622,6 +627,7 @@ export function PropertyDetailSideSections({
         mode={editModalOpen ? 'edit' : 'switch'}
         initialCreateCompany={propertyModal === 'create-company'}
         selectedCompanyId={editingAssociation?.companyId ?? selectedCompanyId}
+        targetCompanyId={editModalOpen ? undefined : switchTargetCompanyId}
         initialForm={
           editingAssociation
             ? {
