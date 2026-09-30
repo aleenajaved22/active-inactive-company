@@ -111,7 +111,7 @@ function SuiteUnitTypeMenu({
   }
 
   return (
-    <div ref={rootRef} className="relative w-[124px] shrink-0">
+    <div ref={rootRef} className="relative w-[88px] shrink-0">
       <button
         id={id}
         type="button"
@@ -124,7 +124,7 @@ function SuiteUnitTypeMenu({
         disabled={disabled}
         onClick={() => (open ? setOpen(false) : openMenu())}
         onKeyDown={onKeyDown}
-        className={`flex h-full w-full items-center justify-between gap-2 rounded-l-lg bg-transparent pl-3.5 pr-3 text-left text-base leading-6 outline-none ${
+        className={`flex h-full w-full items-center justify-between gap-2 rounded-l-lg bg-transparent pl-3 pr-2 text-left text-base leading-6 outline-none ${
           value ? 'text-[#262527]' : 'text-[#ccc]'
         }`}
       >
@@ -182,6 +182,7 @@ function TextField({
   placeholder,
   size,
   error,
+  invalid,
   disabled,
 }: {
   id: string
@@ -191,6 +192,8 @@ function TextField({
   placeholder: string
   size: FieldSize
   error?: string | null
+  /** Red border without an inline message, when the message is shown elsewhere. */
+  invalid?: boolean
   disabled?: boolean
 }) {
   return (
@@ -204,10 +207,10 @@ function TextField({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        aria-invalid={error ? true : undefined}
+        aria-invalid={error || invalid ? true : undefined}
         disabled={disabled}
         className={`${fieldHeight[size]} w-full rounded-lg border ${disabled ? 'bg-[#f5f5f6]' : 'bg-white'} px-3.5 text-base leading-6 text-[#262527] outline-none placeholder:text-[#ccc] ${
-          error ? 'border-[#d92d20]' : 'border-[#e6e6e7] focus:border-primary'
+          error || invalid ? 'border-[#d92d20]' : 'border-[#e6e6e7] focus:border-primary'
         }`}
       />
       {error && <FieldError>{error}</FieldError>}
@@ -219,7 +222,8 @@ function TextField({
 const columnsClass: Record<1 | 2 | 3, string> = {
   1: 'grid-cols-1',
   2: 'grid-cols-2',
-  3: 'grid-cols-3',
+  // Floor and Apartment are short values; give the joined Suite / Unit field the most room.
+  3: 'grid-cols-[minmax(0,0.7fr)_minmax(0,0.8fr)_minmax(0,1.5fr)]',
 }
 
 export function SpaceFields({
@@ -229,6 +233,7 @@ export function SpaceFields({
   size = 'md',
   columns = 3,
   errors,
+  invalidField,
   suiteUnitNumberRef,
   disabled,
 }: {
@@ -238,11 +243,13 @@ export function SpaceFields({
   size?: FieldSize
   columns?: 1 | 2 | 3
   errors?: SpaceFieldsErrors
+  /** Marks one field red when its message is rendered outside this component. */
+  invalidField?: 'floor' | 'apartment' | 'suiteUnit'
   suiteUnitNumberRef?: RefObject<HTMLInputElement | null>
   /** Read-only display, e.g. when the space is locked to an existing one. */
   disabled?: boolean
 }) {
-  const suiteUnitInvalid = Boolean(errors?.suiteUnit)
+  const suiteUnitInvalid = Boolean(errors?.suiteUnit) || invalidField === 'suiteUnit'
   return (
     <div className={`grid ${columnsClass[columns]} items-start gap-4`}>
       <TextField
@@ -253,6 +260,7 @@ export function SpaceFields({
         placeholder="5"
         size={size}
         error={errors?.floor}
+        invalid={invalidField === 'floor'}
         disabled={disabled}
       />
       <TextField
@@ -263,6 +271,7 @@ export function SpaceFields({
         placeholder="12B"
         size={size}
         error={errors?.apartment}
+        invalid={invalidField === 'apartment'}
         disabled={disabled}
       />
       <div className="flex flex-col gap-1.5">

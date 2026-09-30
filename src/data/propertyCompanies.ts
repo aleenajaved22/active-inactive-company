@@ -53,7 +53,7 @@ export type PropertyCompany = {
 }
 
 const defaultAffiliations: CompanyAffiliationBadge[] = [
-  { label: 'Headquarters', bg: '#fff4d8', text: '#f6a300' },
+  { label: 'Headquarters', bg: '#fff4d8', text: '#b54708' },
   { label: 'Managed', bg: '#e5f6ff', text: '#146dff' },
   { label: 'Owned', bg: '#f4edfd', text: '#9747ff' },
   { label: 'Shared', bg: '#fbeeed', text: '#d9534f' },

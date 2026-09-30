@@ -227,7 +227,7 @@ export function useCompanyActions({
     // Bring a past company back onto the space it used to hold.
     return [
       {
-        label: 'Switch to this company',
+        label: 'Make active',
         onSelect: () => openSwitch(spaceKeyOf(association), association.companyId),
       },
     ]

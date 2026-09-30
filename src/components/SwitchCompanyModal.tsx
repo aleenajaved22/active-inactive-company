@@ -114,6 +114,8 @@ export function SwitchCompanyModal({
   const [pendingSubmit, setPendingSubmit] = useState<SwitchCompanySubmitPayload | null>(null)
   const [revertConfirmOpen, setRevertConfirmOpen] = useState(false)
   const comboboxRef = useRef<HTMLDivElement>(null)
+  const spacesRef = useRef(spaces)
+  spacesRef.current = spaces
 
   const toggleAffiliation = (label: PropertyAffiliation) => {
     setPendingAffiliations((prev) => {
@@ -144,7 +146,8 @@ export function SwitchCompanyModal({
       setCutOffDate('')
       setPendingAffiliations(new Set())
     }
-    setSpaceFields(emptySpaceFields())
+    const prefillSpace = !isEditMode && targetCompanyId ? spacesRef.current.find((space) => space.key === initialSpaceKey) : undefined
+    setSpaceFields(prefillSpace ? lockedSpaceFields(prefillSpace) : emptySpaceFields())
     setSubmitAttempted(false)
     setSpaceMenuOpen(false)
     setQuery('')
@@ -202,10 +205,12 @@ export function SwitchCompanyModal({
   const inputValue = dropdownOpen ? query : pendingId ? (pendingCompany?.name ?? '') : ''
 
   const selectedSpace = spaces.find((space) => space.key === spaceKey)
-  const spaceLocked = isEditMode || Boolean(initialSpaceKey)
+  // Making a past company active starts from its old space, but the fields stay editable.
+  const isMakeActive = !isEditMode && Boolean(targetCompanyId)
+  const spaceLocked = isEditMode || (Boolean(initialSpaceKey) && !isMakeActive)
   // Adding a company reuses the switch flow with no space preselected.
   const isAddMode = !isEditMode && !initialSpaceKey
-  const actionLabel = isEditMode ? 'Edit' : isAddMode ? 'Add company' : 'Switch company'
+  const actionLabel = isEditMode ? 'Edit' : isAddMode ? 'Add company' : isMakeActive ? 'Make active' : 'Switch company'
 
   // When adding, the space comes from the free-form fields; build a key/label from whatever is filled.
   const deriveSpaceKey = (v: SpaceFieldsValue) => {
@@ -223,6 +228,15 @@ export function SwitchCompanyModal({
       .filter(Boolean)
       .join(', ') || 'the selected property occupancy'
   const effectiveSpaceKey = spaceLocked ? spaceKey : deriveSpaceKey(spaceFields)
+  // Making a company active on a space someone already holds is an error; name that company.
+  const occupiedSpace = isMakeActive ? spaces.find((space) => space.key === effectiveSpaceKey && (space.currentCompanyName || space.pendingCompanyName)) : undefined
+  const occupiedField: 'floor' | 'apartment' | 'suiteUnit' =
+    spaceFields.suiteUnitType && spaceFields.suiteUnitNumber.trim() ? 'suiteUnit' : spaceFields.floor.trim() ? 'floor' : 'apartment'
+  const occupiedError = occupiedSpace
+    ? occupiedSpace.currentCompanyName
+      ? `${occupiedSpace.label} already has an active company: ${occupiedSpace.currentCompanyName}.`
+      : `${occupiedSpace.label} already has a pending switch to ${occupiedSpace.pendingCompanyName}.`
+    : null
   const effective = parseMMDDYYYY(effectiveDate)
   const end = cutOffDate.trim() ? parseMMDDYYYY(cutOffDate) : null
   const contractEnd = selectedSpace?.currentContractEndDate
@@ -230,10 +244,10 @@ export function SwitchCompanyModal({
     : null
 
   // Space is optional. Only the locked switch flow warns about an existing pending switch.
-  const spaceError =
-    spaceLocked && selectedSpace && !isEditMode && selectedSpace.pendingCompanyName
+  const spaceError = occupiedError ??
+    (spaceLocked && selectedSpace && !isEditMode && selectedSpace.pendingCompanyName
       ? `${selectedSpace.label} already has a pending switch to ${selectedSpace.pendingCompanyName}. Edit that switch instead.`
-      : null
+      : null)
   const companyError = !pendingId
     ? 'Choose a company.'
     : selectedSpace && pendingId === selectedSpace.currentCompanyId
@@ -445,9 +459,10 @@ export function SwitchCompanyModal({
                 columns={3}
                 value={spaceFields}
                 onChange={setSpaceFields}
+                invalidField={occupiedSpace ? occupiedField : undefined}
               />
             )}
-            {showErrors && spaceError && <ModalFieldError>{spaceError}</ModalFieldError>}
+            {(showErrors || occupiedError) && spaceError && <ModalFieldError>{spaceError}</ModalFieldError>}
           </ModalFormRow>
 
           <ModalFormRow

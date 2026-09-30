@@ -50,7 +50,7 @@ function PendingEffectiveDateInfo({
         type="button"
         aria-label="Pending effective date"
         aria-describedby={visible ? tooltipId : undefined}
-        className="relative size-3.5 shrink-0 text-[#f6a300]"
+        className="relative size-3.5 shrink-0 text-[#b54708]"
         onMouseEnter={() => setVisible(true)}
         onMouseLeave={() => setVisible(false)}
         onFocus={() => setVisible(true)}
@@ -103,8 +103,8 @@ export function PendingStatusBadge({
   // Pill carries only the "Pending" label; the date lives behind the info icon inside it.
   const pillClassName =
     size === 'lg'
-      ? 'inline-flex h-[26px] items-center gap-1 rounded-2xl bg-[#fff4d8] px-2.5 text-xs font-medium leading-[18px] text-[#f6a300]'
-      : 'inline-flex items-center gap-1 rounded-2xl bg-[#fff4d8] px-2 py-0.5 text-xs font-medium leading-[18px] text-[#f6a300]'
+      ? 'inline-flex h-[26px] items-center gap-1 rounded-2xl bg-[#fff4d8] px-2.5 text-xs font-medium leading-[18px] text-[#b54708]'
+      : 'inline-flex items-center gap-1 rounded-2xl bg-[#fff4d8] px-2 py-0.5 text-xs font-medium leading-[18px] text-[#b54708]'
 
   return (
     <span className={`w-fit shrink-0 ${pillClassName}`}>

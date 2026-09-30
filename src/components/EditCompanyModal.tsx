@@ -13,7 +13,7 @@ import {
 } from './switchCompanyTypes'
 
 const affiliationChipStyles: Record<PropertyAffiliation, { bg: string; text: string }> = {
-  Headquarters: { bg: '#fff4d8', text: '#f6a300' },
+  Headquarters: { bg: '#fff4d8', text: '#b54708' },
   Managed: { bg: '#e5f6ff', text: '#146dff' },
   Owned: { bg: '#f4edfd', text: '#9747ff' },
   Shared: { bg: '#fbeeed', text: '#d9534f' },

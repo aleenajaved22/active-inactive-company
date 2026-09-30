@@ -33,7 +33,7 @@ export const affiliationStyles: Record<
   { bg: string; text: string; label: string }
 > = {
   corporate: { bg: 'bg-[#eff8ef]', text: 'text-[#2e964b]', label: 'Coprorate' },
-  'owned-remote': { bg: 'bg-[#fff4d8]', text: 'text-[#f6a300]', label: 'Owned-Remote' },
+  'owned-remote': { bg: 'bg-[#fff4d8]', text: 'text-[#b54708]', label: 'Owned-Remote' },
   tenant: { bg: 'bg-[#fef0c7]', text: 'text-[#f4780b]', label: 'Tenant' },
   'occupied-primary': { bg: 'bg-[#f4edfd]', text: 'text-[#9747ff]', label: 'Occupied-Primary' },
   managed: { bg: 'bg-[#e5f6ff]', text: 'text-[#146dff]', label: 'Managed' },

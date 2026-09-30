@@ -502,7 +502,7 @@ export function CompanyListStatusBadge({
     status === 'Active'
       ? 'bg-[#eff8ef] text-[#2e964b]'
       : status === 'Pending'
-        ? 'bg-[#fff4d8] text-[#f6a300]'
+        ? 'bg-[#fff4d8] text-[#b54708]'
         : 'bg-[#ececed] text-[#5b5b5f]'
 
   const sizeClass =
