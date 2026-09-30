@@ -31,9 +31,9 @@ const stageSteps = ['Discovery', 'Qualified', 'Needs Assessment']
 const DETAILS_MIN_WIDTH = 260
 const DETAILS_MAX_WIDTH = 520
 const DETAILS_DEFAULT_WIDTH = 320
-const COMPANIES_MIN_WIDTH = 220
+const COMPANIES_MIN_WIDTH = 280
 const COMPANIES_MAX_WIDTH = 420
-const COMPANIES_DEFAULT_WIDTH = 260
+const COMPANIES_DEFAULT_WIDTH = 320
 
 const clampWidth = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
 
@@ -92,7 +92,9 @@ export function PropertyDetailPage({
             <div className="flex flex-col gap-5 px-8">
               <div className="flex items-start gap-2">
                 <img alt="" className="size-[50px] shrink-0 rounded object-cover" height={50} src={detailPropertyPhoto} width={50} />
-                <h1 className="min-w-0 flex-1 text-xl font-bold leading-7 text-[#262527]">{title}</h1>
+                <h1 title={title} className="line-clamp-2 min-w-0 flex-1 break-words text-xl font-bold leading-7 text-[#262527]">
+                  {title}
+                </h1>
                 <button
                   type="button"
                   aria-label="Edit property"

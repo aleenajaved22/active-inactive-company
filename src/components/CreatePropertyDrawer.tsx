@@ -374,11 +374,8 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                       />
                     </div>
                   </div>
-                  <div className="relative h-[270px] overflow-hidden rounded-lg border border-[#e6e6e7]">
-                    <img alt="" className="size-full object-cover" src={createPropertyMap} />
-                  </div>
                   <div className="flex flex-col gap-1.5">
-                    <DrawerLabel>Address Notes</DrawerLabel>
+                    <DrawerLabel>Address Description</DrawerLabel>
                     <textarea
                       id="create-property-address-notes"
                       value={addressNotes}
@@ -388,12 +385,15 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                       className="w-full resize-none rounded-lg border border-[#e6e6e7] bg-white px-3.5 py-2.5 text-base leading-6 text-[#262527] outline-none placeholder:text-[#ccc]"
                     />
                   </div>
+                  <div className="relative h-[270px] overflow-hidden rounded-lg border border-[#e6e6e7]">
+                    <img alt="" className="size-full object-cover" src={createPropertyMap} />
+                  </div>
                 </section>
 
                 <SectionDivider />
 
                 <section className="flex flex-col gap-4">
-                  <SectionHeading title="Property Details" description="Where this property came from and how it maps to HubSpot" />
+                  <SectionHeading title="Property Details" />
                   <div className="grid grid-cols-2 items-start gap-6">
                     <div className="flex min-w-0 flex-col gap-1.5">
                       <DrawerLabel>Location / Property Name</DrawerLabel>
@@ -500,6 +500,17 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                       />
                     </div>
                   </div>
+                  <div className="flex w-full max-w-[359px] flex-col gap-1.5">
+                    <DrawerLabelWithInfo required tooltip={CUT_OFF_DATE_HELP} tooltipId="create-property-cut-off-date-help">
+                      Company Association End Date
+                    </DrawerLabelWithInfo>
+                    <ModalDateInput
+                      id="create-property-cut-off-date"
+                      variant="drawer"
+                      value={cutOffDate}
+                      onChange={setCutOffDate}
+                    />
+                  </div>
                   <div ref={spaceFieldRef}>
                     <SpaceFields
                       idPrefix="create-property"
@@ -515,25 +526,14 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                       suiteUnitNumberRef={suiteUnitNumberRef}
                     />
                   </div>
-                  <div className="flex w-full max-w-[359px] flex-col gap-1.5">
-                    <DrawerLabelWithInfo required tooltip={CUT_OFF_DATE_HELP} tooltipId="create-property-cut-off-date-help">
-                      Company Association End Date
-                    </DrawerLabelWithInfo>
-                    <ModalDateInput
-                      id="create-property-cut-off-date"
-                      variant="drawer"
-                      value={cutOffDate}
-                      onChange={setCutOffDate}
-                    />
-                  </div>
                 </section>
 
                 <SectionDivider />
 
-                <section className="flex flex-col gap-4">
-                  <SectionHeading title="Assign to" description="The team member who owns this property" />
+                <section className="flex flex-col gap-6">
+                  <SectionHeading title="Assign to" />
                   <div className="grid grid-cols-2 items-start gap-6">
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-4">
                       <div className="flex flex-col gap-1.5">
                         <DrawerLabel required>Assignee</DrawerLabel>
                         <DrawerSelect

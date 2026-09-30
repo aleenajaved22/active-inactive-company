@@ -54,14 +54,14 @@ export function AddContactModal({ open, onClose }: AddContactModalProps) {
           </button>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-[#e6e6e7]">
-          <div className="grid grid-cols-[180px_1fr] gap-4 bg-[#f9f9fa] px-5 py-2.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-[#86868b]">Contact Title</span>
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-[#86868b]">Users</span>
+        <div>
+          <div className="grid grid-cols-[180px_1fr] gap-4 border-y border-[#e6e6e7] bg-white py-3">
+            <span className="text-xs font-medium leading-[18px] text-[#5b5b5f]">Contact Title</span>
+            <span className="text-xs font-medium leading-[18px] text-[#5b5b5f]">Users</span>
           </div>
-          <div className="divide-y divide-[#f0f0f1]">
+          <div className="divide-y divide-[#e6e6e7] border-b border-[#e6e6e7]">
             {contactRoles.map((role, index) => (
-              <div key={role.label} className="grid grid-cols-[180px_1fr] items-center gap-4 px-5 py-3">
+              <div key={role.label} className="grid grid-cols-[180px_1fr] items-center gap-4 py-3">
                 <span
                   className="w-fit rounded-full px-2.5 py-1 text-xs font-medium leading-[18px]"
                   style={{ backgroundColor: role.bg, color: role.text }}

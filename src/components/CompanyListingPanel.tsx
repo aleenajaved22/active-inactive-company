@@ -123,14 +123,14 @@ export function CompanyListingPanel({
       className="flex shrink-0 flex-col overflow-hidden border-r border-[#e6e6e7] bg-white transition-[width] duration-200 ease-out"
     >
       {collapsed ? (
-        <CollapsedPanelRail label="Companies" onExpand={() => onExpand?.()} badge={String(currentRows.length)} />
+        <CollapsedPanelRail label="Companies" onExpand={() => onExpand?.()} />
       ) : (
       <div className="flex min-h-0 flex-1 flex-col" style={{ width }}>
       {view === 'current' ? (
         <>
-          <div className="shrink-0 border-b border-[#e6e6e7] px-4 py-4">
+          <div className="shrink-0 border-b border-[#e6e6e7] px-6 py-4">
             <div className="flex items-center justify-between gap-2">
-              <h2 className="text-sm font-bold leading-5 text-[#262527]">Companies</h2>
+              <h2 className="text-sm font-bold leading-5 text-[#262527]">Companies ({currentRows.length})</h2>
               {onAddCompany && (
                 <button
                   type="button"
@@ -147,9 +147,9 @@ export function CompanyListingPanel({
             <SearchField value={query} onChange={setQuery} placeholder="Search companies" />
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-3">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto py-3">
             {currentRows.length === 0 ? (
-              <p className="px-1 text-sm leading-5 text-[#86868b]">
+              <p className="px-6 text-sm leading-5 text-[#86868b]">
                 {query.trim() ? 'No active or pending companies match your search.' : 'No active companies.'}
               </p>
             ) : (
@@ -172,7 +172,7 @@ export function CompanyListingPanel({
             <button
               type="button"
               onClick={openInactive}
-              className="flex shrink-0 items-center gap-2 border-t border-[#e6e6e7] px-4 py-3 text-left hover:bg-[#f5f5f6]"
+              className="flex shrink-0 items-center gap-2 border-t border-[#e6e6e7] px-6 py-3 text-left hover:bg-[#f5f5f6]"
             >
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-medium leading-5 text-[#262527]">Inactive companies</span>
@@ -193,7 +193,7 @@ export function CompanyListingPanel({
         </>
       ) : (
         <>
-          <div className="shrink-0 border-b border-[#e6e6e7] px-4 py-4">
+          <div className="shrink-0 border-b border-[#e6e6e7] px-6 py-4">
             <div className="flex items-center gap-1">
               <button
                 type="button"
@@ -218,7 +218,7 @@ export function CompanyListingPanel({
             />
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-2">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-0 py-2">
             {inactivePageRows.length === 0 ? (
               <p className="px-1 py-2 text-sm leading-5 text-[#86868b]">No inactive companies match your search.</p>
             ) : (
@@ -241,7 +241,7 @@ export function CompanyListingPanel({
           {inactiveFiltered.length > INACTIVE_PAGE_SIZE && (
             <nav
               aria-label="Inactive companies pages"
-              className="flex shrink-0 items-center justify-between gap-2 border-t border-[#e6e6e7] px-4 py-2.5"
+              className="flex shrink-0 items-center justify-between gap-2 border-t border-[#e6e6e7] px-6 py-2.5"
             >
               <span className="text-xs leading-[18px] text-[#6a6a70]">
                 {page * INACTIVE_PAGE_SIZE + 1}–{Math.min((page + 1) * INACTIVE_PAGE_SIZE, inactiveFiltered.length)} of{' '}
@@ -330,16 +330,17 @@ function CompanyRow({
     // The select button fills the row; the name link, badge and menu sit above it.
     <li
       data-selected={selected || undefined}
-      className={`relative flex items-center gap-1 rounded-[4px] pr-1 ${selected ? 'bg-blue-50' : 'bg-white hover:bg-[#f5f5f6]'}`}
+      className={`relative flex items-center gap-1 pr-6 ${selected ? 'bg-blue-50' : 'bg-white hover:bg-[#f5f5f6]'}`}
     >
       <button
         type="button"
         aria-current={selected || undefined}
         aria-label={`Show ${company.name}, ${space}`}
         onClick={onSelect}
-        className="absolute inset-0 rounded-[4px]"
+        className="absolute inset-0"
       />
-      <div className="pointer-events-none relative flex min-w-0 flex-1 flex-col gap-0.5 py-2.5 pl-2.5">
+      {selected && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-[3px] bg-primary" />}
+      <div className="pointer-events-none relative flex min-w-0 flex-1 flex-col gap-0.5 py-2.5 pl-6">
         {companyHref ? (
           <a href={companyHref} className={`pointer-events-auto max-w-full self-start hover:text-primary hover:underline ${nameClass}`}>
             {company.name}

@@ -260,7 +260,7 @@ export function EditCompanyModal({
             </p>
           ) : (
             <p className="text-xs leading-[18px] text-[#86868b]">
-              On this date the company is dissociated from this space. Leave empty for no end date.
+              On this date the company is dissociated from this property occupancy. Leave empty for no end date.
             </p>
           )}
         </div>

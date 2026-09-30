@@ -204,7 +204,7 @@ export function SwitchCompanyModal({
       spaceFields.suiteUnitType && spaceFields.suiteUnitNumber.trim() && `${spaceFields.suiteUnitType} ${spaceFields.suiteUnitNumber.trim()}`,
     ]
       .filter(Boolean)
-      .join(', ') || 'the selected space'
+      .join(', ') || 'the selected property occupancy'
   const effectiveSpaceKey = spaceLocked ? spaceKey : deriveSpaceKey(spaceFields)
   const effective = parseMMDDYYYY(effectiveDate)
   const end = cutOffDate.trim() ? parseMMDDYYYY(cutOffDate) : null
@@ -403,7 +403,7 @@ export function SwitchCompanyModal({
           </ModalFormRow>
 
           <ModalFormRow
-            label="Space"
+            label="Property Occupancy"
             description="The floor, apartment, suite or unit for this company. Optional — you can add it later."
           >
             {spaceLocked && selectedSpace ? (

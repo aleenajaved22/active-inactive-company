@@ -7,6 +7,8 @@ export type SpaceAssociation = {
   id: string
   spaceType: SpaceType
   spaceNumber: string
+  /** Floor the suite/unit sits on; shown before it in the label (e.g. "Floor 2, Suite 210"). */
+  floor?: string
   companyId: string
   status: PropertyCompanyListStatus
   effectiveDate: string
@@ -29,6 +31,7 @@ const currentSpaceAssociations: SpaceAssociation[] = [
     id: 'suite-210-target',
     spaceType: 'Suite',
     spaceNumber: '210',
+    floor: '2',
     companyId: 'target',
     status: 'Active',
     effectiveDate: '06/01/2025',
@@ -39,6 +42,7 @@ const currentSpaceAssociations: SpaceAssociation[] = [
     id: 'unit-12-walmart',
     spaceType: 'Unit',
     spaceNumber: '12',
+    floor: '1',
     companyId: 'walmart',
     status: 'Active',
     effectiveDate: '03/15/2024',
@@ -50,6 +54,7 @@ const currentSpaceAssociations: SpaceAssociation[] = [
     id: 'suite-104-starbucks',
     spaceType: 'Suite',
     spaceNumber: '104',
+    floor: '1',
     companyId: 'starbucks',
     status: 'Pending',
     effectiveDate: '11/01/2026',
@@ -79,12 +84,12 @@ const currentSpaceAssociations: SpaceAssociation[] = [
 ]
 
 const pastCompanyIds = ['cvs', 'walgreens', 'amazon', 'mcdonalds', 'starbucks', 'kroger', 'target', 'walmart']
-const pastSpaces: Pick<SpaceAssociation, 'spaceType' | 'spaceNumber'>[] = [
+const pastSpaces: Pick<SpaceAssociation, 'spaceType' | 'spaceNumber' | 'floor'>[] = [
   { spaceType: 'Floor', spaceNumber: '5' },
-  { spaceType: 'Suite', spaceNumber: '210' },
-  { spaceType: 'Unit', spaceNumber: '12' },
+  { spaceType: 'Suite', spaceNumber: '210', floor: '2' },
+  { spaceType: 'Unit', spaceNumber: '12', floor: '1' },
   { spaceType: 'Floor', spaceNumber: '3' },
-  { spaceType: 'Suite', spaceNumber: '104' },
+  { spaceType: 'Suite', spaceNumber: '104', floor: '1' },
 ]
 
 /** Prototype history: enough past companies to exercise the inactive list's pagination. */
@@ -107,8 +112,10 @@ export const initialSpaceAssociations: SpaceAssociation[] = [...currentSpaceAsso
 export const spaceKeyOf = (association: Pick<SpaceAssociation, 'spaceType' | 'spaceNumber'>) =>
   `${association.spaceType}|${association.spaceNumber}`
 
-export const spaceLabelOf = (association: Pick<SpaceAssociation, 'spaceType' | 'spaceNumber'>) =>
-  `${association.spaceType} ${association.spaceNumber}`
+export const spaceLabelOf = (association: Pick<SpaceAssociation, 'spaceType' | 'spaceNumber' | 'floor'>) =>
+  association.floor && association.spaceType !== 'Floor'
+    ? `Floor ${association.floor}, ${association.spaceType} ${association.spaceNumber}`
+    : `${association.spaceType} ${association.spaceNumber}`
 
 export function parseMMDDYYYY(value: string): Date | null {
   const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(value.trim())

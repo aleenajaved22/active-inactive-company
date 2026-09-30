@@ -538,7 +538,7 @@ export function PropertyLeadActivities({
                 type="button"
                 onClick={() => setActiveTab(tab)}
                 className={`-mb-px shrink-0 border-b-2 px-1 pb-3.5 text-sm leading-5 ${
-                  active ? 'border-primary font-normal text-primary' : 'border-transparent text-[#5b5b5f]'
+                  active ? 'border-primary font-medium text-primary' : 'border-transparent text-[#5b5b5f]'
                 }`}
               >
                 {tab}

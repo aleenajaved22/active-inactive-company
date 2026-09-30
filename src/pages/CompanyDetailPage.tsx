@@ -23,7 +23,7 @@ export function CompanyDetailPage({
   const name = parentName ?? getPropertyCompany(companyId ?? '').name
   const description = parentName
     ? 'The parent company page is coming soon. It will show its details and the companies it owns.'
-    : "The company detail page is coming soon. It will show this company's details, the spaces it holds and its deals."
+    : "The company detail page is coming soon. It will show this company's details, the property occupancies it holds and its deals."
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-white">

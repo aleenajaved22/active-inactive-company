@@ -100,15 +100,15 @@ export function PendingStatusBadge({
   tooltipId: string
   size?: 'sm' | 'lg'
 }) {
-  // Pill carries only the "Pending" label; the date lives behind the info icon beside it.
+  // Pill carries only the "Pending" label; the date lives behind the info icon inside it.
   const pillClassName =
     size === 'lg'
-      ? 'inline-flex h-[26px] items-center rounded-2xl bg-[#fff4d8] px-2.5 text-xs font-medium leading-[18px] text-[#f6a300]'
-      : 'inline-flex items-center rounded-2xl bg-[#fff4d8] px-2 py-0.5 text-xs font-medium leading-[18px] text-[#f6a300]'
+      ? 'inline-flex h-[26px] items-center gap-1 rounded-2xl bg-[#fff4d8] px-2.5 text-xs font-medium leading-[18px] text-[#f6a300]'
+      : 'inline-flex items-center gap-1 rounded-2xl bg-[#fff4d8] px-2 py-0.5 text-xs font-medium leading-[18px] text-[#f6a300]'
 
   return (
-    <span className="inline-flex w-fit shrink-0 items-center gap-1">
-      <span className={pillClassName}>Pending</span>
+    <span className={`w-fit shrink-0 ${pillClassName}`}>
+      Pending
       <PendingEffectiveDateInfo effectiveDate={effectiveDate} tooltipId={tooltipId} />
     </span>
   )

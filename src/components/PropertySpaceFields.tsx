@@ -117,7 +117,7 @@ function SuiteUnitTypeMenu({
         aria-expanded={open}
         aria-controls={`${id}-listbox`}
         aria-activedescendant={open ? `${id}-option-${activeIndex}` : undefined}
-        aria-label={value ? `Space type: ${value}` : 'Space type'}
+        aria-label={value ? `Property occupancy type: ${value}` : 'Property occupancy type'}
         aria-invalid={invalid || undefined}
         onClick={() => (open ? setOpen(false) : openMenu())}
         onKeyDown={onKeyDown}
@@ -138,7 +138,7 @@ function SuiteUnitTypeMenu({
         <ul
           id={`${id}-listbox`}
           role="listbox"
-          aria-label="Space type"
+          aria-label="Property occupancy type"
           className="absolute -left-px top-full z-10 mt-1 w-[calc(100%+2px)] overflow-y-auto rounded-lg border border-[#e6e6e7] bg-white py-1 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
         >
           {suiteUnitTypes.map((option, index) => {

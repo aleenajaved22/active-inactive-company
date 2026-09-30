@@ -95,7 +95,7 @@ export function PropertyDetailCompanyHeader({
         <div className="flex min-w-0 flex-1 items-center gap-6">
           <div className="flex min-w-[180px] flex-1 items-center gap-3">
             <CompanySitePlaceholderIcon className="size-12 shrink-0" />
-            <div className="flex min-w-0 flex-1 flex-col gap-1 overflow-hidden">
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
               {companyHref ? (
                 <a
                   href={companyHref}
@@ -117,7 +117,7 @@ export function PropertyDetailCompanyHeader({
               ) : (
                 <p className="truncate text-xl font-bold leading-7 text-[#262527]">{companyName}</p>
               )}
-              <p className="flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap text-xs leading-[18px] text-[#86868b]">
+              <p className="flex min-w-0 items-center gap-1 whitespace-nowrap text-xs leading-[18px] text-[#86868b]">
                 {spaceLabel && (
                   <>
                     <span className="shrink-0 font-medium text-[#262527]">{spaceLabel}</span>
@@ -128,19 +128,23 @@ export function PropertyDetailCompanyHeader({
                 )}
                 <button
                   type="button"
-                  title={ownerName}
+                  title={`Owner: ${ownerName}`}
                   aria-label={`Owner: ${ownerName}`}
                   onClick={() => window.alert(`Owner: ${ownerName} (prototype)`)}
-                  className="group/owner inline-flex shrink-0 items-center gap-1 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  className="group/owner relative inline-flex shrink-0 items-center gap-1 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 >
                   <img
                     alt=""
                     className="size-[18px] shrink-0 rounded-full object-cover ring-primary/40 transition group-hover/owner:ring-2"
                     src={ownerAvatarSrc(ownerName)}
                   />
-                  {/* Owner name is hidden until hover/focus, then revealed inline. */}
-                  <span className="max-w-0 overflow-hidden whitespace-nowrap text-[#262527] opacity-0 transition-all duration-150 group-hover/owner:max-w-[160px] group-hover/owner:opacity-100 group-focus-visible/owner:max-w-[160px] group-focus-visible/owner:opacity-100">
-                    {ownerName}
+                  <span className="text-[#262527]">{ownerName}</span>
+                  {/* Role label appears below on hover/focus. */}
+                  <span
+                    role="tooltip"
+                    className="pointer-events-none absolute left-0 top-full z-10 mt-1 rounded bg-[#262527] px-2 py-1 text-xs leading-4 text-white opacity-0 transition-opacity duration-150 group-hover/owner:opacity-100 group-focus-visible/owner:opacity-100"
+                  >
+                    Owner
                   </span>
                 </button>
               </p>

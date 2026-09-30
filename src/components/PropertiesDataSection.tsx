@@ -256,7 +256,7 @@ export function PropertiesDataSection({ onSelectProperty }: PropertiesDataSectio
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto px-8">
-        <div className="inline-flex min-w-full shadow-[1px_0_1px_rgba(0,0,0,0.12)]">
+        <div className="inline-flex min-w-full">
           <table className="min-w-full border-collapse bg-white text-left">
             <thead>
               <tr className="border-t border-[#e6e6e7]">
