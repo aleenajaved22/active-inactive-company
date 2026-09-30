@@ -2,7 +2,11 @@ import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 
 import { createPortal } from 'react-dom'
 import modalClose from '../assets/modal-close.svg'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
+import tableAlertCircleWarn from '../assets/table-alert-circle-warn.svg'
+import { formatShortDate } from '../data/dateFormat'
 import type { PropertyCompany } from '../data/propertyCompanies'
+import { parseMMDDYYYY } from '../data/propertySpaceAssociations'
+import { ModalDateInput } from './ModalDateInput'
 import {
   propertyAffiliationOptions,
   type PropertyAffiliation,
@@ -147,23 +151,54 @@ export type EditCompanyModalProps = {
   open: boolean
   company: PropertyCompany | null
   initialAffiliations: PropertyAffiliation[]
+  initialEndDate: string
+  /** The association's start; the end date has to come after it. */
+  effectiveDate: string
+  /** A pending company taking over the same space; the end date must come before it starts. */
+  nextCompany?: { name: string; effectiveDate: string }
   onClose: () => void
-  onSave: (affiliations: PropertyAffiliation[]) => void
+  onSave: (values: { affiliations: PropertyAffiliation[]; endDate: string }) => void
 }
 
 export function EditCompanyModal({
   open,
   company,
   initialAffiliations,
+  initialEndDate,
+  effectiveDate,
+  nextCompany,
   onClose,
   onSave,
 }: EditCompanyModalProps) {
   const [affiliations, setAffiliations] = useState<Set<PropertyAffiliation>>(new Set())
+  const [endDate, setEndDate] = useState('')
+  const [submitAttempted, setSubmitAttempted] = useState(false)
 
   useEffect(() => {
     if (!open) return
     setAffiliations(new Set(initialAffiliations))
-  }, [open, initialAffiliations])
+    setEndDate(initialEndDate)
+    setSubmitAttempted(false)
+  }, [open, initialAffiliations, initialEndDate])
+
+  // Optional, but when set it must be a real date after the association starts.
+  const end = endDate.trim() ? parseMMDDYYYY(endDate) : null
+  const start = parseMMDDYYYY(effectiveDate)
+  const nextStart = nextCompany ? parseMMDDYYYY(nextCompany.effectiveDate) : null
+  const endDateError =
+    endDate.trim() && !end
+      ? 'Enter a valid date (MM/DD/YYYY).'
+      : end && start && end <= start
+        ? `End Date must be after the Effective Date (${formatShortDate(effectiveDate)}).`
+        : nextCompany && nextStart && (!end || end >= nextStart)
+          ? `End Date must be before ${nextCompany.name} starts on ${formatShortDate(nextCompany.effectiveDate)}.`
+          : null
+
+  const handleSave = () => {
+    setSubmitAttempted(true)
+    if (endDateError) return
+    onSave({ affiliations: [...affiliations], endDate: endDate.trim() })
+  }
 
   useEffect(() => {
     if (!open) return
@@ -190,7 +225,9 @@ export function EditCompanyModal({
             <h2 id="edit-company-title" className="text-xl font-bold leading-7 text-[#262527]">
               Edit Company
             </h2>
-            <p className="mt-1 text-sm leading-5 text-[#6a6a70]">You can edit contact against different labels</p>
+            <p className="mt-1 text-sm leading-5 text-[#6a6a70]">
+              Update this company&apos;s affiliation and association end date
+            </p>
           </div>
           <button type="button" aria-label="Close" onClick={onClose} className="relative size-6 shrink-0">
             <img alt="" className="absolute inset-0 block size-full max-w-none" src={modalClose} />
@@ -209,6 +246,25 @@ export function EditCompanyModal({
           <AffiliationChipSelect value={affiliations} onChange={setAffiliations} />
         </div>
 
+        <div className="mt-4 flex flex-col gap-1.5">
+          <label htmlFor="edit-company-end-date" className="text-sm font-medium leading-5 text-[#86868b]">
+            Company Association End Date
+          </label>
+          <ModalDateInput id="edit-company-end-date" value={endDate} onChange={setEndDate} />
+          {submitAttempted && endDateError ? (
+            <p className="flex items-start gap-1.5 text-sm leading-5 text-[#b32318]">
+              <span className="relative mt-0.5 size-4 shrink-0" aria-hidden>
+                <img alt="" className="absolute inset-0 block size-full max-w-none" src={tableAlertCircleWarn} />
+              </span>
+              <span>{endDateError}</span>
+            </p>
+          ) : (
+            <p className="text-xs leading-[18px] text-[#86868b]">
+              On this date the company is dissociated from this space. Leave empty for no end date.
+            </p>
+          )}
+        </div>
+
         <div className="mt-6 flex justify-end gap-3 border-t border-[#e6e6e7] pt-4">
           <button
             type="button"
@@ -219,7 +275,7 @@ export function EditCompanyModal({
           </button>
           <button
             type="button"
-            onClick={() => onSave([...affiliations])}
+            onClick={handleSave}
             className="rounded-lg border border-primary bg-primary px-3.5 py-2 text-sm leading-5 text-white shadow-[0px_1px_2px_0px_rgba(16,24,40,0.05)]"
           >
             Save

@@ -117,6 +117,15 @@ export function useCompanyActions({
   const spaceOptions = useMemo(() => buildSpaceOptions(associations), [associations])
   const editingPending = associations.find((item) => item.id === editPendingId)
   const editingAffiliations = associations.find((item) => item.id === editAffiliationsId)
+  const editingNextPending =
+    editingAffiliations?.status === 'Active'
+      ? associations.find(
+          (item) => item.status === 'Pending' && spaceKeyOf(item) === spaceKeyOf(editingAffiliations),
+        )
+      : undefined
+  const editingNextCompany = editingNextPending
+    ? { name: getPropertyCompany(editingNextPending.companyId).name, effectiveDate: editingNextPending.effectiveDate }
+    : undefined
 
   const pendingInitialForm = useMemo<SwitchCompanyFormValues | undefined>(
     () =>
@@ -196,10 +205,10 @@ export function useCompanyActions({
     if (fallback) onSelectAssociation(fallback.id)
   }
 
-  const handleSaveAffiliations = (affiliations: PropertyAffiliation[]) => {
+  const handleSaveCompany = ({ affiliations, endDate }: { affiliations: PropertyAffiliation[]; endDate: string }) => {
     if (!editAffiliationsId) return
     onAssociationsChange(
-      associations.map((item) => (item.id === editAffiliationsId ? { ...item, affiliations } : item)),
+      associations.map((item) => (item.id === editAffiliationsId ? { ...item, affiliations, endDate } : item)),
     )
     setEditAffiliationsId(null)
   }
@@ -208,7 +217,7 @@ export function useCompanyActions({
     if (association.status === 'Active') {
       return [
         { label: 'Switch company', onSelect: () => openSwitch(spaceKeyOf(association)) },
-        { label: 'Edit affiliation', onSelect: () => setEditAffiliationsId(association.id) },
+        { label: 'Edit company', onSelect: () => setEditAffiliationsId(association.id) },
       ]
     }
     if (association.status === 'Pending') {
@@ -246,8 +255,11 @@ export function useCompanyActions({
         open={editingAffiliations !== undefined}
         company={editingAffiliations ? getPropertyCompany(editingAffiliations.companyId) : null}
         initialAffiliations={editingAffiliations?.affiliations ?? []}
+        initialEndDate={editingAffiliations?.endDate ?? ''}
+        effectiveDate={editingAffiliations?.effectiveDate ?? ''}
+        nextCompany={editingNextCompany}
         onClose={() => setEditAffiliationsId(null)}
-        onSave={handleSaveAffiliations}
+        onSave={handleSaveCompany}
       />
     </>
   )
