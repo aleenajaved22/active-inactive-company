@@ -6,6 +6,7 @@ import detailPlus from '../assets/detail-plus.svg'
 import tableAlertCircleWarn from '../assets/table-alert-circle-warn.svg'
 import { CreateCompanyModal } from './CreateCompanyModal'
 import { ModalDateInput } from './ModalDateInput'
+import { formatShortDate } from '../data/dateFormat'
 import { propertyCompanies } from '../data/propertyCompanies'
 import { parseMMDDYYYY } from '../data/propertySpaceAssociations'
 import {
@@ -293,7 +294,7 @@ export function SwitchCompanyModal({
     : !effective
       ? 'Enter a valid date (MM/DD/YYYY).'
       : contractEnd && effective <= contractEnd
-        ? `Effective Date must be after ${selectedSpace?.currentCompanyName}'s contract ends on ${selectedSpace?.currentContractEndDate}.`
+        ? `Effective Date must be after ${selectedSpace?.currentCompanyName}'s contract ends on ${formatShortDate(selectedSpace?.currentContractEndDate ?? '')}.`
         : null
   const endDateError =
     cutOffDate.trim() && !end
@@ -658,7 +659,7 @@ export function SwitchCompanyModal({
                 <p className="mt-2 text-sm leading-5 text-[#6a6a70]">
                   <span className="font-medium text-[#262527]">{confirmTargetCompany?.name}</span> will take over{' '}
                   <span className="font-medium text-[#262527]">{selectedSpace?.label}</span> on{' '}
-                  {pendingSubmit.effectiveDate}.
+                  {formatShortDate(pendingSubmit.effectiveDate)}.
                   {selectedSpace?.currentCompanyName ? ` ${selectedSpace.currentCompanyName} stays active until then.` : ''}{' '}
                   Do you want to continue?
                 </p>

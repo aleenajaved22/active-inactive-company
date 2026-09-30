@@ -6,6 +6,7 @@ import detailEdit2 from '../assets/detail-edit-2.svg'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
 import tablePlus from '../assets/table-plus.svg'
 import tableSearch from '../assets/table-search.svg'
+import { formatShortDate } from '../data/dateFormat'
 import type { CompanyDealCard, DealFollowUp, PropertyCompany } from '../data/propertyCompanies'
 import { mainPanelLinkClass, mainPanelPrimaryButtonClass } from './mainPanelReadOnlyStyles'
 
@@ -141,7 +142,7 @@ function DealFollowUpIndicator({ dealName, followUp }: { dealName: string; follo
       <button
         ref={triggerRef}
         type="button"
-        aria-label={`Follow-up on ${followUp.date}`}
+        aria-label={`Follow-up on ${formatShortDate(followUp.date)}`}
         aria-describedby={visible ? tooltipId : undefined}
         onMouseEnter={() => setVisible(true)}
         onMouseLeave={() => setVisible(false)}
@@ -162,7 +163,7 @@ function DealFollowUpIndicator({ dealName, followUp }: { dealName: string; follo
             className="pointer-events-none w-max max-w-[280px] -translate-x-1/2 -translate-y-full rounded-lg bg-[#262527] px-3 py-2 text-sm leading-5 text-white shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
           >
             <p className="font-medium">
-              Follow-up • {followUp.date}
+              Follow-up • {formatShortDate(followUp.date)}
             </p>
             <p className="text-xs leading-[18px] text-[#e6e6e7]">{followUp.time}</p>
             <p className="mt-1 whitespace-normal text-xs leading-[18px] text-[#e6e6e7]">{followUp.note}</p>
@@ -228,7 +229,7 @@ export function DealsTabPanel({ company, readOnly = false }: DealsTabPanelProps)
                   </span>
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 text-[#86868b]">{deal.amount}</td>
-                <td className="whitespace-nowrap px-4 py-3 text-[#86868b]">{deal.date}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-[#86868b]">{formatShortDate(deal.date)}</td>
                 <td className="px-4 py-3">
                   <span className={`inline-flex rounded-2xl px-2 py-0.5 text-xs font-medium ${stageBadgeClass(deal.stage)}`}>
                     {deal.stage}

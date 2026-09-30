@@ -5,10 +5,13 @@ import type { CompanyAffiliationBadge } from '../data/propertyDetailSidePanel'
 import type { PropertyCompanyListStatus } from '../data/propertyCompanies'
 import { PendingStatusBadge } from './PendingStatusBadge'
 import { CompanyListStatusBadge } from './PropertyLeadActivities'
+import { ActionMenu, type ActionMenuItem } from './companyActions'
 import type { ReactNode } from 'react'
 
 type PropertyDetailCompanyHeaderProps = {
   companyName: string
+  /** Same ⋮ actions as this company's row in the Companies panel. */
+  actions?: ActionMenuItem[]
   /** Opens the company detail page when set. */
   companyHref?: string
   /** The suite, unit or floor this company holds on the property. */
@@ -75,6 +78,7 @@ function CompanySitePlaceholderIcon({ className }: { className?: string }) {
 
 export function PropertyDetailCompanyHeader({
   companyName,
+  actions = [],
   companyHref,
   spaceLabel,
   listStatus,
@@ -183,17 +187,22 @@ export function PropertyDetailCompanyHeader({
               </div>
             </HeaderLabeledBlock>
             <div className="w-px shrink-0 self-stretch bg-[#e6e6e7]" aria-hidden />
-            <HeaderLabeledBlock label="Association Status">
-              {listStatus === 'Pending' && pendingEffectiveDate !== undefined ? (
-                <PendingStatusBadge
-                  size="lg"
-                  effectiveDate={pendingEffectiveDate}
-                  tooltipId={pendingTooltipId ?? 'pending-effective-date-header'}
-                />
-              ) : (
-                <CompanyListStatusBadge status={listStatus} size="lg" />
-              )}
-            </HeaderLabeledBlock>
+            <div className="flex shrink-0 items-start gap-1">
+              <HeaderLabeledBlock label="Association Status">
+                {listStatus === 'Pending' && pendingEffectiveDate !== undefined ? (
+                  <PendingStatusBadge
+                    size="lg"
+                    effectiveDate={pendingEffectiveDate}
+                    tooltipId={pendingTooltipId ?? 'pending-effective-date-header'}
+                  />
+                ) : (
+                  <CompanyListStatusBadge status={listStatus} size="lg" />
+                )}
+              </HeaderLabeledBlock>
+              <div className="flex h-[48px] items-end">
+                <ActionMenu label={`Actions for ${companyName}`} items={actions} />
+              </div>
+            </div>
           </div>
         </div>
       </div>

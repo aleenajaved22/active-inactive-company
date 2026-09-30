@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
+import { formatShortDate } from '../data/dateFormat'
 
 function PendingEffectiveDateInfo({
   effectiveDate,
@@ -11,7 +12,7 @@ function PendingEffectiveDateInfo({
   const triggerRef = useRef<HTMLButtonElement>(null)
   const [visible, setVisible] = useState(false)
   const [style, setStyle] = useState<CSSProperties>({})
-  const displayDate = effectiveDate.trim() || '—'
+  const displayDate = effectiveDate.trim() ? formatShortDate(effectiveDate) : '—'
 
   useLayoutEffect(() => {
     if (!visible || !triggerRef.current) return

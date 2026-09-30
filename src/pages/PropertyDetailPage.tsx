@@ -11,6 +11,7 @@ import detailStageLast from '../assets/detail-stage-last.svg'
 import { AppHeader } from '../components/AppHeader'
 import { CompaniesPanelToggle } from '../components/CompaniesPanelToggle'
 import { CompanyListingPanel } from '../components/CompanyListingPanel'
+import { useCompanyActions } from '../components/companyActions'
 import { EditDealDrawer } from '../components/EditDealDrawer'
 import { PropertyDetailSideSections } from '../components/PropertyDetailSideSections'
 import { PropertyDetailCompanyHeader } from '../components/PropertyDetailCompanyHeader'
@@ -47,6 +48,13 @@ export function PropertyDetailPage({
   const [selectedAssociationId, setSelectedAssociationId] = useState(initialSpaceAssociations[0].id)
   const selectedAssociation =
     associations.find((item) => item.id === selectedAssociationId) ?? associations[0]
+  const { menuItemsFor, dialogs: companyDialogs } = useCompanyActions({
+    associations,
+    onAssociationsChange: setAssociations,
+    onSelectAssociation: setSelectedAssociationId,
+    propertyModal,
+    onPropertyModalChange,
+  })
   const listStatus = selectedAssociation.status
   const selectedCompany = getPropertyCompany(selectedAssociation.companyId)
   const [editDealOpen, setEditDealOpen] = useState(false)
@@ -116,11 +124,9 @@ export function PropertyDetailPage({
 
           <CompanyListingPanel
             associations={associations}
-            onAssociationsChange={setAssociations}
             selectedAssociationId={selectedAssociation.id}
             onSelectAssociation={setSelectedAssociationId}
-            propertyModal={propertyModal}
-            onPropertyModalChange={onPropertyModalChange}
+            menuItemsFor={menuItemsFor}
             collapsed={!companiesPanelOpen}
             companyHref={companyHref}
           />
@@ -150,6 +156,7 @@ export function PropertyDetailPage({
             ) : null}
             <PropertyDetailCompanyHeader
               companyName={selectedCompany.name}
+              actions={menuItemsFor(selectedAssociation)}
               companyHref={companyHref?.(selectedCompany.id)}
               spaceLabel={spaceLabelOf(selectedAssociation)}
               listStatus={listStatus}
@@ -231,6 +238,7 @@ export function PropertyDetailPage({
         </main>
       </div>
       <EditDealDrawer open={editDealOpen} onClose={() => setEditDealOpen(false)} />
+      {companyDialogs}
     </div>
   )
 }

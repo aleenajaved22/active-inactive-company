@@ -1,31 +1,21 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
-import detailCompanyMenu from '../assets/detail-company-menu.svg'
 import tableSearch from '../assets/table-search.svg'
 import { getPropertyCompany, type PropertyCompanyListStatus } from '../data/propertyCompanies'
 import {
   parseMMDDYYYY,
-  spaceKeyOf,
   spaceLabelOf,
   type SpaceAssociation,
 } from '../data/propertySpaceAssociations'
-import type { PropertyModal } from '../prototype/screenLinks'
-import { EditCompanyModal } from './EditCompanyModal'
-import { SwitchCompanyModal } from './SwitchCompanyModal'
-import type {
-  PropertyAffiliation,
-  SwitchCompanyFormValues,
-  SwitchCompanySubmitPayload,
-  SwitchSpaceOption,
-} from './switchCompanyTypes'
+import { formatShortDate } from '../data/dateFormat'
+import { ActionMenu, type ActionMenuItem } from './companyActions'
 
 type CompanyListingPanelProps = {
   associations: SpaceAssociation[]
-  onAssociationsChange: (next: SpaceAssociation[]) => void
   selectedAssociationId: string
   onSelectAssociation: (id: string) => void
-  propertyModal?: PropertyModal
-  onPropertyModalChange?: (modal?: PropertyModal) => void
+  /** Row ⋮ actions, shared with the company header. */
+  menuItemsFor: (association: SpaceAssociation) => ActionMenuItem[]
   /** Hides the panel while keeping its search, view and page state. */
   collapsed?: boolean
   companyHref?: (companyId: string) => string
@@ -36,7 +26,7 @@ const INACTIVE_PAGE_SIZE = 8
 
 // Row separators, hidden around the selected row so its rounded highlight stands alone.
 const rowListClass =
-  'flex flex-col divide-y divide-[#e6e6e7] [&>li[data-selected]]:border-t-transparent [&>li[data-selected]+li]:border-t-transparent'
+  'flex flex-col divide-y divide-[#e6e6e7] [&>li[data-selected]]:border-b-transparent [&>li:has(+li[data-selected])]:border-b-transparent'
 
 const matchesQuery = (association: SpaceAssociation, query: string) => {
   const needle = query.trim().toLowerCase()
@@ -78,12 +68,11 @@ function StatusBadge({ status }: { status: PropertyCompanyListStatus }) {
 
 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-/** "Nov 1" this year, "Jan 2027" otherwise, so the badge stays short. */
-function shortStartDate(value: string) {
+/** "Nov 1, 2026" for the pending badge. */
+function badgeStartDate(value: string) {
   const date = parseMMDDYYYY(value)
   if (!date) return value
-  const month = monthNames[date.getMonth()]
-  return date.getFullYear() === new Date().getFullYear() ? `${month} ${date.getDate()}` : `${month} ${date.getFullYear()}`
+  return `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
 }
 
 /** Pending badge showing when the company moves in; the tooltip gives the full date. */
@@ -110,9 +99,11 @@ function PendingBadge({ id, effectiveDate }: { id: string; effectiveDate: string
         onMouseLeave={() => setVisible(false)}
         onFocus={() => setVisible(true)}
         onBlur={() => setVisible(false)}
-        className="shrink-0 cursor-default whitespace-nowrap rounded-2xl bg-[#fff4d8] px-2 py-0.5 text-xs font-medium leading-[18px] text-[#b54708]"
+        className="flex shrink-0 cursor-default flex-col items-center rounded-lg bg-[#fff4d8] px-2 py-1 text-center text-xs font-medium leading-4 text-[#b54708]"
       >
-        Starts {shortStartDate(effectiveDate)}
+        {/* Stacked so the full date fits beside the company name. */}
+        <span className="text-[11px] font-normal">Starts</span>
+        <span className="whitespace-nowrap">{badgeStartDate(effectiveDate)}</span>
       </button>
       {visible &&
         createPortal(
@@ -122,7 +113,7 @@ function PendingBadge({ id, effectiveDate }: { id: string; effectiveDate: string
             style={style}
             className="pointer-events-none w-max -translate-x-1/2 -translate-y-full rounded-lg bg-[#262527] px-3 py-2 text-xs leading-[18px] text-white shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
           >
-            Pending · Starts <span className="font-medium">{effectiveDate}</span>
+            Pending · Starts <span className="font-medium">{formatShortDate(effectiveDate)}</span>
             <span
               aria-hidden
               className="absolute left-1/2 top-full size-2 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-[#262527]"
@@ -134,85 +125,11 @@ function PendingBadge({ id, effectiveDate }: { id: string; effectiveDate: string
   )
 }
 
-type RowMenuItem = { label: string; onSelect: () => void }
-
-function RowMenu({ label, items }: { label: string; items: RowMenuItem[] }) {
-  const rootRef = useRef<HTMLDivElement>(null)
-  const [open, setOpen] = useState(false)
-
-  useEffect(() => {
-    if (!open) return
-    const closeOnOutside = (event: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', closeOnOutside)
-    return () => document.removeEventListener('mousedown', closeOnOutside)
-  }, [open])
-
-  return (
-    <div ref={rootRef} className="relative shrink-0">
-      <button
-        type="button"
-        aria-label={label}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        onClick={() => setOpen((prev) => !prev)}
-        className="flex size-7 items-center justify-center rounded-lg hover:bg-[#e6e6e7]/60"
-      >
-        <img alt="" className="size-4 max-w-none" src={detailCompanyMenu} />
-      </button>
-      {open && (
-        <div
-          role="menu"
-          className="absolute right-0 top-full z-20 mt-1 min-w-[160px] rounded-lg border border-[#e6e6e7] bg-white py-1 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
-        >
-          {items.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                setOpen(false)
-                item.onSelect()
-              }}
-              className="w-full px-3 py-2 text-left text-sm leading-5 text-[#262527] hover:bg-[#f5f5f6]"
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-/** Builds one switch target per space, with its current and pending company. */
-function buildSpaceOptions(associations: SpaceAssociation[]): SwitchSpaceOption[] {
-  const options = new Map<string, SwitchSpaceOption>()
-  for (const association of associations) {
-    const key = spaceKeyOf(association)
-    const option = options.get(key) ?? { key, label: spaceLabelOf(association) }
-    const companyName = getPropertyCompany(association.companyId).name
-    if (association.status === 'Active') {
-      option.currentCompanyId = association.companyId
-      option.currentCompanyName = companyName
-      option.currentContractEndDate = association.endDate || undefined
-    } else if (association.status === 'Pending') {
-      option.pendingAssociationId = association.id
-      option.pendingCompanyName = companyName
-    }
-    options.set(key, option)
-  }
-  return [...options.values()].sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }))
-}
-
 export function CompanyListingPanel({
   associations,
-  onAssociationsChange,
   selectedAssociationId,
   onSelectAssociation,
-  propertyModal,
-  onPropertyModalChange,
+  menuItemsFor,
   collapsed = false,
   companyHref,
 }: CompanyListingPanelProps) {
@@ -220,29 +137,6 @@ export function CompanyListingPanel({
   const [view, setView] = useState<'current' | 'inactive'>('current')
   const [inactiveQuery, setInactiveQuery] = useState('')
   const [inactivePage, setInactivePage] = useState(0)
-  const [switchSpaceKey, setSwitchSpaceKey] = useState<string | undefined>()
-  const [switchTargetCompanyId, setSwitchTargetCompanyId] = useState<string | undefined>()
-  const [editPendingId, setEditPendingId] = useState<string | null>(null)
-  const [editAffiliationsId, setEditAffiliationsId] = useState<string | null>(null)
-
-  const spaceOptions = useMemo(() => buildSpaceOptions(associations), [associations])
-  const editingPending = associations.find((item) => item.id === editPendingId)
-  const editingAffiliations = associations.find((item) => item.id === editAffiliationsId)
-
-  const pendingInitialForm = useMemo<SwitchCompanyFormValues | undefined>(
-    () =>
-      editingPending
-        ? {
-            spaceKey: spaceKeyOf(editingPending),
-            companyId: editingPending.companyId,
-            effectiveDate: editingPending.effectiveDate,
-            cutOffDate: editingPending.endDate,
-            affiliations: editingPending.affiliations,
-          }
-        : undefined,
-    [editingPending],
-  )
-
   // One list: active companies first, then pending switches (each marked by its badge).
   const currentRows = useMemo(
     () =>
@@ -268,78 +162,6 @@ export function CompanyListingPanel({
     setView('inactive')
   }
 
-  const switchModalOpen = propertyModal !== undefined || editPendingId !== null
-
-  const openSwitch = (spaceKey?: string, targetCompanyId?: string) => {
-    setSwitchSpaceKey(spaceKey)
-    setSwitchTargetCompanyId(targetCompanyId)
-    onPropertyModalChange?.('switch-company')
-  }
-
-  const closeSwitch = () => {
-    setEditPendingId(null)
-    setSwitchSpaceKey(undefined)
-    setSwitchTargetCompanyId(undefined)
-    onPropertyModalChange?.(undefined)
-  }
-
-  const handleConfirm = (payload: SwitchCompanySubmitPayload) => {
-    if (payload.mode === 'edit' && payload.associationId) {
-      onAssociationsChange(
-        associations.map((item) =>
-          item.id === payload.associationId
-            ? {
-                ...item,
-                companyId: payload.companyId,
-                effectiveDate: payload.effectiveDate,
-                endDate: payload.cutOffDate,
-                affiliations: payload.affiliations,
-              }
-            : item,
-        ),
-      )
-      onSelectAssociation(payload.associationId)
-      return
-    }
-
-    const [spaceType, spaceNumber] = payload.spaceKey.split('|') as [SpaceAssociation['spaceType'], string]
-    const id = `pending-${Date.now()}`
-    onAssociationsChange([
-      ...associations,
-      {
-        id,
-        spaceType,
-        spaceNumber,
-        companyId: payload.companyId,
-        status: 'Pending',
-        effectiveDate: payload.effectiveDate,
-        endDate: payload.cutOffDate,
-        affiliations: payload.affiliations,
-      },
-    ])
-    onSelectAssociation(id)
-  }
-
-  const handleRevert = (associationId: string) => {
-    const reverted = associations.find((item) => item.id === associationId)
-    const next = associations.filter((item) => item.id !== associationId)
-    onAssociationsChange(next)
-    // Return to the company that stays active on the same space.
-    const fallback =
-      next.find((item) => item.status === 'Active' && reverted && spaceKeyOf(item) === spaceKeyOf(reverted)) ??
-      next.find((item) => item.status === 'Active') ??
-      next[0]
-    if (fallback) onSelectAssociation(fallback.id)
-  }
-
-  const handleSaveAffiliations = (affiliations: PropertyAffiliation[]) => {
-    if (!editAffiliationsId) return
-    onAssociationsChange(
-      associations.map((item) => (item.id === editAffiliationsId ? { ...item, affiliations } : item)),
-    )
-    setEditAffiliationsId(null)
-  }
-
   return (
     <aside
       id="company-listing-panel"
@@ -347,10 +169,10 @@ export function CompanyListingPanel({
       aria-hidden={collapsed || undefined}
       inert={collapsed}
       className={`flex shrink-0 flex-col overflow-hidden bg-white transition-[width] duration-200 ease-out ${
-        collapsed ? 'w-0 border-r-0' : 'w-[max(15vw,220px)] border-r border-[#e6e6e7]'
+        collapsed ? 'w-0 border-r-0' : 'w-[max(15vw,232px)] border-r border-[#e6e6e7]'
       }`}
     >
-      <div className="flex min-h-0 w-[max(15vw,220px)] flex-1 flex-col">
+      <div className="flex min-h-0 w-[max(15vw,232px)] flex-1 flex-col">
       {view === 'current' ? (
         <>
           <div className="shrink-0 border-b border-[#e6e6e7] px-4 py-4">
@@ -372,14 +194,7 @@ export function CompanyListingPanel({
                     selected={association.id === selectedAssociationId}
                     onSelect={() => onSelectAssociation(association.id)}
                     companyHref={companyHref?.(association.companyId)}
-                    menuItems={
-                      association.status === 'Active'
-                        ? [
-                            { label: 'Switch company', onSelect: () => openSwitch(spaceKeyOf(association)) },
-                            { label: 'Edit affiliation', onSelect: () => setEditAffiliationsId(association.id) },
-                          ]
-                        : [{ label: 'Edit switch', onSelect: () => setEditPendingId(association.id) }]
-                    }
+                    menuItems={menuItemsFor(association)}
                   />
                 ))}
               </ul>
@@ -448,13 +263,7 @@ export function CompanyListingPanel({
                     selected={association.id === selectedAssociationId}
                     onSelect={() => onSelectAssociation(association.id)}
                     companyHref={companyHref?.(association.companyId)}
-                    menuItems={[
-                      // Bring a past company back onto the space it used to hold.
-                      {
-                        label: 'Switch to this company',
-                        onSelect: () => openSwitch(spaceKeyOf(association), association.companyId),
-                      },
-                    ]}
+                    menuItems={menuItemsFor(association)}
                     showStatus={false}
                   />
                 ))}
@@ -498,30 +307,6 @@ export function CompanyListingPanel({
 
       </div>
 
-      <SwitchCompanyModal
-        open={switchModalOpen}
-        mode={editingPending ? 'edit' : 'switch'}
-        spaces={spaceOptions}
-        initialSpaceKey={editingPending ? undefined : switchSpaceKey}
-        targetCompanyId={editingPending ? undefined : switchTargetCompanyId}
-        initialForm={pendingInitialForm}
-        initialCreateCompany={propertyModal === 'create-company'}
-        associationId={editPendingId ?? undefined}
-        onClose={closeSwitch}
-        onConfirm={handleConfirm}
-        onRevertPending={handleRevert}
-        onFlowChange={(flow) => {
-          if (flow === null) closeSwitch()
-          else onPropertyModalChange?.(flow)
-        }}
-      />
-      <EditCompanyModal
-        open={editingAffiliations !== undefined}
-        company={editingAffiliations ? getPropertyCompany(editingAffiliations.companyId) : null}
-        initialAffiliations={editingAffiliations?.affiliations ?? []}
-        onClose={() => setEditAffiliationsId(null)}
-        onSave={handleSaveAffiliations}
-      />
     </aside>
   )
 }
@@ -564,14 +349,14 @@ function CompanyRow({
   selected: boolean
   onSelect: () => void
   companyHref?: string
-  menuItems: RowMenuItem[]
+  menuItems: ActionMenuItem[]
   /** Off inside the inactive view, where every row shares the same status. */
   showStatus?: boolean
 }) {
   const company = getPropertyCompany(association.companyId)
   const space = spaceLabelOf(association)
   const detail =
-    association.status === 'Inactive' && association.endDate ? `${space} · Ended ${association.endDate}` : space
+    association.status === 'Inactive' && association.endDate ? `${space} · Ended ${formatShortDate(association.endDate)}` : space
   const nameClass = 'min-w-0 truncate text-sm font-medium leading-5 text-[#262527]'
 
   return (
@@ -589,27 +374,27 @@ function CompanyRow({
       />
       <div className="pointer-events-none relative flex min-w-0 flex-1 flex-col gap-0.5 py-2.5 pl-2.5">
         {companyHref ? (
-          <a href={companyHref} className={`pointer-events-auto self-start hover:text-primary hover:underline ${nameClass}`}>
+          <a href={companyHref} className={`pointer-events-auto max-w-full self-start hover:text-primary hover:underline ${nameClass}`}>
             {company.name}
           </a>
         ) : (
           <span className={nameClass}>{company.name}</span>
         )}
-        <div className="flex min-w-0 items-center justify-between gap-2">
-          <span className="min-w-0 truncate text-xs leading-[18px] text-[#86868b]">{detail}</span>
-          {showStatus &&
-            (association.status === 'Pending' ? (
-              <span className="pointer-events-auto flex shrink-0">
-                <PendingBadge id={association.id} effectiveDate={association.effectiveDate} />
-              </span>
-            ) : (
-              <StatusBadge status={association.status} />
-            ))}
-        </div>
+        <span className="min-w-0 truncate text-xs leading-[18px] text-[#86868b]">{detail}</span>
       </div>
+      {showStatus &&
+        (association.status === 'Pending' ? (
+          <span className="relative flex shrink-0">
+            <PendingBadge id={association.id} effectiveDate={association.effectiveDate} />
+          </span>
+        ) : (
+          <span className="pointer-events-none relative flex shrink-0">
+            <StatusBadge status={association.status} />
+          </span>
+        ))}
       <div className="relative flex shrink-0 items-center">
         {menuItems.length > 0 ? (
-          <RowMenu label={`Actions for ${company.name}, ${space}`} items={menuItems} />
+          <ActionMenu label={`Actions for ${company.name}, ${space}`} items={menuItems} />
         ) : (
           <span className="w-1 shrink-0" aria-hidden />
         )}

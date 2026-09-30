@@ -23,6 +23,7 @@ import {
   type LeadActivityTab,
   type PropertyContactRole,
 } from '../data/leadActivities'
+import { formatShortDate } from '../data/dateFormat'
 import type { PropertyCompany, PropertyCompanyListStatus } from '../data/propertyCompanies'
 import { LeadActivityTabEmptyState } from './LeadActivityTabEmptyState'
 import { mainPanelLinkClass, mainPanelPrimaryButtonClass } from './mainPanelReadOnlyStyles'
@@ -400,7 +401,7 @@ function TasksPanel({ tasks, readOnly = false }: { tasks: PropertyCompany['tasks
                 <td className="whitespace-nowrap px-4 py-3 font-medium text-[#262527]">{task.title}</td>
                 <td className="max-w-[120px] truncate px-4 py-3 text-[#86868b]">{task.description}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-[#86868b]">
-                  {task.dueDate}
+                  {formatShortDate(task.dueDate)}
                   {task.overdue && <span className="ml-1 text-[#e43f32]">!</span>}
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 text-[#86868b]">{task.createdBy}</td>
