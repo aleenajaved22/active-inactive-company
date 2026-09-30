@@ -60,11 +60,13 @@ function SuiteUnitTypeMenu({
   value,
   onChange,
   invalid,
+  disabled,
 }: {
   id: string
   value: SpaceType | ''
   onChange: (value: SpaceType) => void
   invalid?: boolean
+  disabled?: boolean
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
@@ -119,9 +121,10 @@ function SuiteUnitTypeMenu({
         aria-activedescendant={open ? `${id}-option-${activeIndex}` : undefined}
         aria-label={value ? `Property occupancy type: ${value}` : 'Property occupancy type'}
         aria-invalid={invalid || undefined}
+        disabled={disabled}
         onClick={() => (open ? setOpen(false) : openMenu())}
         onKeyDown={onKeyDown}
-        className={`flex h-full w-full items-center justify-between gap-2 rounded-l-lg bg-white pl-3.5 pr-3 text-left text-base leading-6 outline-none ${
+        className={`flex h-full w-full items-center justify-between gap-2 rounded-l-lg bg-transparent pl-3.5 pr-3 text-left text-base leading-6 outline-none ${
           value ? 'text-[#262527]' : 'text-[#ccc]'
         }`}
       >
@@ -179,6 +182,7 @@ function TextField({
   placeholder,
   size,
   error,
+  disabled,
 }: {
   id: string
   label: string
@@ -187,6 +191,7 @@ function TextField({
   placeholder: string
   size: FieldSize
   error?: string | null
+  disabled?: boolean
 }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -200,7 +205,8 @@ function TextField({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         aria-invalid={error ? true : undefined}
-        className={`${fieldHeight[size]} w-full rounded-lg border bg-white px-3.5 text-base leading-6 text-[#262527] outline-none placeholder:text-[#ccc] ${
+        disabled={disabled}
+        className={`${fieldHeight[size]} w-full rounded-lg border ${disabled ? 'bg-[#f5f5f6]' : 'bg-white'} px-3.5 text-base leading-6 text-[#262527] outline-none placeholder:text-[#ccc] ${
           error ? 'border-[#d92d20]' : 'border-[#e6e6e7] focus:border-primary'
         }`}
       />
@@ -224,6 +230,7 @@ export function SpaceFields({
   columns = 3,
   errors,
   suiteUnitNumberRef,
+  disabled,
 }: {
   value: SpaceFieldsValue
   onChange: (next: SpaceFieldsValue) => void
@@ -232,6 +239,8 @@ export function SpaceFields({
   columns?: 1 | 2 | 3
   errors?: SpaceFieldsErrors
   suiteUnitNumberRef?: RefObject<HTMLInputElement | null>
+  /** Read-only display, e.g. when the space is locked to an existing one. */
+  disabled?: boolean
 }) {
   const suiteUnitInvalid = Boolean(errors?.suiteUnit)
   return (
@@ -244,6 +253,7 @@ export function SpaceFields({
         placeholder="5"
         size={size}
         error={errors?.floor}
+        disabled={disabled}
       />
       <TextField
         id={`${idPrefix}-apartment`}
@@ -253,13 +263,14 @@ export function SpaceFields({
         placeholder="12B"
         size={size}
         error={errors?.apartment}
+        disabled={disabled}
       />
       <div className="flex flex-col gap-1.5">
         <label htmlFor={`${idPrefix}-suite-unit-type`}>
           <FieldLabel>Suite / Unit</FieldLabel>
         </label>
         <div
-          className={`flex ${fieldHeight[size]} rounded-lg border bg-white ${
+          className={`flex ${fieldHeight[size]} rounded-lg border ${disabled ? 'bg-[#f5f5f6]' : 'bg-white'} ${
             suiteUnitInvalid ? 'border-[#d92d20]' : 'border-[#e6e6e7] focus-within:border-primary'
           }`}
         >
@@ -268,6 +279,7 @@ export function SpaceFields({
             value={value.suiteUnitType}
             onChange={(suiteUnitType) => onChange({ ...value, suiteUnitType })}
             invalid={suiteUnitInvalid}
+            disabled={disabled}
           />
           <div className="my-2.5 w-px shrink-0 bg-[#e6e6e7]" aria-hidden />
           <input
@@ -277,6 +289,7 @@ export function SpaceFields({
             aria-label={value.suiteUnitType ? `${value.suiteUnitType} number` : 'Suite or unit number'}
             aria-invalid={suiteUnitInvalid || undefined}
             value={value.suiteUnitNumber}
+            disabled={disabled}
             onChange={(event) => onChange({ ...value, suiteUnitNumber: event.target.value })}
             placeholder="210B"
             className="min-w-0 flex-1 rounded-r-lg bg-transparent px-3.5 text-base leading-6 text-[#262527] outline-none placeholder:text-[#ccc]"

@@ -41,6 +41,8 @@ export type SwitchCompanySubmitPayload = SwitchCompanyFormValues & {
 export type SwitchSpaceOption = {
   key: string
   label: string
+  /** Floor the suite/unit sits on, when known. */
+  floor?: string
   currentCompanyId?: string
   currentCompanyName?: string
   /** Current company's association end date; a new company can only start after it. */

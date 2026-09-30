@@ -39,15 +39,18 @@ function ModalFormRow({
   label,
   description,
   required,
+  stacked,
   children,
 }: {
   label: string
   description: string
   required?: boolean
+  /** Puts the fields under the label at full width, for rows that need more room. */
+  stacked?: boolean
   children: ReactNode
 }) {
   return (
-    <div className="grid grid-cols-2 gap-8 py-5">
+    <div className={`grid gap-x-8 gap-y-3 py-5 ${stacked ? 'grid-cols-1' : 'grid-cols-2'}`}>
       <div className="min-w-0">
         <p className="text-sm font-bold leading-5 text-[#262527]">
           {label}
@@ -69,6 +72,17 @@ function ModalFieldError({ children }: { children: ReactNode }) {
       <span>{children}</span>
     </p>
   )
+}
+
+/** Splits a locked space ("Suite|210" plus its floor) into the Floor / Apartment / Suite-Unit fields. */
+function lockedSpaceFields(space: SwitchSpaceOption): SpaceFieldsValue {
+  const [type, number = ''] = space.key.split('|')
+  const fields = emptySpaceFields()
+  if (type === 'Floor') return { ...fields, floor: number, suiteUnitType: '', suiteUnitNumber: '' }
+  if (type === 'Apartment' || type === 'Flat') {
+    return { ...fields, floor: space.floor ?? '', apartment: number, suiteUnitType: '', suiteUnitNumber: '' }
+  }
+  return { ...fields, floor: space.floor ?? '', suiteUnitType: type as SpaceFieldsValue['suiteUnitType'], suiteUnitNumber: number }
 }
 
 export function SwitchCompanyModal({
@@ -189,6 +203,9 @@ export function SwitchCompanyModal({
 
   const selectedSpace = spaces.find((space) => space.key === spaceKey)
   const spaceLocked = isEditMode || Boolean(initialSpaceKey)
+  // Adding a company reuses the switch flow with no space preselected.
+  const isAddMode = !isEditMode && !initialSpaceKey
+  const actionLabel = isEditMode ? 'Edit' : isAddMode ? 'Add company' : 'Switch company'
 
   // When adding, the space comes from the free-form fields; build a key/label from whatever is filled.
   const deriveSpaceKey = (v: SpaceFieldsValue) => {
@@ -290,7 +307,7 @@ export function SwitchCompanyModal({
               id="switch-company-title"
               className="min-w-0 flex-1 break-words text-xl font-bold leading-7 text-[#262527]"
             >
-              {isEditMode ? 'Edit' : 'Switch company'}
+              {actionLabel}
             </h2>
             <button type="button" aria-label="Close" onClick={closeModal} className="relative size-6 shrink-0">
               <img alt="" className="absolute inset-0 block size-full max-w-none" src={modalClose} />
@@ -404,22 +421,28 @@ export function SwitchCompanyModal({
 
           <ModalFormRow
             label="Property Occupancy"
-            description="The floor, apartment, suite or unit for this company. Optional — you can add it later."
+            description="The floor, apartment, suite or unit for this company."
+            stacked
           >
             {spaceLocked && selectedSpace ? (
-              <div className="flex h-10 items-center rounded-lg border border-[#e6e6e7] bg-[#f5f5f6] px-3.5 text-sm leading-5 text-[#262527]">
-                <span className="truncate">
-                  {selectedSpace.label}
-                  {selectedSpace.currentCompanyName && (
-                    <span className="text-[#86868b]"> · Current: {selectedSpace.currentCompanyName}</span>
-                  )}
-                </span>
+              <div className="flex flex-col gap-2">
+                <SpaceFields
+                  idPrefix="switch-company-locked"
+                  size="sm"
+                  columns={3}
+                  disabled
+                  value={lockedSpaceFields(selectedSpace)}
+                  onChange={() => {}}
+                />
+                {selectedSpace.currentCompanyName && (
+                  <p className="text-sm leading-5 text-[#86868b]">Current: {selectedSpace.currentCompanyName}</p>
+                )}
               </div>
             ) : (
               <SpaceFields
                 idPrefix="switch-company"
                 size="sm"
-                columns={1}
+                columns={3}
                 value={spaceFields}
                 onChange={setSpaceFields}
               />
@@ -507,7 +530,7 @@ export function SwitchCompanyModal({
               }}
               className="rounded-lg border border-primary bg-primary px-3.5 py-2 text-sm leading-5 text-white shadow-[0px_1px_2px_0px_rgba(16,24,40,0.05)]"
             >
-              {isEditMode ? 'Update' : 'Switch company'}
+              {isEditMode ? 'Update' : actionLabel}
             </button>
           </div>
         </div>
@@ -585,7 +608,7 @@ export function SwitchCompanyModal({
               </span>
               <div className="min-w-0 flex-1">
                 <h3 id="switch-company-confirm-title" className="text-lg font-bold leading-7 text-[#262527]">
-                  Switch company?
+                  {actionLabel}?
                 </h3>
                 <p className="mt-2 text-sm leading-5 text-[#6a6a70]">
                   <span className="font-medium text-[#262527]">{confirmTargetCompany?.name}</span> will take over{' '}
@@ -609,7 +632,7 @@ export function SwitchCompanyModal({
                 onClick={() => completeSubmit(pendingSubmit)}
                 className="rounded-lg border border-primary bg-primary px-3.5 py-2 text-sm font-medium leading-5 text-white shadow-[0px_1px_2px_0px_rgba(16,24,40,0.05)]"
               >
-                Switch company
+                {actionLabel}
               </button>
             </div>
           </div>

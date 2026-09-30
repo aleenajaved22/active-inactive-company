@@ -514,7 +514,7 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                   <div ref={spaceFieldRef}>
                     <SpaceFields
                       idPrefix="create-property"
-                      columns={2}
+                      columns={3}
                       value={{ floor, apartment, suiteUnitType, suiteUnitNumber }}
                       onChange={(next) => {
                         setFloor(next.floor)

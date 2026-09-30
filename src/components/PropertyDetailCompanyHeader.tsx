@@ -53,7 +53,7 @@ function HeaderLabeledBlock({
   )
 }
 
-function CompanySitePlaceholderIcon({ className }: { className?: string }) {
+export function CompanySitePlaceholderIcon({ className }: { className?: string }) {
   return (
     <svg
       aria-hidden

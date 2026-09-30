@@ -72,7 +72,7 @@ function buildSpaceOptions(associations: SpaceAssociation[]): SwitchSpaceOption[
   const options = new Map<string, SwitchSpaceOption>()
   for (const association of associations) {
     const key = spaceKeyOf(association)
-    const option = options.get(key) ?? { key, label: spaceLabelOf(association) }
+    const option = options.get(key) ?? { key, label: spaceLabelOf(association), floor: association.floor }
     const companyName = getPropertyCompany(association.companyId).name
     if (association.status === 'Active') {
       option.currentCompanyId = association.companyId

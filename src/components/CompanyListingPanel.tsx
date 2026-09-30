@@ -123,12 +123,22 @@ export function CompanyListingPanel({
       className="flex shrink-0 flex-col overflow-hidden border-r border-[#e6e6e7] bg-white transition-[width] duration-200 ease-out"
     >
       {collapsed ? (
-        <CollapsedPanelRail label="Companies" onExpand={() => onExpand?.()} />
+        <CollapsedPanelRail
+          label="Companies"
+          onExpand={() => onExpand?.()}
+          onSelect={onSelectAssociation}
+          items={currentRows.map((association) => ({
+            id: association.id,
+            name: getPropertyCompany(association.companyId).name,
+            detail: spaceLabelOf(association),
+            selected: association.id === selectedAssociationId,
+          }))}
+        />
       ) : (
       <div className="flex min-h-0 flex-1 flex-col" style={{ width }}>
       {view === 'current' ? (
         <>
-          <div className="shrink-0 border-b border-[#e6e6e7] px-6 py-4">
+          <div className="shrink-0 border-b border-[#e6e6e7] px-6 pb-5 pt-4">
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-sm font-bold leading-5 text-[#262527]">Companies ({currentRows.length})</h2>
               {onAddCompany && (
@@ -147,7 +157,7 @@ export function CompanyListingPanel({
             <SearchField value={query} onChange={setQuery} placeholder="Search companies" />
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto py-3">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-3">
             {currentRows.length === 0 ? (
               <p className="px-6 text-sm leading-5 text-[#86868b]">
                 {query.trim() ? 'No active or pending companies match your search.' : 'No active companies.'}
@@ -193,7 +203,7 @@ export function CompanyListingPanel({
         </>
       ) : (
         <>
-          <div className="shrink-0 border-b border-[#e6e6e7] px-6 py-4">
+          <div className="shrink-0 border-b border-[#e6e6e7] px-6 pb-5 pt-4">
             <div className="flex items-center gap-1">
               <button
                 type="button"
@@ -218,7 +228,7 @@ export function CompanyListingPanel({
             />
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-0 py-2">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-0 pb-2">
             {inactivePageRows.length === 0 ? (
               <p className="px-1 py-2 text-sm leading-5 text-[#86868b]">No inactive companies match your search.</p>
             ) : (
