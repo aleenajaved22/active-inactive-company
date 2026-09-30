@@ -194,19 +194,18 @@ export function CompanyListingPanel({
       ) : (
         <>
           <div className="shrink-0 border-b border-[#e6e6e7] px-6 pb-5 pt-4">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="min-w-0 truncate text-sm font-bold leading-5 text-[#262527]">
-                Inactive companies ({inactiveAll.length})
-              </h2>
+            <div className="flex items-center gap-1">
               <button
                 type="button"
                 aria-label="Back to active companies"
                 onClick={() => setView('current')}
-                className="flex shrink-0 items-center gap-1 text-sm font-medium leading-5 text-primary hover:underline"
+                className="-ml-1.5 flex size-7 shrink-0 items-center justify-center rounded-lg text-[#444446] hover:bg-[#f5f5f6]"
               >
                 <ChevronIcon direction="left" />
-                Back
               </button>
+              <h2 className="min-w-0 flex-1 truncate text-sm font-bold leading-5 text-[#262527]">
+                Inactive companies ({inactiveAll.length})
+              </h2>
             </div>
             <SearchField
               value={inactiveQuery}

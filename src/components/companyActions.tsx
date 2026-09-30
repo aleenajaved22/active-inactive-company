@@ -12,7 +12,44 @@ import type {
   SwitchSpaceOption,
 } from './switchCompanyTypes'
 
-export type ActionMenuItem = { label: string; onSelect: () => void }
+export type ActionMenuIcon = 'switch' | 'edit' | 'activate'
+export type ActionMenuItem = { label: string; icon?: ActionMenuIcon; onSelect: () => void }
+
+const iconPaths: Record<ActionMenuIcon, ReactNode> = {
+  // Two arrows chasing each other: swap the company on a space.
+  switch: (
+    <>
+      <path d="M2 6.5H12.5L10 4" />
+      <path d="M14 9.5H3.5L6 12" />
+    </>
+  ),
+  edit: <path d="M11.3333 2L14 4.66667L5 13.6667L1.66667 14.3333L2.33333 11L11.3333 2Z" />,
+  activate: (
+    <>
+      <circle cx="8" cy="8" r="6.25" />
+      <path d="M5.5 8.25L7.25 10L10.5 6.5" />
+    </>
+  ),
+}
+
+function MenuItemIcon({ icon }: { icon: ActionMenuIcon }) {
+  return (
+    <svg
+      aria-hidden
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.33"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="shrink-0 text-[#6a6a70]"
+    >
+      {iconPaths[icon]}
+    </svg>
+  )
+}
 
 /** ⋮ button with a small menu; used on company rows and in the company header. */
 export function ActionMenu({ label, items }: { label: string; items: ActionMenuItem[] }) {
@@ -56,8 +93,9 @@ export function ActionMenu({ label, items }: { label: string; items: ActionMenuI
                 setOpen(false)
                 item.onSelect()
               }}
-              className="w-full whitespace-nowrap px-3 py-2 text-left text-sm leading-5 text-[#262527] hover:bg-[#f5f5f6]"
+              className="flex w-full items-center gap-2 whitespace-nowrap px-3 py-2 text-left text-sm leading-5 text-[#262527] hover:bg-[#f5f5f6]"
             >
+              {item.icon && <MenuItemIcon icon={item.icon} />}
               {item.label}
             </button>
           ))}
@@ -217,17 +255,18 @@ export function useCompanyActions({
   const menuItemsFor = (association: SpaceAssociation): ActionMenuItem[] => {
     if (association.status === 'Active') {
       return [
-        { label: 'Switch company', onSelect: () => openSwitch(spaceKeyOf(association)) },
-        { label: 'Edit company', onSelect: () => setEditAffiliationsId(association.id) },
+        { label: 'Switch company', icon: 'switch', onSelect: () => openSwitch(spaceKeyOf(association)) },
+        { label: 'Edit company', icon: 'edit', onSelect: () => setEditAffiliationsId(association.id) },
       ]
     }
     if (association.status === 'Pending') {
-      return [{ label: 'Edit switch', onSelect: () => setEditPendingId(association.id) }]
+      return [{ label: 'Edit switch', icon: 'edit', onSelect: () => setEditPendingId(association.id) }]
     }
     // Bring a past company back onto the space it used to hold.
     return [
       {
         label: 'Make active',
+        icon: 'activate',
         onSelect: () => openSwitch(spaceKeyOf(association), association.companyId),
       },
     ]
