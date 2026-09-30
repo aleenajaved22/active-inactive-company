@@ -123,17 +123,7 @@ export function CompanyListingPanel({
       className="flex shrink-0 flex-col overflow-hidden bg-white transition-[width] duration-200 ease-out"
     >
       {collapsed ? (
-        <CollapsedPanelRail
-          label="Companies"
-          onExpand={() => onExpand?.()}
-          onSelect={onSelectAssociation}
-          items={currentRows.map((association) => ({
-            id: association.id,
-            name: getPropertyCompany(association.companyId).name,
-            detail: spaceLabelOf(association),
-            selected: association.id === selectedAssociationId,
-          }))}
-        />
+        <CollapsedPanelRail label="Companies" count={currentRows.length} onExpand={() => onExpand?.()} />
       ) : (
       <div className="flex min-h-0 flex-1 flex-col" style={{ width }}>
       {view === 'current' ? (
