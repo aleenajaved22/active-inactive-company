@@ -9,6 +9,7 @@ import { ModalDateInput } from './ModalDateInput'
 import { formatShortDate } from '../data/dateFormat'
 import { propertyCompanies } from '../data/propertyCompanies'
 import { parseMMDDYYYY } from '../data/propertySpaceAssociations'
+import { SpaceFields, emptySpaceFields, type SpaceFieldsValue } from './PropertySpaceFields'
 import {
   propertyAffiliationOptions,
   type PropertyAffiliation,
@@ -70,93 +71,6 @@ function ModalFieldError({ children }: { children: ReactNode }) {
   )
 }
 
-function SpaceSelect({
-  spaces,
-  value,
-  onChange,
-  open,
-  onOpenChange,
-  invalid,
-}: {
-  spaces: SwitchSpaceOption[]
-  value: string
-  onChange: (key: string) => void
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  invalid?: boolean
-}) {
-  const rootRef = useRef<HTMLDivElement>(null)
-  const selected = spaces.find((space) => space.key === value)
-
-  useEffect(() => {
-    if (!open) return
-    const closeOnOutside = (event: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) onOpenChange(false)
-    }
-    document.addEventListener('mousedown', closeOnOutside)
-    return () => document.removeEventListener('mousedown', closeOnOutside)
-  }, [open, onOpenChange])
-
-  return (
-    <div ref={rootRef} className="relative">
-      <button
-        id="switch-company-space"
-        type="button"
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        onClick={() => onOpenChange(!open)}
-        className={`flex h-10 w-full items-center justify-between gap-2 rounded-lg border bg-white px-3.5 text-left text-sm leading-5 ${
-          invalid ? 'border-[#b32318]' : 'border-[#e6e6e7]'
-        }`}
-      >
-        <span className={`min-w-0 truncate ${selected ? 'text-[#262527]' : 'text-[#6a6a70]'}`}>
-          {selected ? selected.label : 'Select suite, unit or floor'}
-          {selected?.currentCompanyName && <span className="text-[#86868b]"> · {selected.currentCompanyName}</span>}
-        </span>
-        <span className="relative size-4 shrink-0">
-          <img
-            alt=""
-            className={`absolute inset-0 block size-full max-w-none transition-transform ${open ? 'rotate-180' : ''}`}
-            src={questionsChevronDown}
-          />
-        </span>
-      </button>
-      {open && (
-        <ul
-          role="listbox"
-          aria-label="Space"
-          className="absolute left-0 right-0 top-full z-10 mt-1 max-h-[220px] overflow-y-auto rounded-lg border border-[#e6e6e7] bg-white py-1 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
-        >
-          {spaces.map((space) => {
-            const isSelected = space.key === value
-            return (
-              <li key={space.key} role="option" aria-selected={isSelected}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onChange(space.key)
-                    onOpenChange(false)
-                  }}
-                  className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm leading-5 ${
-                    isSelected ? 'bg-primary-subtle text-primary' : 'text-[#262527] hover:bg-[#f5f5f6]'
-                  }`}
-                >
-                  <span className="font-medium">{space.label}</span>
-                  <span className="truncate text-xs text-[#86868b]">
-                    {space.pendingCompanyName
-                      ? `Pending switch to ${space.pendingCompanyName}`
-                      : (space.currentCompanyName ?? 'No active company')}
-                  </span>
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-      )}
-    </div>
-  )
-}
-
 export function SwitchCompanyModal({
   open,
   mode = 'switch',
@@ -174,6 +88,7 @@ export function SwitchCompanyModal({
   const isEditMode = mode === 'edit'
   const [query, setQuery] = useState('')
   const [spaceKey, setSpaceKey] = useState('')
+  const [spaceFields, setSpaceFields] = useState<SpaceFieldsValue>(emptySpaceFields)
   const [spaceMenuOpen, setSpaceMenuOpen] = useState(false)
   const [submitAttempted, setSubmitAttempted] = useState(false)
   const [pendingId, setPendingId] = useState('')
@@ -215,6 +130,7 @@ export function SwitchCompanyModal({
       setCutOffDate('')
       setPendingAffiliations(new Set())
     }
+    setSpaceFields(emptySpaceFields())
     setSubmitAttempted(false)
     setSpaceMenuOpen(false)
     setQuery('')
@@ -273,15 +189,32 @@ export function SwitchCompanyModal({
 
   const selectedSpace = spaces.find((space) => space.key === spaceKey)
   const spaceLocked = isEditMode || Boolean(initialSpaceKey)
+
+  // When adding, the space comes from the free-form fields; build a key/label from whatever is filled.
+  const deriveSpaceKey = (v: SpaceFieldsValue) => {
+    if (v.suiteUnitType && v.suiteUnitNumber.trim()) return `${v.suiteUnitType}|${v.suiteUnitNumber.trim()}`
+    if (v.floor.trim()) return `Floor|${v.floor.trim()}`
+    if (v.apartment.trim()) return `Apartment|${v.apartment.trim()}`
+    return ''
+  }
+  const addSpaceLabel =
+    [
+      spaceFields.floor.trim() && `Floor ${spaceFields.floor.trim()}`,
+      spaceFields.apartment.trim() && `Apartment ${spaceFields.apartment.trim()}`,
+      spaceFields.suiteUnitType && spaceFields.suiteUnitNumber.trim() && `${spaceFields.suiteUnitType} ${spaceFields.suiteUnitNumber.trim()}`,
+    ]
+      .filter(Boolean)
+      .join(', ') || 'the selected space'
+  const effectiveSpaceKey = spaceLocked ? spaceKey : deriveSpaceKey(spaceFields)
   const effective = parseMMDDYYYY(effectiveDate)
   const end = cutOffDate.trim() ? parseMMDDYYYY(cutOffDate) : null
   const contractEnd = selectedSpace?.currentContractEndDate
     ? parseMMDDYYYY(selectedSpace.currentContractEndDate)
     : null
 
-  const spaceError = !selectedSpace
-    ? 'Choose the suite, unit or floor whose company is changing.'
-    : !isEditMode && selectedSpace.pendingCompanyName
+  // Space is optional. Only the locked switch flow warns about an existing pending switch.
+  const spaceError =
+    spaceLocked && selectedSpace && !isEditMode && selectedSpace.pendingCompanyName
       ? `${selectedSpace.label} already has a pending switch to ${selectedSpace.pendingCompanyName}. Edit that switch instead.`
       : null
   const companyError = !pendingId
@@ -314,7 +247,7 @@ export function SwitchCompanyModal({
   const buildSubmitPayload = (): SwitchCompanySubmitPayload => ({
     mode: isEditMode ? 'edit' : 'switch',
     associationId: isEditMode ? associationId : undefined,
-    spaceKey,
+    spaceKey: effectiveSpaceKey,
     companyId: pendingId,
     effectiveDate,
     cutOffDate,
@@ -369,33 +302,6 @@ export function SwitchCompanyModal({
         </div>
 
         <div className="flex flex-col">
-          <ModalFormRow
-            label="Space"
-            description="The suite, unit or floor whose company is changing. The current company stays active until the effective date."
-            required
-          >
-            {spaceLocked && selectedSpace ? (
-              <div className="flex h-10 items-center rounded-lg border border-[#e6e6e7] bg-[#f5f5f6] px-3.5 text-sm leading-5 text-[#262527]">
-                <span className="truncate">
-                  {selectedSpace.label}
-                  {selectedSpace.currentCompanyName && (
-                    <span className="text-[#86868b]"> · Current: {selectedSpace.currentCompanyName}</span>
-                  )}
-                </span>
-              </div>
-            ) : (
-              <SpaceSelect
-                spaces={spaces}
-                value={spaceKey}
-                onChange={setSpaceKey}
-                open={spaceMenuOpen}
-                onOpenChange={setSpaceMenuOpen}
-                invalid={showErrors && Boolean(spaceError)}
-              />
-            )}
-            {showErrors && spaceError && <ModalFieldError>{spaceError}</ModalFieldError>}
-          </ModalFormRow>
-
           <ModalFormRow
             label="Company"
             description="Select the company that should be associated with this property."
@@ -494,6 +400,31 @@ export function SwitchCompanyModal({
               </div>
               {showErrors && companyError && <ModalFieldError>{companyError}</ModalFieldError>}
             </div>
+          </ModalFormRow>
+
+          <ModalFormRow
+            label="Space"
+            description="The floor, apartment, suite or unit for this company. Optional — you can add it later."
+          >
+            {spaceLocked && selectedSpace ? (
+              <div className="flex h-10 items-center rounded-lg border border-[#e6e6e7] bg-[#f5f5f6] px-3.5 text-sm leading-5 text-[#262527]">
+                <span className="truncate">
+                  {selectedSpace.label}
+                  {selectedSpace.currentCompanyName && (
+                    <span className="text-[#86868b]"> · Current: {selectedSpace.currentCompanyName}</span>
+                  )}
+                </span>
+              </div>
+            ) : (
+              <SpaceFields
+                idPrefix="switch-company"
+                size="sm"
+                columns={1}
+                value={spaceFields}
+                onChange={setSpaceFields}
+              />
+            )}
+            {showErrors && spaceError && <ModalFieldError>{spaceError}</ModalFieldError>}
           </ModalFormRow>
 
           <ModalFormRow
@@ -658,7 +589,7 @@ export function SwitchCompanyModal({
                 </h3>
                 <p className="mt-2 text-sm leading-5 text-[#6a6a70]">
                   <span className="font-medium text-[#262527]">{confirmTargetCompany?.name}</span> will take over{' '}
-                  <span className="font-medium text-[#262527]">{selectedSpace?.label}</span> on{' '}
+                  <span className="font-medium text-[#262527]">{selectedSpace?.label ?? addSpaceLabel}</span> on{' '}
                   {formatShortDate(pendingSubmit.effectiveDate)}.
                   {selectedSpace?.currentCompanyName ? ` ${selectedSpace.currentCompanyName} stays active until then.` : ''}{' '}
                   Do you want to continue?

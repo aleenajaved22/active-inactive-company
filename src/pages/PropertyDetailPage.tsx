@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import detailChevronSm from '../assets/detail-chevron-sm.svg'
 import detailDividerH from '../assets/detail-divider-h.svg'
 import detailEdit from '../assets/detail-edit.svg'
@@ -9,7 +9,8 @@ import detailStageApprovedReadonly from '../assets/detail-stage-approved-readonl
 import detailStageDefault from '../assets/detail-stage-default.svg'
 import detailStageLast from '../assets/detail-stage-last.svg'
 import { AppHeader } from '../components/AppHeader'
-import { CompaniesPanelToggle } from '../components/CompaniesPanelToggle'
+import { ResizeHandle } from '../components/ResizeHandle'
+import { SidePanelToggle } from '../components/SidePanelToggle'
 import { CompanyListingPanel } from '../components/CompanyListingPanel'
 import { useCompanyActions } from '../components/companyActions'
 import { EditDealDrawer } from '../components/EditDealDrawer'
@@ -25,6 +26,16 @@ import type { PropertyModal } from '../prototype/screenLinks'
 import { formatPropertyTitle, type PropertyRow } from '../data/properties'
 
 const stageSteps = ['Discovery', 'Qualified', 'Needs Assessment']
+
+// Drag limits: panels resize within these bounds and collapse to a slim rail instead of disappearing.
+const DETAILS_MIN_WIDTH = 260
+const DETAILS_MAX_WIDTH = 520
+const DETAILS_DEFAULT_WIDTH = 320
+const COMPANIES_MIN_WIDTH = 220
+const COMPANIES_MAX_WIDTH = 420
+const COMPANIES_DEFAULT_WIDTH = 260
+
+const clampWidth = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
 
 type PropertyDetailPageProps = {
   property: PropertyRow
@@ -48,7 +59,7 @@ export function PropertyDetailPage({
   const [selectedAssociationId, setSelectedAssociationId] = useState(initialSpaceAssociations[0].id)
   const selectedAssociation =
     associations.find((item) => item.id === selectedAssociationId) ?? associations[0]
-  const { menuItemsFor, dialogs: companyDialogs } = useCompanyActions({
+  const { menuItemsFor, openAddCompany, dialogs: companyDialogs } = useCompanyActions({
     associations,
     onAssociationsChange: setAssociations,
     onSelectAssociation: setSelectedAssociationId,
@@ -58,7 +69,10 @@ export function PropertyDetailPage({
   const listStatus = selectedAssociation.status
   const selectedCompany = getPropertyCompany(selectedAssociation.companyId)
   const [editDealOpen, setEditDealOpen] = useState(false)
+  const [detailsWidth, setDetailsWidth] = useState(DETAILS_DEFAULT_WIDTH)
   const [companiesPanelOpen, setCompaniesPanelOpen] = useState(true)
+  const [companiesWidth, setCompaniesWidth] = useState(COMPANIES_DEFAULT_WIDTH)
+  const resizeStart = useRef(0)
   const mainPanelReadOnly = listStatus === 'Inactive' || listStatus === 'Pending'
   const mainPanelEmptyStates = listStatus === 'Pending'
 
@@ -68,7 +82,13 @@ export function PropertyDetailPage({
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <AppHeader propertyName={property.name} onNavigateProperties={onBack} />
         <main className="flex min-h-0 flex-1 overflow-hidden">
-          <aside className="flex w-[22.5vw] shrink-0 flex-col overflow-y-auto border-r border-[#e6e6e7] bg-white py-6">
+          <aside
+            id="property-details-panel"
+            aria-label="Property details"
+            style={{ width: detailsWidth }}
+            className="flex shrink-0 flex-col overflow-hidden border-r border-[#e6e6e7] bg-white"
+          >
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto py-6" style={{ width: detailsWidth }}>
             <div className="flex flex-col gap-5 px-8">
               <div className="flex items-start gap-2">
                 <img alt="" className="size-[50px] shrink-0 rounded object-cover" height={50} src={detailPropertyPhoto} width={50} />
@@ -120,7 +140,17 @@ export function PropertyDetailPage({
               <img alt="" className="block w-full max-w-none" src={detailDividerH} />
             </div>
             <PropertyDetailSideSections />
+            </div>
           </aside>
+          <ResizeHandle
+            ariaLabel="Resize property details"
+            onResizeStart={() => {
+              resizeStart.current = detailsWidth
+            }}
+            onResize={(delta) =>
+              setDetailsWidth(clampWidth(resizeStart.current + delta, DETAILS_MIN_WIDTH, DETAILS_MAX_WIDTH))
+            }
+          />
 
           <CompanyListingPanel
             associations={associations}
@@ -128,9 +158,29 @@ export function PropertyDetailPage({
             onSelectAssociation={setSelectedAssociationId}
             menuItemsFor={menuItemsFor}
             collapsed={!companiesPanelOpen}
+            width={companiesWidth}
+            onExpand={() => setCompaniesPanelOpen(true)}
+            onAddCompany={openAddCompany}
             companyHref={companyHref}
           />
-          <CompaniesPanelToggle open={companiesPanelOpen} onToggle={() => setCompaniesPanelOpen((open) => !open)} />
+          {companiesPanelOpen && (
+            <ResizeHandle
+              ariaLabel="Resize companies panel"
+              onResizeStart={() => {
+                resizeStart.current = companiesWidth
+              }}
+              onResize={(delta) =>
+                setCompaniesWidth(clampWidth(resizeStart.current + delta, COMPANIES_MIN_WIDTH, COMPANIES_MAX_WIDTH))
+              }
+            />
+          )}
+          <SidePanelToggle
+            open={companiesPanelOpen}
+            onToggle={() => setCompaniesPanelOpen((open) => !open)}
+            controls="company-listing-panel"
+            labelOpen="Collapse companies panel"
+            labelClosed="Expand companies panel"
+          />
 
           <section className="flex min-w-0 flex-1 flex-col overflow-y-auto border-l border-[#e6e6e7]">
             {listStatus === 'Pending' ? (
@@ -154,21 +204,6 @@ export function PropertyDetailPage({
                 </p>
               </div>
             ) : null}
-            <PropertyDetailCompanyHeader
-              companyName={selectedCompany.name}
-              actions={menuItemsFor(selectedAssociation)}
-              companyHref={companyHref?.(selectedCompany.id)}
-              spaceLabel={spaceLabelOf(selectedAssociation)}
-              listStatus={listStatus}
-              ownerName={selectedCompany.companyOwner}
-              parentCompany={selectedCompany.parentCompany}
-              parentCompanyHref={
-                selectedCompany.parentCompany ? parentCompanyHref?.(selectedCompany.parentCompany) : undefined
-              }
-              affiliations={affiliationsToBadges(selectedAssociation.affiliations)}
-              pendingEffectiveDate={listStatus === 'Pending' ? selectedAssociation.effectiveDate : undefined}
-              pendingTooltipId={`pending-effective-date-header-${selectedAssociation.id}`}
-            />
             <div className="border-b border-[#e6e6e7] px-8 py-5">
               <div className="mb-2 flex items-start justify-between">
                 <p className="text-sm font-bold leading-5 text-[#262527]">Property Stages</p>
@@ -225,6 +260,22 @@ export function PropertyDetailPage({
                 </button>
               </div>
             </div>
+
+            <PropertyDetailCompanyHeader
+              companyName={selectedCompany.name}
+              actions={menuItemsFor(selectedAssociation)}
+              companyHref={companyHref?.(selectedCompany.id)}
+              spaceLabel={spaceLabelOf(selectedAssociation)}
+              listStatus={listStatus}
+              ownerName={selectedCompany.companyOwner}
+              parentCompany={selectedCompany.parentCompany}
+              parentCompanyHref={
+                selectedCompany.parentCompany ? parentCompanyHref?.(selectedCompany.parentCompany) : undefined
+              }
+              affiliations={affiliationsToBadges(selectedAssociation.affiliations)}
+              pendingEffectiveDate={listStatus === 'Pending' ? selectedAssociation.effectiveDate : undefined}
+              pendingTooltipId={`pending-effective-date-header-${selectedAssociation.id}`}
+            />
 
             <div className="flex min-h-0 flex-1 flex-col px-8 pb-5 pt-6">
               <PropertyLeadActivities

@@ -107,6 +107,7 @@ export function useCompanyActions({
   onPropertyModalChange,
 }: UseCompanyActionsOptions): {
   menuItemsFor: (association: SpaceAssociation) => ActionMenuItem[]
+  openAddCompany: () => void
   dialogs: ReactNode
 } {
   const [switchSpaceKey, setSwitchSpaceKey] = useState<string | undefined>()
@@ -264,5 +265,8 @@ export function useCompanyActions({
     </>
   )
 
-  return { menuItemsFor, dialogs }
+  // Adding a company reuses the switch flow with no space preselected, so the user picks the space.
+  const openAddCompany = () => openSwitch()
+
+  return { menuItemsFor, openAddCompany, dialogs }
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { AddContactModal } from './AddContactModal'
 import activityChevron from '../assets/activity-chevron.svg'
 import activityPhone from '../assets/activity-phone.svg'
 import activityTask from '../assets/activity-task.svg'
@@ -91,6 +92,7 @@ const contactRoleBadgeStyles: Record<PropertyContactRole, { bg: string; text: st
 }
 
 function ContactsPanel({ readOnly = false }: { readOnly?: boolean }) {
+  const [addContactOpen, setAddContactOpen] = useState(false)
   return (
     <div className="mt-6 flex min-h-0 flex-1 flex-col gap-6 pb-6">
       <div className="flex w-full items-center justify-between gap-3">
@@ -102,7 +104,7 @@ function ContactsPanel({ readOnly = false }: { readOnly?: boolean }) {
         </label>
         <button
           type="button"
-          onClick={() => window.alert('Add contact (prototype)')}
+          onClick={() => setAddContactOpen(true)}
           className={`h-9 ${mainPanelPrimaryButtonClass(readOnly, 'filled')}`}
         >
           <span className="relative size-4">
@@ -111,6 +113,7 @@ function ContactsPanel({ readOnly = false }: { readOnly?: boolean }) {
           Add Contact
         </button>
       </div>
+      <AddContactModal open={addContactOpen} onClose={() => setAddContactOpen(false)} />
 
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="overflow-x-auto border-t border-[#e6e6e7]">

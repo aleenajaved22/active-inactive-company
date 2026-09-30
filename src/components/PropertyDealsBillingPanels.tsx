@@ -205,7 +205,7 @@ export function DealsTabPanel({ company, readOnly = false }: DealsTabPanelProps)
           <span className="relative size-4">
             <img alt="" className="absolute inset-0 block size-full max-w-none" src={tablePlus} />
           </span>
-          New deal
+          New Deal
         </button>
       </div>
       <div className="overflow-x-auto border-y border-[#e6e6e7]">

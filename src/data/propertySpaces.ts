@@ -2,6 +2,9 @@ export const spaceTypes = ['Suite', 'Unit', 'Floor', 'Flat', 'Apartment'] as con
 
 export type SpaceType = (typeof spaceTypes)[number]
 
+/** Types offered by the joined Suite / Unit field (Floor and Apartment are now standalone fields). */
+export const suiteUnitTypes = ['Suite', 'Unit'] as const
+
 type ExistingSpace = {
   address: string
   spaceType: SpaceType

@@ -5,13 +5,13 @@ import contactAvatarSavannah from '../assets/contacts/avatar-savannah.png'
 
 export const leadActivityTabs = [
   'Deals',
+  'Questions',
   'Billing',
   'Contacts',
   'Notes',
   'Tasks',
   'Emails',
   'Meetings',
-  'Questions',
   'Activity',
 ] as const
 export type LeadActivityTab = (typeof leadActivityTabs)[number]

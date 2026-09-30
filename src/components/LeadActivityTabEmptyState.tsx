@@ -20,7 +20,7 @@ const emptyStateByTab: Record<LeadActivityTab, EmptyStateConfig> = {
   Deals: {
     title: 'No deals added',
     description: "You haven't added any deals yet.",
-    actionLabel: 'New deal',
+    actionLabel: 'New Deal',
     icon: 'deal',
   },
   Billing: {
@@ -107,7 +107,7 @@ type LeadActivityTabEmptyStateProps = {
 
 export function LeadActivityTabEmptyState({ tab, readOnly = false }: LeadActivityTabEmptyStateProps) {
   const config = emptyStateByTab[tab]
-  const showPlus = config.actionLabel?.startsWith('Add') || config.actionLabel === 'New deal'
+  const showPlus = config.actionLabel?.startsWith('Add') || config.actionLabel === 'New Deal'
 
   return (
     <div className="flex min-h-[360px] flex-1 flex-col items-center justify-center gap-4 px-6 py-12 text-center">
@@ -123,7 +123,7 @@ export function LeadActivityTabEmptyState({ tab, readOnly = false }: LeadActivit
               <img
                 alt=""
                 className="absolute inset-0 block size-full max-w-none"
-                src={config.actionLabel === 'New deal' ? tablePlus : detailPlus}
+                src={config.actionLabel === 'New Deal' ? tablePlus : detailPlus}
               />
             </span>
           ) : null}

@@ -1,5 +1,5 @@
-import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { createPortal } from 'react-dom'
+import { useMemo, useState } from 'react'
+import detailPlus from '../assets/detail-plus.svg'
 import tableSearch from '../assets/table-search.svg'
 import { getPropertyCompany, type PropertyCompanyListStatus } from '../data/propertyCompanies'
 import {
@@ -8,6 +8,8 @@ import {
   type SpaceAssociation,
 } from '../data/propertySpaceAssociations'
 import { formatShortDate } from '../data/dateFormat'
+import { CollapsedPanelRail, PANEL_RAIL_WIDTH } from './CollapsedPanelRail'
+import { PendingStatusBadge } from './PendingStatusBadge'
 import { ActionMenu, type ActionMenuItem } from './companyActions'
 
 type CompanyListingPanelProps = {
@@ -18,9 +20,16 @@ type CompanyListingPanelProps = {
   menuItemsFor: (association: SpaceAssociation) => ActionMenuItem[]
   /** Hides the panel while keeping its search, view and page state. */
   collapsed?: boolean
+  /** Current panel width in px (ignored while collapsed). */
+  width?: number
+  /** Expands the panel from its collapsed rail. */
+  onExpand?: () => void
+  /** Opens the flow to add a company to a space on this property. */
+  onAddCompany?: () => void
   companyHref?: (companyId: string) => string
 }
 
+const DEFAULT_PANEL_WIDTH = 232
 const currentStatusOrder: PropertyCompanyListStatus[] = ['Active', 'Pending']
 const INACTIVE_PAGE_SIZE = 8
 
@@ -66,71 +75,15 @@ function StatusBadge({ status }: { status: PropertyCompanyListStatus }) {
   )
 }
 
-const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-
-/** "Nov 1, 2026" for the pending badge. */
-function badgeStartDate(value: string) {
-  const date = parseMMDDYYYY(value)
-  if (!date) return value
-  return `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
-}
-
-/** Pending badge showing when the company moves in; the tooltip gives the full date. */
-function PendingBadge({ id, effectiveDate }: { id: string; effectiveDate: string }) {
-  const triggerRef = useRef<HTMLButtonElement>(null)
-  const [visible, setVisible] = useState(false)
-  const [style, setStyle] = useState<CSSProperties>({})
-  const tooltipId = `pending-start-${id}`
-
-  useLayoutEffect(() => {
-    if (!visible || !triggerRef.current) return
-    const rect = triggerRef.current.getBoundingClientRect()
-    setStyle({ position: 'fixed', left: rect.left + rect.width / 2, top: rect.top - 8, zIndex: 80 })
-  }, [visible])
-
-  return (
-    <>
-      <button
-        ref={triggerRef}
-        type="button"
-        aria-label={`Pending, starts ${effectiveDate}`}
-        aria-describedby={visible ? tooltipId : undefined}
-        onMouseEnter={() => setVisible(true)}
-        onMouseLeave={() => setVisible(false)}
-        onFocus={() => setVisible(true)}
-        onBlur={() => setVisible(false)}
-        className="flex shrink-0 cursor-default flex-col items-center rounded-lg bg-[#fff4d8] px-2 py-1 text-center text-xs font-medium leading-4 text-[#b54708]"
-      >
-        {/* Stacked so the full date fits beside the company name. */}
-        <span className="text-[11px] font-normal">Starts</span>
-        <span className="whitespace-nowrap">{badgeStartDate(effectiveDate)}</span>
-      </button>
-      {visible &&
-        createPortal(
-          <div
-            id={tooltipId}
-            role="tooltip"
-            style={style}
-            className="pointer-events-none w-max -translate-x-1/2 -translate-y-full rounded-lg bg-[#262527] px-3 py-2 text-xs leading-[18px] text-white shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
-          >
-            Pending · Starts <span className="font-medium">{formatShortDate(effectiveDate)}</span>
-            <span
-              aria-hidden
-              className="absolute left-1/2 top-full size-2 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-[#262527]"
-            />
-          </div>,
-          document.body,
-        )}
-    </>
-  )
-}
-
 export function CompanyListingPanel({
   associations,
   selectedAssociationId,
   onSelectAssociation,
   menuItemsFor,
   collapsed = false,
+  width = DEFAULT_PANEL_WIDTH,
+  onExpand,
+  onAddCompany,
   companyHref,
 }: CompanyListingPanelProps) {
   const [query, setQuery] = useState('')
@@ -166,17 +119,31 @@ export function CompanyListingPanel({
     <aside
       id="company-listing-panel"
       aria-label="Companies"
-      aria-hidden={collapsed || undefined}
-      inert={collapsed}
-      className={`flex shrink-0 flex-col overflow-hidden bg-white transition-[width] duration-200 ease-out ${
-        collapsed ? 'w-0 border-r-0' : 'w-[max(15vw,232px)] border-r border-[#e6e6e7]'
-      }`}
+      style={{ width: collapsed ? PANEL_RAIL_WIDTH : width }}
+      className="flex shrink-0 flex-col overflow-hidden border-r border-[#e6e6e7] bg-white transition-[width] duration-200 ease-out"
     >
-      <div className="flex min-h-0 w-[max(15vw,232px)] flex-1 flex-col">
+      {collapsed ? (
+        <CollapsedPanelRail label="Companies" onExpand={() => onExpand?.()} badge={String(currentRows.length)} />
+      ) : (
+      <div className="flex min-h-0 flex-1 flex-col" style={{ width }}>
       {view === 'current' ? (
         <>
           <div className="shrink-0 border-b border-[#e6e6e7] px-4 py-4">
-            <h2 className="text-sm font-bold leading-5 text-[#262527]">Companies</h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-bold leading-5 text-[#262527]">Companies</h2>
+              {onAddCompany && (
+                <button
+                  type="button"
+                  onClick={onAddCompany}
+                  className="flex shrink-0 items-center gap-1 text-sm font-medium leading-5 text-primary hover:underline"
+                >
+                  <span className="relative size-4 shrink-0" aria-hidden>
+                    <img alt="" className="absolute inset-0 block size-full max-w-none" src={detailPlus} />
+                  </span>
+                  Add
+                </button>
+              )}
+            </div>
             <SearchField value={query} onChange={setQuery} placeholder="Search companies" />
           </div>
 
@@ -306,7 +273,7 @@ export function CompanyListingPanel({
       )}
 
       </div>
-
+      )}
     </aside>
   )
 }
@@ -385,7 +352,10 @@ function CompanyRow({
       {showStatus &&
         (association.status === 'Pending' ? (
           <span className="relative flex shrink-0">
-            <PendingBadge id={association.id} effectiveDate={association.effectiveDate} />
+            <PendingStatusBadge
+              effectiveDate={association.effectiveDate}
+              tooltipId={`pending-start-${association.id}`}
+            />
           </span>
         ) : (
           <span className="pointer-events-none relative flex shrink-0">

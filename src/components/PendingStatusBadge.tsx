@@ -79,10 +79,11 @@ function PendingEffectiveDateInfo({
             id={tooltipId}
             role="tooltip"
             style={style}
-            className="pointer-events-none rounded-lg bg-[#262527] p-3 text-sm leading-5 text-white shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
+            className="pointer-events-none w-max rounded-lg bg-[#262527] px-3 py-2 text-sm leading-5 text-white shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
           >
-            <p className="font-medium">Effective Date</p>
-            <p className="mt-0.5 text-[#e6e6e7]">{displayDate}</p>
+            <p className="whitespace-nowrap">
+              <span className="font-medium">Effective Date:</span> <span className="text-[#e6e6e7]">{displayDate}</span>
+            </p>
           </div>,
           document.body,
         )}
@@ -99,14 +100,15 @@ export function PendingStatusBadge({
   tooltipId: string
   size?: 'sm' | 'lg'
 }) {
-  const className =
+  // Pill carries only the "Pending" label; the date lives behind the info icon beside it.
+  const pillClassName =
     size === 'lg'
-      ? 'inline-flex h-[26px] w-fit shrink-0 items-center gap-0.5 rounded-2xl bg-[#fff4d8] py-0.5 pl-2.5 pr-2 text-xs font-medium leading-[18px] text-[#f6a300]'
-      : 'inline-flex shrink-0 items-center gap-0.5 rounded-2xl bg-[#fff4d8] py-0.5 pl-2 pr-1 text-xs font-medium leading-[18px] text-[#f6a300]'
+      ? 'inline-flex h-[26px] items-center rounded-2xl bg-[#fff4d8] px-2.5 text-xs font-medium leading-[18px] text-[#f6a300]'
+      : 'inline-flex items-center rounded-2xl bg-[#fff4d8] px-2 py-0.5 text-xs font-medium leading-[18px] text-[#f6a300]'
 
   return (
-    <span className={className}>
-      Pending
+    <span className="inline-flex w-fit shrink-0 items-center gap-1">
+      <span className={pillClassName}>Pending</span>
       <PendingEffectiveDateInfo effectiveDate={effectiveDate} tooltipId={tooltipId} />
     </span>
   )

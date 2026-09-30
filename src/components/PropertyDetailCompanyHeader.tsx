@@ -126,15 +126,23 @@ export function PropertyDetailCompanyHeader({
                     </span>
                   </>
                 )}
-                <span className="shrink-0">Owner :</span>
-                <span className="inline-flex min-w-0 items-center gap-1">
+                <button
+                  type="button"
+                  title={ownerName}
+                  aria-label={`Owner: ${ownerName}`}
+                  onClick={() => window.alert(`Owner: ${ownerName} (prototype)`)}
+                  className="group/owner inline-flex shrink-0 items-center gap-1 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                >
                   <img
                     alt=""
-                    className="size-[18px] shrink-0 rounded-full object-cover"
+                    className="size-[18px] shrink-0 rounded-full object-cover ring-primary/40 transition group-hover/owner:ring-2"
                     src={ownerAvatarSrc(ownerName)}
                   />
-                  <span className="truncate text-[#262527]">{ownerName}</span>
-                </span>
+                  {/* Owner name is hidden until hover/focus, then revealed inline. */}
+                  <span className="max-w-0 overflow-hidden whitespace-nowrap text-[#262527] opacity-0 transition-all duration-150 group-hover/owner:max-w-[160px] group-hover/owner:opacity-100 group-focus-visible/owner:max-w-[160px] group-focus-visible/owner:opacity-100">
+                    {ownerName}
+                  </span>
+                </button>
               </p>
             </div>
           </div>

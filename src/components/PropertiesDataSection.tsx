@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
+import { createPortal } from 'react-dom'
 import { CreatePropertyDrawer } from './CreatePropertyDrawer'
 import paginationChevronDown from '../assets/pagination-chevron-down.svg'
 import paginationChevronLeft from '../assets/pagination-chevron-left.svg'
@@ -11,7 +12,7 @@ import tableRepeat from '../assets/table-repeat.svg'
 import tableSearch from '../assets/table-search.svg'
 import tableStar from '../assets/table-star.svg'
 import tableSync from '../assets/table-sync.svg'
-import { affiliationStyles, propertyRows } from '../data/properties'
+import { propertyRows } from '../data/properties'
 
 type PropertiesDataSectionProps = {
   onSelectProperty: (index: number) => void
@@ -23,12 +24,112 @@ function CheckboxCell() {
   )
 }
 
-function AffiliationBadge({ variant }: { variant: keyof typeof affiliationStyles }) {
-  const style = affiliationStyles[variant]
+const MAX_VISIBLE_COMPANIES = 2
+
+function CompaniesCell({ companies }: { companies: string[] }) {
+  const visible = companies.slice(0, MAX_VISIBLE_COMPANIES)
+  const overflow = companies.slice(MAX_VISIBLE_COMPANIES)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const [open, setOpen] = useState(false)
+  const [style, setStyle] = useState<CSSProperties>({})
+
+  const cancelClose = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current)
+  }
+  const scheduleClose = () => {
+    cancelClose()
+    closeTimer.current = setTimeout(() => setOpen(false), 140)
+  }
+  useEffect(() => cancelClose, [])
+
+  useLayoutEffect(() => {
+    if (!open || !triggerRef.current) return
+    const update = () => {
+      const trigger = triggerRef.current
+      if (!trigger) return
+      const rect = trigger.getBoundingClientRect()
+      setStyle({
+        position: 'fixed',
+        left: Math.min(rect.left, window.innerWidth - 252),
+        top: rect.bottom + 6,
+        zIndex: 80,
+      })
+    }
+    update()
+    window.addEventListener('scroll', update, true)
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update, true)
+      window.removeEventListener('resize', update)
+    }
+  }, [open])
+
   return (
-    <span className={`inline-flex rounded-2xl px-2 py-0.5 text-xs font-medium leading-[18px] ${style.bg} ${style.text}`}>
-      {style.label}
-    </span>
+    <div className="flex items-center gap-1.5">
+      {visible.map((name) => (
+        <span
+          key={name}
+          className="max-w-[160px] shrink-0 truncate rounded-2xl bg-[#f5f5f6] px-2 py-0.5 text-xs font-medium leading-[18px] text-[#5b5b5f]"
+          title={name}
+        >
+          {name}
+        </span>
+      ))}
+      {overflow.length > 0 && (
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          onClick={(event) => {
+            event.stopPropagation()
+            setOpen((prev) => !prev)
+          }}
+          onMouseEnter={() => {
+            cancelClose()
+            setOpen(true)
+          }}
+          onMouseLeave={scheduleClose}
+          onFocus={() => setOpen(true)}
+          onBlur={scheduleClose}
+          aria-label={`${overflow.length} more companies: ${overflow.join(', ')}`}
+          className="shrink-0 rounded-2xl bg-[#f5f5f6] px-2 py-0.5 text-xs font-medium leading-[18px] text-[#5b5b5f] hover:bg-[#ececed]"
+        >
+          +{overflow.length}
+        </button>
+      )}
+      {open &&
+        overflow.length > 0 &&
+        createPortal(
+          <div
+            role="listbox"
+            aria-label="Companies"
+            style={style}
+            onMouseEnter={cancelClose}
+            onMouseLeave={scheduleClose}
+            onClick={(event) => event.stopPropagation()}
+            className="w-[236px] overflow-hidden rounded-lg border border-[#e6e6e7] bg-white shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
+          >
+            <p className="border-b border-[#e6e6e7] px-3 py-2 text-xs font-medium leading-[18px] text-[#86868b]">
+              Companies · {companies.length}
+            </p>
+            <ul className="max-h-[240px] overflow-y-auto py-1">
+              {companies.map((name) => (
+                <li
+                  key={name}
+                  role="option"
+                  aria-selected={false}
+                  className="px-3 py-2 text-sm leading-5 text-[#262527] hover:bg-[#f5f5f6]"
+                >
+                  {name}
+                </li>
+              ))}
+            </ul>
+          </div>,
+          document.body,
+        )}
+    </div>
   )
 }
 
@@ -56,7 +157,7 @@ function PropertyNameCell({ name, sync, starred }: { name: string; sync?: boolea
 
 function Pagination() {
   return (
-    <div className="flex h-14 flex-1 items-center justify-end gap-6 border-t border-[#e6e6e7] bg-white px-6 py-2.5">
+    <div className="flex h-14 shrink-0 items-center justify-end gap-6 border-t border-[#e6e6e7] bg-white px-6 py-2.5">
       <div className="flex flex-1 items-center justify-end gap-0.5">
         <p className="flex-1 text-right text-sm leading-5 text-[#444446]">Rows per page: 15</p>
         <span className="relative size-3.5 shrink-0">
@@ -159,23 +260,20 @@ export function PropertiesDataSection({ onSelectProperty }: PropertiesDataSectio
           <table className="min-w-full border-collapse bg-white text-left">
             <thead>
               <tr className="border-t border-[#e6e6e7]">
-                <th className="w-16 border-t border-[#e6e6e7] px-6 py-3">
+                <th className="sticky left-0 z-20 w-[64px] min-w-[64px] border-t border-[#e6e6e7] bg-white px-6 py-3">
                   <CheckboxCell />
                 </th>
-                <th className="whitespace-nowrap border-t border-[#e6e6e7] px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f]">
+                <th className="sticky left-[64px] z-20 w-[96px] min-w-[96px] whitespace-nowrap border-t border-[#e6e6e7] bg-white px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f]">
                   ID
                 </th>
-                <th className="whitespace-nowrap border-t border-[#e6e6e7] px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f]">
+                <th className="sticky left-[160px] z-20 min-w-[300px] whitespace-nowrap border-t border-[#e6e6e7] bg-white px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f] shadow-[6px_0_6px_-4px_rgba(0,0,0,0.08)]">
                   Property Name
                 </th>
                 <th className="whitespace-nowrap border-t border-[#e6e6e7] px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f]">
-                  Property Affiliation
+                  Property Address
                 </th>
                 <th className="whitespace-nowrap border-t border-[#e6e6e7] px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f]">
-                  Company Name
-                </th>
-                <th className="whitespace-nowrap border-t border-[#e6e6e7] px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f]">
-                  Parent Company
+                  Companies
                 </th>
                 <th className="whitespace-nowrap border-t border-[#e6e6e7] px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f]">
                   Deals Count
@@ -192,21 +290,25 @@ export function PropertiesDataSection({ onSelectProperty }: PropertiesDataSectio
               {propertyRows.map((row, index) => (
                 <tr
                   key={`${row.id}-${index}`}
-                  className="cursor-pointer border-t border-[#e6e6e7] hover:bg-[#f5f5f6]"
+                  className="group cursor-pointer border-t border-[#e6e6e7] hover:bg-[#f5f5f6]"
                   onClick={() => onSelectProperty(index)}
                 >
-                  <td className="px-6 py-3" onClick={(event) => event.stopPropagation()}>
+                  <td
+                    className="sticky left-0 z-20 w-[64px] bg-white px-6 py-3 group-hover:bg-[#f5f5f6]"
+                    onClick={(event) => event.stopPropagation()}
+                  >
                     <CheckboxCell />
                   </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium leading-5 text-[#444446]">{row.id}</td>
-                  <td className="px-6 py-4">
+                  <td className="sticky left-[64px] z-20 w-[96px] whitespace-nowrap bg-white px-6 py-4 text-sm font-medium leading-5 text-[#444446] group-hover:bg-[#f5f5f6]">
+                    {row.id}
+                  </td>
+                  <td className="sticky left-[160px] z-20 min-w-[300px] bg-white px-6 py-4 group-hover:bg-[#f5f5f6] shadow-[6px_0_6px_-4px_rgba(0,0,0,0.08)]">
                     <PropertyNameCell name={row.name} sync={row.sync} starred={row.starred} />
                   </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm leading-5 text-[#86868b]">{row.address}</td>
                   <td className="px-6 py-4">
-                    <AffiliationBadge variant={row.affiliation} />
+                    <CompaniesCell companies={row.companies} />
                   </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm leading-5 text-[#86868b]">{row.company}</td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm leading-5 text-[#86868b]">{row.parentCompany}</td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm leading-5 text-[#86868b]">{row.dealsCount}</td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm leading-5 text-[#86868b]">{row.country}</td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm leading-5 text-[#86868b]">{row.state}</td>

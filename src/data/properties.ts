@@ -12,6 +12,7 @@ export type PropertyRow = {
   starred?: boolean
   affiliation: AffiliationVariant
   company: string
+  companies: string[]
   parentCompany: string
   dealsCount: number
   country: string
@@ -46,6 +47,7 @@ export const propertyRows: PropertyRow[] = [
     starred: true,
     affiliation: 'corporate',
     company: 'Costco wholesale',
+    companies: ['Costco wholesale', 'Kirkland Signature', 'Costco Travel'],
     parentCompany: 'Costco',
     dealsCount: 1,
     country: 'United States',
@@ -58,6 +60,7 @@ export const propertyRows: PropertyRow[] = [
     name: 'Mcdonalds - Y Block',
     affiliation: 'owned-remote',
     company: 'Mcdonalds',
+    companies: ['Mcdonalds', 'McCafe'],
     parentCompany: 'Mcdonalds',
     dealsCount: 4,
     country: 'United States',
@@ -71,6 +74,7 @@ export const propertyRows: PropertyRow[] = [
     sync: true,
     affiliation: 'tenant',
     company: 'H&M Store',
+    companies: ['H&M Store', 'COS', 'Weekday', 'Monki', 'Arket'],
     parentCompany: 'H&M',
     dealsCount: 3,
     country: 'United States',
@@ -83,6 +87,7 @@ export const propertyRows: PropertyRow[] = [
     name: 'Charleston - Maple 987',
     affiliation: 'occupied-primary',
     company: "Charleston's Restaurant",
+    companies: ["Charleston's Restaurant", 'Charleston Catering'],
     parentCompany: 'Charleston',
     dealsCount: 2,
     country: 'United States',
@@ -95,6 +100,7 @@ export const propertyRows: PropertyRow[] = [
     name: 'Milwaukee Tools - 432 Aspen',
     affiliation: 'occupied-primary',
     company: 'Milwaukee Tools',
+    companies: ['Milwaukee Tools', 'Empire Level', 'Ridgid'],
     parentCompany: 'Milwaukee Tools',
     dealsCount: 2,
     country: 'United States',
@@ -108,6 +114,7 @@ export const propertyRows: PropertyRow[] = [
     sync: true,
     affiliation: 'corporate',
     company: 'Brian Mart',
+    companies: ['Brian Mart', 'Brian Express', 'Brian Fresh'],
     parentCompany: 'Brian Mart',
     dealsCount: 3,
     country: 'United States',
@@ -120,6 +127,7 @@ export const propertyRows: PropertyRow[] = [
     name: 'Park - Downtown',
     affiliation: 'managed',
     company: 'Park',
+    companies: ['Park', 'Central Park Conservancy', 'NYC Parks', 'Green Thumb'],
     parentCompany: 'Central Park',
     dealsCount: 2,
     country: 'United States',
@@ -132,6 +140,7 @@ export const propertyRows: PropertyRow[] = [
     name: 'Zorinski Lake - Garden Down',
     affiliation: 'corporate',
     company: 'Zorinski Lake',
+    companies: ['Zorinski Lake', 'Zorinski Marina'],
     parentCompany: 'Zorinski',
     dealsCount: 3,
     country: 'United States',
