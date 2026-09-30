@@ -340,7 +340,7 @@ function CompanyRow({
         className="absolute inset-0"
       />
       {selected && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-[3px] bg-primary" />}
-      <div className="pointer-events-none relative flex min-w-0 flex-1 flex-col gap-0.5 py-2.5 pl-6">
+      <div className="pointer-events-none relative flex min-w-0 flex-1 flex-col gap-1.5 py-2.5 pl-6">
         {companyHref ? (
           <a href={companyHref} className={`pointer-events-auto max-w-full self-start hover:text-primary hover:underline ${nameClass}`}>
             {company.name}
@@ -348,7 +348,9 @@ function CompanyRow({
         ) : (
           <span className={nameClass}>{company.name}</span>
         )}
-        <span className="min-w-0 truncate text-xs leading-[18px] text-[#86868b]">{detail}</span>
+        <span title={detail} className="min-w-0 truncate text-[13px] leading-[18px] text-[#5b5b5f]">
+          {detail}
+        </span>
       </div>
       {showStatus &&
         (association.status === 'Pending' ? (
