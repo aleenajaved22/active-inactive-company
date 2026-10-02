@@ -226,7 +226,7 @@ export function EditCompanyModal({
               Edit Company
             </h2>
             <p className="mt-1 text-sm leading-5 text-[#6a6a70]">
-              Update this company&apos;s affiliation and association end date
+              Update this company&apos;s affiliation and how long it stays at this property
             </p>
           </div>
           <button type="button" aria-label="Close" onClick={onClose} className="relative size-6 shrink-0">
@@ -248,7 +248,7 @@ export function EditCompanyModal({
 
         <div className="mt-4 flex flex-col gap-1.5">
           <label htmlFor="edit-company-end-date" className="text-sm font-medium leading-5 text-[#86868b]">
-            Company Association End Date
+            Company at property till date
           </label>
           <ModalDateInput id="edit-company-end-date" value={endDate} onChange={setEndDate} />
           {submitAttempted && endDateError ? (

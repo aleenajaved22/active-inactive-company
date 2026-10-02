@@ -5,6 +5,7 @@ import detailPlus from '../assets/detail-plus.svg'
 import modalClose from '../assets/modal-close.svg'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
 import tableSearch from '../assets/table-search.svg'
+import { propertyCompanies } from '../data/propertyCompanies'
 import { companyParents, findSpaceConflict, type SpaceType } from '../data/propertySpaces'
 import { CreateCompanyModal } from './CreateCompanyModal'
 import { ModalDateInput } from './ModalDateInput'
@@ -26,8 +27,11 @@ type CreatePropertyDrawerProps = {
   onClose: () => void
 }
 
-const CUT_OFF_DATE_HELP =
-  'On the Company Association End Date, the current company is dissociated from this property'
+const CUT_OFF_DATE_HELP = 'The date until which the current company is at this property, after which it is dissociated'
+
+const parentCompanyOptions = [
+  ...new Set([...Object.values(companyParents), ...propertyCompanies.map((item) => item.parentCompany ?? '').filter(Boolean)]),
+].sort((a, b) => a.localeCompare(b))
 
 function DrawerLabel({ children, required }: { children: ReactNode; required?: boolean }) {
   return (
@@ -222,7 +226,6 @@ function FieldError({ id, children }: { id: string; children: ReactNode }) {
 export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProps) {
   const [address, setAddress] = useState('')
   const [floor, setFloor] = useState('')
-  const [apartment, setApartment] = useState('')
   const [suiteUnitType, setSuiteUnitType] = useState<SpaceType | ''>('Suite')
   const [suiteUnitNumber, setSuiteUnitNumber] = useState('')
   const [propertyName, setPropertyName] = useState('')
@@ -261,7 +264,6 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
     if (open) return
     setAddress('')
     setFloor('')
-    setApartment('')
     setSuiteUnitType('Suite')
     setSuiteUnitNumber('')
     setPropertyName('')
@@ -294,18 +296,14 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
 
   // Space fields are optional, so we only surface a conflict when one already exists at this address.
   const floorConflict = findSpaceConflict(address, 'Floor', floor)
-  const apartmentConflict = findSpaceConflict(address, 'Apartment', apartment)
   const suiteUnitConflict = findSpaceConflict(address, suiteUnitType, suiteUnitNumber)
   const floorError = floorConflict
     ? `Floor ${floor.trim()} is already assigned to ${floorConflict} at this address.`
     : null
-  const apartmentError = apartmentConflict
-    ? `Apartment ${apartment.trim()} is already assigned to ${apartmentConflict} at this address.`
-    : null
   const suiteUnitError = suiteUnitConflict
     ? `${suiteUnitType} ${suiteUnitNumber.trim()} is already assigned to ${suiteUnitConflict} at this address.`
     : null
-  const spaceConflict = Boolean(floorConflict || apartmentConflict || suiteUnitConflict)
+  const spaceConflict = Boolean(floorConflict || suiteUnitConflict)
   const assigneeError = submitAttempted && !assignee ? 'Select an assignee.' : null
 
   const handleCreate = () => {
@@ -492,17 +490,18 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <DrawerLabel>Parent Company</DrawerLabel>
-                      <DrawerTextInput
+                      <DrawerSelect
                         id="create-property-parent-company"
                         value={parentCompany}
                         onChange={setParentCompany}
-                        placeholder="Parent Company"
+                        options={parentCompanyOptions}
+                        placeholder="Select parent company"
                       />
                     </div>
                   </div>
                   <div className="flex w-full max-w-[359px] flex-col gap-1.5">
-                    <DrawerLabelWithInfo required tooltip={CUT_OFF_DATE_HELP} tooltipId="create-property-cut-off-date-help">
-                      Company Association End Date
+                    <DrawerLabelWithInfo tooltip={CUT_OFF_DATE_HELP} tooltipId="create-property-cut-off-date-help">
+                      Company at property till date
                     </DrawerLabelWithInfo>
                     <ModalDateInput
                       id="create-property-cut-off-date"
@@ -514,15 +513,13 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                   <div ref={spaceFieldRef}>
                     <SpaceFields
                       idPrefix="create-property"
-                      columns={3}
-                      value={{ floor, apartment, suiteUnitType, suiteUnitNumber }}
+                      value={{ floor, suiteUnitType, suiteUnitNumber }}
                       onChange={(next) => {
                         setFloor(next.floor)
-                        setApartment(next.apartment)
                         setSuiteUnitType(next.suiteUnitType)
                         setSuiteUnitNumber(next.suiteUnitNumber)
                       }}
-                      errors={{ floor: floorError, apartment: apartmentError, suiteUnit: suiteUnitError }}
+                      errors={{ floor: floorError, suiteUnit: suiteUnitError }}
                       suiteUnitNumberRef={suiteUnitNumberRef}
                     />
                   </div>

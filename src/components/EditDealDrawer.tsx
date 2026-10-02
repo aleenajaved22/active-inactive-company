@@ -118,7 +118,6 @@ export function EditDealDrawer({ open, onClose }: EditDealDrawerProps) {
   const [squareFootage, setSquareFootage] = useState('')
   const [numUnits, setNumUnits] = useState('')
   const [amenities, setAmenities] = useState('')
-  const [numberOfBuildings, setNumberOfBuildings] = useState('')
   const [parkingSpaces, setParkingSpaces] = useState('')
   const [avgRent, setAvgRent] = useState('')
   const [buildingClass, setBuildingClass] = useState('')
@@ -222,12 +221,6 @@ export function EditDealDrawer({ open, onClose }: EditDealDrawerProps) {
               <div className="grid grid-cols-3 gap-6">
                 <MetricField id="edit-property-num-units" label="No. of Units" value={numUnits} onChange={setNumUnits} />
                 <MetricField id="edit-property-amenities" label="Amenities" value={amenities} onChange={setAmenities} />
-                <MetricField
-                  id="edit-property-num-buildings"
-                  label="Number of Buildings"
-                  value={numberOfBuildings}
-                  onChange={setNumberOfBuildings}
-                />
               </div>
 
               <div className="grid grid-cols-3 gap-6">
@@ -237,7 +230,7 @@ export function EditDealDrawer({ open, onClose }: EditDealDrawerProps) {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <DrawerLabel variant="regular">Company Association End Date</DrawerLabel>
+                <DrawerLabel variant="regular">Company at property till date</DrawerLabel>
                 <ModalDateInput
                   id="edit-deal-company-association-end-date"
                   value={companyAssociationEndDate}

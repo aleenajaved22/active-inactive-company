@@ -106,7 +106,7 @@ export function PropertyDetailPage({
               </div>
               <div className="flex flex-col gap-2 text-sm leading-5 text-[#6a6a70]">
                 <p>{property.address}</p>
-                <p>{property.metaLine}</p>
+                <p>{property.industryVertical}</p>
               </div>
             </div>
             <div className="my-4 px-8">

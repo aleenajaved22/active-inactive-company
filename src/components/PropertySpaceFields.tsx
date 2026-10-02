@@ -11,21 +11,18 @@ import { suiteUnitTypes, type SpaceType } from '../data/propertySpaces'
 
 export type SpaceFieldsValue = {
   floor: string
-  apartment: string
   suiteUnitType: SpaceType | ''
   suiteUnitNumber: string
 }
 
 export const emptySpaceFields = (): SpaceFieldsValue => ({
   floor: '',
-  apartment: '',
   suiteUnitType: 'Suite',
   suiteUnitNumber: '',
 })
 
 export type SpaceFieldsErrors = {
   floor?: string | null
-  apartment?: string | null
   suiteUnit?: string | null
 }
 
@@ -54,7 +51,7 @@ function FieldError({ id, children }: { id?: string; children: ReactNode }) {
   )
 }
 
-/** Suite/Unit type picker: a small listbox limited to Suite and Unit. */
+/** Suite / Unit / Apartment type picker: a small listbox. */
 function SuiteUnitTypeMenu({
   id,
   value,
@@ -111,7 +108,7 @@ function SuiteUnitTypeMenu({
   }
 
   return (
-    <div ref={rootRef} className="relative w-[88px] shrink-0">
+    <div ref={rootRef} className="relative w-[112px] shrink-0">
       <button
         id={id}
         type="button"
@@ -218,20 +215,12 @@ function TextField({
   )
 }
 
-/** Floor, Apartment and a joined Suite / Unit field — the space inputs shared by the create and switch flows. */
-const columnsClass: Record<1 | 2 | 3, string> = {
-  1: 'grid-cols-1',
-  2: 'grid-cols-2',
-  // Floor and Apartment are short values; give the joined Suite / Unit field the most room.
-  3: 'grid-cols-[minmax(0,0.7fr)_minmax(0,0.8fr)_minmax(0,1.5fr)]',
-}
-
+/** Floor and a joined Suite / Unit / Apartment field — the space inputs shared by the create and switch flows. */
 export function SpaceFields({
   value,
   onChange,
   idPrefix = 'space',
   size = 'md',
-  columns = 3,
   errors,
   invalidField,
   suiteUnitNumberRef,
@@ -241,17 +230,16 @@ export function SpaceFields({
   onChange: (next: SpaceFieldsValue) => void
   idPrefix?: string
   size?: FieldSize
-  columns?: 1 | 2 | 3
   errors?: SpaceFieldsErrors
   /** Marks one field red when its message is rendered outside this component. */
-  invalidField?: 'floor' | 'apartment' | 'suiteUnit'
+  invalidField?: 'floor' | 'suiteUnit'
   suiteUnitNumberRef?: RefObject<HTMLInputElement | null>
   /** Read-only display, e.g. when the space is locked to an existing one. */
   disabled?: boolean
 }) {
   const suiteUnitInvalid = Boolean(errors?.suiteUnit) || invalidField === 'suiteUnit'
   return (
-    <div className={`grid ${columnsClass[columns]} items-start gap-4`}>
+    <div className="grid grid-cols-[minmax(0,0.7fr)_minmax(0,1.6fr)] items-start gap-4">
       <TextField
         id={`${idPrefix}-floor`}
         label="Floor"
@@ -261,17 +249,6 @@ export function SpaceFields({
         size={size}
         error={errors?.floor}
         invalid={invalidField === 'floor'}
-        disabled={disabled}
-      />
-      <TextField
-        id={`${idPrefix}-apartment`}
-        label="Apartment"
-        value={value.apartment}
-        onChange={(apartment) => onChange({ ...value, apartment })}
-        placeholder="12B"
-        size={size}
-        error={errors?.apartment}
-        invalid={invalidField === 'apartment'}
         disabled={disabled}
       />
       <div className="flex flex-col gap-1.5">

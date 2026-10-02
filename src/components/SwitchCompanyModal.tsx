@@ -74,13 +74,13 @@ function ModalFieldError({ children }: { children: ReactNode }) {
   )
 }
 
-/** Splits a locked space ("Suite|210" plus its floor) into the Floor / Apartment / Suite-Unit fields. */
+/** Splits a locked space ("Suite|210" plus its floor) into the Floor / Suite-Unit-Apartment fields. */
 function lockedSpaceFields(space: SwitchSpaceOption): SpaceFieldsValue {
   const [type, number = ''] = space.key.split('|')
   const fields = emptySpaceFields()
   if (type === 'Floor') return { ...fields, floor: number, suiteUnitType: '', suiteUnitNumber: '' }
-  if (type === 'Apartment' || type === 'Flat') {
-    return { ...fields, floor: space.floor ?? '', apartment: number, suiteUnitType: '', suiteUnitNumber: '' }
+  if (type === 'Flat') {
+    return { ...fields, floor: space.floor ?? '', suiteUnitType: 'Apartment', suiteUnitNumber: number }
   }
   return { ...fields, floor: space.floor ?? '', suiteUnitType: type as SpaceFieldsValue['suiteUnitType'], suiteUnitNumber: number }
 }
@@ -216,13 +216,11 @@ export function SwitchCompanyModal({
   const deriveSpaceKey = (v: SpaceFieldsValue) => {
     if (v.suiteUnitType && v.suiteUnitNumber.trim()) return `${v.suiteUnitType}|${v.suiteUnitNumber.trim()}`
     if (v.floor.trim()) return `Floor|${v.floor.trim()}`
-    if (v.apartment.trim()) return `Apartment|${v.apartment.trim()}`
     return ''
   }
   const addSpaceLabel =
     [
       spaceFields.floor.trim() && `Floor ${spaceFields.floor.trim()}`,
-      spaceFields.apartment.trim() && `Apartment ${spaceFields.apartment.trim()}`,
       spaceFields.suiteUnitType && spaceFields.suiteUnitNumber.trim() && `${spaceFields.suiteUnitType} ${spaceFields.suiteUnitNumber.trim()}`,
     ]
       .filter(Boolean)
@@ -230,8 +228,8 @@ export function SwitchCompanyModal({
   const effectiveSpaceKey = spaceLocked ? spaceKey : deriveSpaceKey(spaceFields)
   // Making a company active on a space someone already holds is an error; name that company.
   const occupiedSpace = isMakeActive ? spaces.find((space) => space.key === effectiveSpaceKey && (space.currentCompanyName || space.pendingCompanyName)) : undefined
-  const occupiedField: 'floor' | 'apartment' | 'suiteUnit' =
-    spaceFields.suiteUnitType && spaceFields.suiteUnitNumber.trim() ? 'suiteUnit' : spaceFields.floor.trim() ? 'floor' : 'apartment'
+  const occupiedField: 'floor' | 'suiteUnit' =
+    spaceFields.suiteUnitType && spaceFields.suiteUnitNumber.trim() ? 'suiteUnit' : 'floor'
   const occupiedError = occupiedSpace
     ? occupiedSpace.currentCompanyName
       ? `${occupiedSpace.label} already has an active company: ${occupiedSpace.currentCompanyName}.`
@@ -435,7 +433,7 @@ export function SwitchCompanyModal({
 
           <ModalFormRow
             label="Property Occupancy"
-            description="The floor, apartment, suite or unit for this company."
+            description="The floor, suite, unit or apartment for this company."
             stacked
           >
             {spaceLocked && selectedSpace ? (
@@ -443,7 +441,6 @@ export function SwitchCompanyModal({
                 <SpaceFields
                   idPrefix="switch-company-locked"
                   size="sm"
-                  columns={3}
                   disabled
                   value={lockedSpaceFields(selectedSpace)}
                   onChange={() => {}}
@@ -456,7 +453,6 @@ export function SwitchCompanyModal({
               <SpaceFields
                 idPrefix="switch-company"
                 size="sm"
-                columns={3}
                 value={spaceFields}
                 onChange={setSpaceFields}
                 invalidField={occupiedSpace ? occupiedField : undefined}
@@ -477,8 +473,8 @@ export function SwitchCompanyModal({
           </ModalFormRow>
 
           <ModalFormRow
-            label="Company Association End Date - Association Removed"
-            description="On the Association End Date, the selected company is dissociated from this property. A company with active contracts cannot be dissociated, close or complete them first"
+            label="Company at property till date"
+            description="Optional. The selected company stays at this property until this date, then is dissociated. A company with active contracts cannot be dissociated, close or complete them first"
           >
             <ModalDateInput id="switch-company-cut-off-date" value={cutOffDate} onChange={setCutOffDate} />
             {showErrors && endDateError && <ModalFieldError>{endDateError}</ModalFieldError>}

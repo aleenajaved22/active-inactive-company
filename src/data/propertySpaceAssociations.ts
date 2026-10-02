@@ -50,6 +50,28 @@ const currentSpaceAssociations: SpaceAssociation[] = [
     affiliations: ['Tenant'],
   },
   {
+    // A unit with no floor, e.g. a standalone building.
+    id: 'unit-8-kroger',
+    spaceType: 'Unit',
+    spaceNumber: '8',
+    companyId: 'kroger',
+    status: 'Active',
+    effectiveDate: '02/01/2025',
+    endDate: '',
+    affiliations: ['Tenant'],
+  },
+  {
+    // A suite with no floor, e.g. a single-storey building.
+    id: 'suite-305-cvs',
+    spaceType: 'Suite',
+    spaceNumber: '305',
+    companyId: 'cvs',
+    status: 'Active',
+    effectiveDate: '09/01/2025',
+    endDate: '',
+    affiliations: ['Tenant'],
+  },
+  {
     // Starbucks has signed for the vacant Suite 104 and moves in on the effective date.
     id: 'suite-104-starbucks',
     spaceType: 'Suite',

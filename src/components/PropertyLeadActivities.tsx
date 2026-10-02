@@ -281,7 +281,14 @@ function NotesPanel({ readOnly = false }: { readOnly?: boolean }) {
   )
 }
 
+const EMAILS_PAGE_SIZE = 10
+
 function EmailsPanel({ readOnly = false }: { readOnly?: boolean }) {
+  const [page, setPage] = useState(0)
+  const pageCount = Math.max(1, Math.ceil(emailsFeed.length / EMAILS_PAGE_SIZE))
+  const pageEmails = emailsFeed.slice(page * EMAILS_PAGE_SIZE, (page + 1) * EMAILS_PAGE_SIZE)
+  const pageButtonClass =
+    'flex size-8 items-center justify-center rounded-full border border-[#d0cfd2] bg-white disabled:cursor-not-allowed disabled:opacity-40'
   return (
     <div className="mt-6 flex flex-col gap-4 overflow-y-auto pb-6">
       <div className="flex flex-wrap items-center gap-3">
@@ -311,7 +318,7 @@ function EmailsPanel({ readOnly = false }: { readOnly?: boolean }) {
         </button>
       </div>
       <div className="divide-y divide-[#e6e6e7] border-y border-[#e6e6e7]">
-        {emailsFeed.map((email) => (
+        {pageEmails.map((email) => (
           <button
             key={email.id}
             type="button"
@@ -331,6 +338,35 @@ function EmailsPanel({ readOnly = false }: { readOnly?: boolean }) {
           </button>
         ))}
       </div>
+      <nav aria-label="Emails pages" className="flex h-14 items-center justify-end gap-6 px-6">
+        <span className="text-sm leading-5 text-[#444446]">
+          {page * EMAILS_PAGE_SIZE + 1}-{Math.min((page + 1) * EMAILS_PAGE_SIZE, emailsFeed.length)} of {emailsFeed.length}
+        </span>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            aria-label="Previous page"
+            disabled={page === 0}
+            onClick={() => setPage(page - 1)}
+            className={pageButtonClass}
+          >
+            <span className="relative size-5">
+              <img alt="" className="absolute inset-0 block size-full max-w-none" src={paginationChevronLeft} />
+            </span>
+          </button>
+          <button
+            type="button"
+            aria-label="Next page"
+            disabled={page >= pageCount - 1}
+            onClick={() => setPage(page + 1)}
+            className={pageButtonClass}
+          >
+            <span className="relative size-5">
+              <img alt="" className="absolute inset-0 block size-full max-w-none" src={paginationChevronRight} />
+            </span>
+          </button>
+        </div>
+      </nav>
     </div>
   )
 }

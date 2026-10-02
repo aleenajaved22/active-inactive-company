@@ -209,7 +209,7 @@ export const notesFeed: NoteItem[] = [
   },
 ]
 
-export const emailsFeed: EmailItem[] = [
+const baseEmails: EmailItem[] = [
   {
     id: '1',
     sender: 'Ethan Brooks',
@@ -257,6 +257,17 @@ export const emailsFeed: EmailItem[] = [
     time: 'May 24',
     shaded: true,
   },
+]
+
+const earlierDays = ['May 23', 'May 22', 'May 21', 'May 20', 'May 17', 'May 16', 'May 15', 'May 14', 'May 13']
+
+/** Prototype mailbox: the base emails followed by older ones, enough to exercise pagination. */
+export const emailsFeed: EmailItem[] = [
+  ...baseEmails,
+  ...Array.from({ length: 18 }, (_, index): EmailItem => {
+    const base = baseEmails[index % baseEmails.length]
+    return { ...base, id: String(baseEmails.length + index + 1), time: earlierDays[Math.floor(index / 2)], unread: false, shaded: index % 2 === 0 }
+  }),
 ]
 
 export const tasksFeed: TaskItem[] = [
