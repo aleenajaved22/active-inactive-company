@@ -6,10 +6,11 @@ import { formatShortDate } from '../data/dateFormat'
  * recorded against it.
  *
  * Informational only: nothing is blocked here and there is nothing to
- * acknowledge, so it is an inline note rather than a modal. It sits above the
- * deal list, where it is read before any contract dates are set — the create-time
- * validation still catches a date that goes past the till date, and this note is
- * only there so the user does not reach that point unaware.
+ * acknowledge, so it is an inline note rather than a modal. It rests at the foot
+ * of the company panel, in view while the contract is set up without
+ * interrupting the tabs — the create-time validation still catches a date that
+ * goes past the till date, and this note is only there so the user does not
+ * reach that point unaware.
  *
  * Renders nothing when the company has no till date, which is most contracts.
  */

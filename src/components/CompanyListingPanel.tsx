@@ -364,7 +364,9 @@ function CompanyRow({
             <StatusBadge status={association.status} />
           </span>
         ))}
-      <div className="relative flex shrink-0 items-center">
+      {/* Pulled out by the icon button's own padding so the ⋮ glyph lines up
+          with the Add button and search field, not just its hit area. */}
+      <div className="relative -mr-1.5 flex shrink-0 items-center">
         {menuItems.length > 0 ? (
           <ActionMenu label={`Actions for ${company.name}, ${space}`} items={menuItems} />
         ) : (

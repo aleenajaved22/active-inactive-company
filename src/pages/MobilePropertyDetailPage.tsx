@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { affiliationsToBadges } from '../components/switchCompanyTypes'
+import { ContractProposalNotice } from '../components/ContractProposalNotice'
 import { INACTIVE_BANNER, PENDING_BANNER } from '../data/companyAtPropertyCopy'
 import { leadActivityTabs } from '../data/leadActivities'
 import { formatPropertyTitle, type PropertyRow } from '../data/properties'
@@ -364,6 +365,10 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
             ) : (
               <TabPlaceholder tab={activeTab} />
             )}
+
+            {/* Matches the web app: a leaving date rests at the foot of the
+                company panel rather than interrupting the tabs. */}
+            <ContractProposalNotice tillDate={selectedAssociation.endDate} />
           </div>
         </div>
 
