@@ -6,6 +6,7 @@ export type PrototypeScreen =
   | { screen: 'mobile-create-property' }
   | { screen: 'mobile-request-sent' }
   | { screen: 'mobile-property'; propertyIndex: number }
+  | { screen: 'fo-email' }
   | { screen: 'property'; propertyIndex: number; modal?: PropertyModal }
   | { screen: 'company'; propertyIndex: number; companyId: string }
   | { screen: 'parent-company'; propertyIndex: number; parentName: string }
@@ -19,6 +20,7 @@ export const prototypeScreenCatalog: { label: string; screen: PrototypeScreen }[
   { label: 'Mobile — Create property', screen: { screen: 'mobile-create-property' } },
   { label: 'Mobile — Request sent', screen: { screen: 'mobile-request-sent' } },
   { label: 'Mobile — Property detail', screen: { screen: 'mobile-property', propertyIndex: 0 } },
+  { label: 'FO email template', screen: { screen: 'fo-email' } },
 ]
 
 export function prototypeScreenToHash(screen: PrototypeScreen): string {
@@ -27,6 +29,7 @@ export function prototypeScreenToHash(screen: PrototypeScreen): string {
   if (screen.screen === 'mobile-create-property') return '#/mobile/create-property'
   if (screen.screen === 'mobile-request-sent') return '#/mobile/request-sent'
   if (screen.screen === 'mobile-property') return `#/mobile/property/${screen.propertyIndex}`
+  if (screen.screen === 'fo-email') return '#/email/franchise-owner'
   if (screen.screen === 'company') return `#/property/${screen.propertyIndex}/company/${screen.companyId}`
   if (screen.screen === 'parent-company') {
     return `#/property/${screen.propertyIndex}/parent/${encodeURIComponent(screen.parentName)}`
@@ -52,6 +55,10 @@ export function parsePrototypeHash(rawHash: string): PrototypeScreen {
 
   if (hash === 'mobile/request-sent') {
     return { screen: 'mobile-request-sent' }
+  }
+
+  if (hash === 'email/franchise-owner') {
+    return { screen: 'fo-email' }
   }
 
   const mobilePropertyMatch = /^mobile\/property\/(\d+)\/?$/.exec(hash)

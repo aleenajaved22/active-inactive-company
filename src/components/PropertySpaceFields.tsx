@@ -7,7 +7,13 @@ import {
   type RefObject,
 } from 'react'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
+import {
+  OCCUPANCY_PLACEHOLDERS,
+  OCCUPANCY_TOOLTIPS,
+  SUITE_UNIT_LABEL,
+} from '../data/companyAtPropertyCopy'
 import { suiteUnitTypes, type SpaceType } from '../data/propertySpaces'
+import { InfoTooltip } from './InfoTooltip'
 
 export type SpaceFieldsValue = {
   floor: string
@@ -30,8 +36,16 @@ type FieldSize = 'sm' | 'md'
 
 const fieldHeight: Record<FieldSize, string> = { sm: 'h-10', md: 'h-11' }
 
-function FieldLabel({ children }: { children: ReactNode }) {
-  return <span className="text-sm font-medium leading-5 text-[#86868b]">{children}</span>
+function FieldLabel({ children, tooltip, tooltipLabel }: { children: ReactNode; tooltip?: string; tooltipLabel?: string }) {
+  if (!tooltip) {
+    return <span className="text-sm font-medium leading-5 text-[#86868b]">{children}</span>
+  }
+  return (
+    <span className="flex items-center gap-1">
+      <span className="text-sm font-medium leading-5 text-[#86868b]">{children}</span>
+      <InfoTooltip label={tooltipLabel ?? `${children} information`} text={tooltip} />
+    </span>
+  )
 }
 
 function FieldError({ id, children }: { id?: string; children: ReactNode }) {
@@ -121,11 +135,9 @@ function SuiteUnitTypeMenu({
         disabled={disabled}
         onClick={() => (open ? setOpen(false) : openMenu())}
         onKeyDown={onKeyDown}
-        className={`flex h-full w-full items-center justify-between gap-2 rounded-l-lg bg-transparent pl-3 pr-2 text-left text-base leading-6 outline-none ${
-          value ? 'text-[#262527]' : 'text-[#ccc]'
-        }`}
+        className="flex h-full w-full items-center justify-between gap-2 rounded-l-lg bg-transparent pl-3 pr-2 text-left text-base leading-6 text-[#262527] outline-none"
       >
-        {value || 'Type'}
+        {value || 'Suite'}
         <span className="relative size-5 shrink-0" aria-hidden>
           <img
             alt=""
@@ -181,6 +193,7 @@ function TextField({
   error,
   invalid,
   disabled,
+  tooltip,
 }: {
   id: string
   label: string
@@ -189,6 +202,8 @@ function TextField({
   placeholder: string
   size: FieldSize
   error?: string | null
+  /** Accepted-format help, shown behind an ⓘ beside the label. */
+  tooltip?: string
   /** Red border without an inline message, when the message is shown elsewhere. */
   invalid?: boolean
   disabled?: boolean
@@ -196,7 +211,9 @@ function TextField({
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id}>
-        <FieldLabel>{label}</FieldLabel>
+        <FieldLabel tooltip={tooltip} tooltipLabel={`${label} format`}>
+          {label}
+        </FieldLabel>
       </label>
       <input
         id={id}
@@ -245,7 +262,8 @@ export function SpaceFields({
         label="Floor"
         value={value.floor}
         onChange={(floor) => onChange({ ...value, floor })}
-        placeholder="5"
+        placeholder={OCCUPANCY_PLACEHOLDERS.floor}
+        tooltip={OCCUPANCY_TOOLTIPS.floor}
         size={size}
         error={errors?.floor}
         invalid={invalidField === 'floor'}
@@ -253,7 +271,9 @@ export function SpaceFields({
       />
       <div className="flex flex-col gap-1.5">
         <label htmlFor={`${idPrefix}-suite-unit-type`}>
-          <FieldLabel>Suite / Unit</FieldLabel>
+          <FieldLabel tooltip={OCCUPANCY_TOOLTIPS.suiteUnit} tooltipLabel={`${SUITE_UNIT_LABEL} format`}>
+            {SUITE_UNIT_LABEL}
+          </FieldLabel>
         </label>
         <div
           className={`flex ${fieldHeight[size]} rounded-lg border ${disabled ? 'bg-[#f5f5f6]' : 'bg-white'} ${
@@ -277,7 +297,7 @@ export function SpaceFields({
             value={value.suiteUnitNumber}
             disabled={disabled}
             onChange={(event) => onChange({ ...value, suiteUnitNumber: event.target.value })}
-            placeholder="210B"
+            placeholder={OCCUPANCY_PLACEHOLDERS.suiteUnit}
             className="min-w-0 flex-1 rounded-r-lg bg-transparent px-3.5 text-base leading-6 text-[#262527] outline-none placeholder:text-[#ccc]"
           />
         </div>

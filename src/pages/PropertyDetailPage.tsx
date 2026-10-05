@@ -19,6 +19,7 @@ import { PropertyDetailCompanyHeader } from '../components/PropertyDetailCompany
 import { mainPanelLinkClass } from '../components/mainPanelReadOnlyStyles'
 import { PropertyLeadActivities } from '../components/PropertyLeadActivities'
 import { SidebarNavigation } from '../components/SidebarNavigation'
+import { INACTIVE_BANNER, PENDING_BANNER } from '../data/companyAtPropertyCopy'
 import { getPropertyCompany } from '../data/propertyCompanies'
 import { initialSpaceAssociations, spaceLabelOf, type SpaceAssociation } from '../data/propertySpaceAssociations'
 import { affiliationsToBadges } from '../components/switchCompanyTypes'
@@ -69,11 +70,15 @@ export function PropertyDetailPage({
   const listStatus = selectedAssociation.status
   const selectedCompany = getPropertyCompany(selectedAssociation.companyId)
   const [editDealOpen, setEditDealOpen] = useState(false)
+  // Parent Company is blank on some records; once set here it behaves as a HubSpot value.
+  const [parentCompanyOverrides, setParentCompanyOverrides] = useState<Record<string, string>>({})
   const [detailsWidth, setDetailsWidth] = useState(DETAILS_DEFAULT_WIDTH)
   const [companiesPanelOpen, setCompaniesPanelOpen] = useState(true)
   const [companiesWidth, setCompaniesWidth] = useState(COMPANIES_DEFAULT_WIDTH)
   const resizeStart = useRef(0)
-  const mainPanelReadOnly = listStatus === 'Inactive' || listStatus === 'Pending'
+  // Pending is no longer disabled: the user can prepare for the incoming
+  // company. Only publishing a contract waits for the effective date.
+  const mainPanelReadOnly = listStatus === 'Inactive'
   const mainPanelEmptyStates = listStatus === 'Pending'
 
   return (
@@ -106,7 +111,6 @@ export function PropertyDetailPage({
               </div>
               <div className="flex flex-col gap-2 text-sm leading-5 text-[#6a6a70]">
                 <p>{property.address}</p>
-                <p>{property.industryVertical}</p>
               </div>
             </div>
             <div className="my-4 px-8">
@@ -121,12 +125,6 @@ export function PropertyDetailPage({
                     <img alt="" className="absolute inset-0 block size-full max-w-none" src={detailChevronSm} />
                   </span>
                 </span>
-              </div>
-              <div className="flex items-center justify-between rounded-lg bg-white px-3 py-1.5">
-                <span className="text-sm leading-5 text-primary">Assigned to</span>
-                <button type="button" className="text-sm leading-5 text-primary underline">
-                  Assign User
-                </button>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-white px-3 py-1.5">
                 <span className="text-sm leading-5 text-primary">Linked Franchise</span>
@@ -185,7 +183,7 @@ export function PropertyDetailPage({
           />
 
           <section className="flex min-w-0 flex-1 flex-col overflow-y-auto border-l border-[#e6e6e7]">
-            {listStatus === 'Pending' ? (
+            {listStatus !== 'Active' ? (
               <div
                 className="flex items-start gap-2 border-b border-primary/20 bg-[#e5f6ff] px-8 py-3"
                 role="status"
@@ -202,7 +200,7 @@ export function PropertyDetailPage({
                   </svg>
                 </span>
                 <p className="text-sm font-medium leading-5 text-[#262527]">
-                  All features will become available once the effective date arrives
+                  {listStatus === 'Pending' ? PENDING_BANNER : INACTIVE_BANNER}
                 </p>
               </div>
             ) : null}
@@ -269,10 +267,23 @@ export function PropertyDetailPage({
               companyHref={companyHref?.(selectedCompany.id)}
               spaceLabel={spaceLabelOf(selectedAssociation)}
               listStatus={listStatus}
-              ownerName={selectedCompany.companyOwner}
-              parentCompany={selectedCompany.parentCompany}
-              parentCompanyHref={
-                selectedCompany.parentCompany ? parentCompanyHref?.(selectedCompany.parentCompany) : undefined
+              industryVertical={selectedCompany.industryVertical}
+              parentCompany={parentCompanyOverrides[selectedCompany.id] ?? selectedCompany.parentCompany}
+              parentCompanyHref={(() => {
+                const parent = parentCompanyOverrides[selectedCompany.id] ?? selectedCompany.parentCompany
+                return parent ? parentCompanyHref?.(parent) : undefined
+              })()}
+              onParentCompanyChange={(value) =>
+                setParentCompanyOverrides((prev) => ({ ...prev, [selectedCompany.id]: value }))
+              }
+              assignee={selectedAssociation.assignee}
+              supervisor={selectedAssociation.supervisor}
+              onAssigneeChange={({ assignee, supervisor }) =>
+                setAssociations((prev) =>
+                  prev.map((item) =>
+                    item.id === selectedAssociation.id ? { ...item, assignee, supervisor } : item,
+                  ),
+                )
               }
               affiliations={affiliationsToBadges(selectedAssociation.affiliations)}
               pendingEffectiveDate={listStatus === 'Pending' ? selectedAssociation.effectiveDate : undefined}
@@ -285,6 +296,7 @@ export function PropertyDetailPage({
                 company={selectedCompany}
                 readOnly={mainPanelReadOnly}
                 showEmptyStates={mainPanelEmptyStates}
+                tillDate={selectedAssociation.endDate}
               />
             </div>
           </section>

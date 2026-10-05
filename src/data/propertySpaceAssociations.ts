@@ -14,6 +14,9 @@ export type SpaceAssociation = {
   effectiveDate: string
   endDate: string
   affiliations: PropertyAffiliation[]
+  /** Set per property + company, so one value cannot cover the whole property. */
+  assignee: string
+  supervisor?: string
 }
 
 const currentSpaceAssociations: SpaceAssociation[] = [
@@ -26,6 +29,8 @@ const currentSpaceAssociations: SpaceAssociation[] = [
     effectiveDate: '01/01/2024',
     endDate: '12/31/2026',
     affiliations: ['Headquarters', 'Managed', 'Tenant'],
+    assignee: 'Jeff Zolos',
+    supervisor: 'Jerome Bell',
   },
   {
     id: 'suite-210-target',
@@ -37,6 +42,7 @@ const currentSpaceAssociations: SpaceAssociation[] = [
     effectiveDate: '06/01/2025',
     endDate: '',
     affiliations: ['Managed'],
+    assignee: 'Henry Micheal',
   },
   {
     id: 'unit-12-walmart',
@@ -48,6 +54,7 @@ const currentSpaceAssociations: SpaceAssociation[] = [
     effectiveDate: '03/15/2024',
     endDate: '03/14/2027',
     affiliations: ['Tenant'],
+    assignee: 'Jeff Zolos',
   },
   {
     // A unit with no floor, e.g. a standalone building.
@@ -59,6 +66,7 @@ const currentSpaceAssociations: SpaceAssociation[] = [
     effectiveDate: '02/01/2025',
     endDate: '',
     affiliations: ['Tenant'],
+    assignee: 'Jeff Zolos',
   },
   {
     // A suite with no floor, e.g. a single-storey building.
@@ -70,6 +78,7 @@ const currentSpaceAssociations: SpaceAssociation[] = [
     effectiveDate: '09/01/2025',
     endDate: '',
     affiliations: ['Tenant'],
+    assignee: 'Jeff Zolos',
   },
   {
     // Starbucks has signed for the vacant Suite 104 and moves in on the effective date.
@@ -82,6 +91,8 @@ const currentSpaceAssociations: SpaceAssociation[] = [
     effectiveDate: '11/01/2026',
     endDate: '10/31/2029',
     affiliations: ['Tenant', 'Regional Office'],
+    assignee: 'Henry Micheal',
+    supervisor: 'Jeff Zolos',
   },
   {
     id: 'floor-5-costco',
@@ -92,6 +103,7 @@ const currentSpaceAssociations: SpaceAssociation[] = [
     effectiveDate: '01/01/2021',
     endDate: '12/31/2023',
     affiliations: ['Owned', 'Shared', 'Regional Office'],
+    assignee: 'Jeff Zolos',
   },
   {
     id: 'floor-3-home-depot',
@@ -102,6 +114,7 @@ const currentSpaceAssociations: SpaceAssociation[] = [
     effectiveDate: '01/01/2020',
     endDate: '12/31/2022',
     affiliations: ['Owned'],
+    assignee: 'Henry Micheal',
   },
 ]
 
@@ -126,6 +139,7 @@ const pastSpaceAssociations: SpaceAssociation[] = Array.from({ length: 22 }, (_,
     effectiveDate: `${month}/01/${endYear - 3}`,
     endDate: `${month}/28/${endYear}`,
     affiliations: ['Tenant'],
+    assignee: index % 2 === 0 ? 'Jeff Zolos' : 'Henry Micheal',
   }
 })
 

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import modalClose from '../assets/modal-close.svg'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
 import { ModalDateInput } from './ModalDateInput'
+import { COMPANY_AT_PROPERTY } from '../data/companyAtPropertyCopy'
 
 type EditDealDrawerProps = {
   open: boolean
@@ -230,9 +231,9 @@ export function EditDealDrawer({ open, onClose }: EditDealDrawerProps) {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <DrawerLabel variant="regular">Company at property till date</DrawerLabel>
+                <DrawerLabel variant="regular">{COMPANY_AT_PROPERTY.tillDateLabel}</DrawerLabel>
                 <ModalDateInput
-                  id="edit-deal-company-association-end-date"
+                  id="edit-deal-company-till-date"
                   value={companyAssociationEndDate}
                   onChange={setCompanyAssociationEndDate}
                   variant="drawer"

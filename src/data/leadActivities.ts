@@ -5,7 +5,7 @@ import contactAvatarSavannah from '../assets/contacts/avatar-savannah.png'
 
 export const leadActivityTabs = [
   'Deals',
-  'Questions',
+  'Convert Questions',
   'Billing',
   'Contacts',
   'Notes',

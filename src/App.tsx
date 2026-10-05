@@ -10,6 +10,7 @@ import { MobileCreatePropertyPage } from './pages/MobileCreatePropertyPage'
 import { MobilePropertyDetailPage } from './pages/MobilePropertyDetailPage'
 import { MobilePropertyListingPage } from './pages/MobilePropertyListingPage'
 import { MobilePropertyRequestSentPage } from './pages/MobilePropertyRequestSentPage'
+import { FranchiseOwnerEmailPage } from './pages/FranchiseOwnerEmailPage'
 import { PropertyDetailPage } from './pages/PropertyDetailPage'
 
 function App() {
@@ -34,6 +35,15 @@ function App() {
     },
     [propertyIndex, setPropertyModal],
   )
+
+  if (screen.screen === 'fo-email') {
+    return (
+      <>
+        <FranchiseOwnerEmailPage />
+        <PrototypeScreenLinks />
+      </>
+    )
+  }
 
   if (screen.screen === 'mobile-listing') {
     return (

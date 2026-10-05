@@ -1,6 +1,12 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import type { SwitchCompanyFormValues, SwitchCompanySubmitPayload } from '../components/switchCompanyTypes'
-import { buildSpaceOptions } from '../data/companyAssociation'
+import {
+  associationToSpaceFields,
+  buildOccupants,
+  buildSpaceOptions,
+  spaceFieldsToAssociation,
+} from '../data/companyAssociation'
+import type { OccupancyFieldsValue } from '../data/propertyOccupancy'
 import { getPropertyCompany } from '../data/propertyCompanies'
 import { spaceKeyOf, spaceLabelOf, type SpaceAssociation } from '../data/propertySpaceAssociations'
 import type { PropertyAffiliation } from '../components/switchCompanyTypes'
@@ -49,6 +55,8 @@ export function useMobileCompanyActions({
   )
 
   const spaces = useMemo(() => buildSpaceOptions(associations), [associations])
+  // Who holds what on the property, so occupancy clashes can name the company.
+  const occupants = useMemo(() => buildOccupants(associations), [associations])
 
   const openFlow = (next: Flow) => {
     onFlowOpen?.()
@@ -68,6 +76,8 @@ export function useMobileCompanyActions({
                 effectiveDate: payload.effectiveDate,
                 endDate: payload.cutOffDate,
                 affiliations: payload.affiliations,
+                assignee: payload.assignee,
+                supervisor: payload.supervisor,
               }
             : item,
         ),
@@ -92,6 +102,8 @@ export function useMobileCompanyActions({
         effectiveDate: payload.effectiveDate,
         endDate: payload.cutOffDate,
         affiliations: payload.affiliations,
+        assignee: payload.assignee,
+        supervisor: payload.supervisor,
       },
     ])
     onSelectAssociation(id)
@@ -114,14 +126,29 @@ export function useMobileCompanyActions({
   const handleSaveCompany = ({
     affiliations: next,
     endDate,
+    spaceFields,
+    assignee,
+    supervisor,
   }: {
     affiliations: PropertyAffiliation[]
     endDate: string
+    spaceFields: OccupancyFieldsValue
+    assignee: string
+    supervisor?: string
   }) => {
     if (!editAffiliationsId) return
     onAssociationsChange(
       associations.map((item) =>
-        item.id === editAffiliationsId ? { ...item, affiliations: next, endDate } : item,
+        item.id === editAffiliationsId
+          ? {
+              ...item,
+              affiliations: next,
+              endDate,
+              assignee,
+              supervisor,
+              ...spaceFieldsToAssociation(spaceFields),
+            }
+          : item,
       ),
     )
     setEditAffiliationsId(null)
@@ -169,6 +196,8 @@ export function useMobileCompanyActions({
                 effectiveDate: association.effectiveDate,
                 cutOffDate: association.endDate,
                 affiliations: association.affiliations,
+                assignee: association.assignee,
+                supervisor: association.supervisor,
               },
             }),
         },
@@ -195,6 +224,7 @@ export function useMobileCompanyActions({
         <MobileSwitchCompanyScreen
           mode={flow.mode}
           spaces={spaces}
+          occupants={occupants}
           initialSpaceKey={flow.spaceKey}
           targetCompanyId={flow.targetCompanyId}
           initialForm={flow.initialForm}
@@ -220,8 +250,13 @@ export function useMobileCompanyActions({
         <MobileEditCompanySheet
           open
           companyName={getPropertyCompany(editingAffiliations.companyId).name}
+          companyId={editingAffiliations.companyId}
           initialAffiliations={editingAffiliations.affiliations}
           initialEndDate={editingAffiliations.endDate}
+          initialSpaceFields={associationToSpaceFields(editingAffiliations)}
+          occupants={occupants}
+          initialAssignee={editingAffiliations.assignee}
+          initialSupervisor={editingAffiliations.supervisor}
           effectiveDate={editingAffiliations.effectiveDate}
           nextCompany={
             editingNextPending

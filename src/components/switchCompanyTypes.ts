@@ -30,6 +30,9 @@ export type SwitchCompanyFormValues = {
   effectiveDate: string
   cutOffDate: string
   affiliations: PropertyAffiliation[]
+  /** Every property + company needs an assignee; a supervisor is optional. */
+  assignee: string
+  supervisor?: string
 }
 
 export type SwitchCompanySubmitPayload = SwitchCompanyFormValues & {

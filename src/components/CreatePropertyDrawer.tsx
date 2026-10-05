@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import createPropertyMap from '../assets/create-property-map.png'
 import detailPlus from '../assets/detail-plus.svg'
@@ -6,7 +6,6 @@ import modalClose from '../assets/modal-close.svg'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
 import tableSearch from '../assets/table-search.svg'
 import {
-  CUT_OFF_DATE_HELP,
   affiliationOptions,
   assigneeOptions,
   associatedFranchiseOptions,
@@ -18,8 +17,19 @@ import {
   supervisorOptions,
   type Affiliation,
 } from '../data/propertyFormOptions'
-import { companyParents, findSpaceConflict, type SpaceType } from '../data/propertySpaces'
+import {
+  COMPANY_AT_PROPERTY,
+  HUBSPOT_STAGE_LABEL,
+  OCCUPANCY_DESCRIPTION,
+  OCCUPANCY_LABEL,
+  TILL_DATE_TOOLTIP,
+} from '../data/companyAtPropertyCopy'
+import { buildOccupants } from '../data/companyAssociation'
+import { initialSpaceAssociations } from '../data/propertySpaceAssociations'
+import { validateOccupancy } from '../data/propertyOccupancy'
+import { companyParents, type SpaceType } from '../data/propertySpaces'
 import { CreateCompanyModal } from './CreateCompanyModal'
+import { InfoTooltip } from './InfoTooltip'
 import { ModalDateInput } from './ModalDateInput'
 import { SpaceFields } from './PropertySpaceFields'
 
@@ -48,78 +58,10 @@ function DrawerLabelWithInfo({
   tooltip: string
   tooltipId: string
 }) {
-  const triggerRef = useRef<HTMLButtonElement>(null)
-  const [tooltipVisible, setTooltipVisible] = useState(false)
-  const [tooltipStyle, setTooltipStyle] = useState<CSSProperties>({})
-
-  useLayoutEffect(() => {
-    if (!tooltipVisible || !triggerRef.current) return
-
-    const updatePosition = () => {
-      const trigger = triggerRef.current
-      if (!trigger) return
-      const rect = trigger.getBoundingClientRect()
-      const width = Math.min(320, window.innerWidth - 24)
-      let left = rect.left + rect.width / 2 - width / 2
-      left = Math.max(12, Math.min(left, window.innerWidth - width - 12))
-      setTooltipStyle({
-        position: 'fixed',
-        left,
-        top: rect.top - 6,
-        width,
-        transform: 'translateY(-100%)',
-        zIndex: 80,
-      })
-    }
-
-    updatePosition()
-    window.addEventListener('scroll', updatePosition, true)
-    window.addEventListener('resize', updatePosition)
-    return () => {
-      window.removeEventListener('scroll', updatePosition, true)
-      window.removeEventListener('resize', updatePosition)
-    }
-  }, [tooltipVisible])
-
-  const showTooltip = () => setTooltipVisible(true)
-  const hideTooltip = () => setTooltipVisible(false)
-
   return (
     <div className="flex items-center gap-1">
       <DrawerLabel required={required}>{children}</DrawerLabel>
-      <button
-        ref={triggerRef}
-        type="button"
-        className="flex size-4 shrink-0 items-center justify-center rounded-full text-[#86868b] hover:text-[#6a6a70]"
-        aria-describedby={tooltipVisible ? tooltipId : undefined}
-        aria-label={`${children} information`}
-        onMouseEnter={showTooltip}
-        onMouseLeave={hideTooltip}
-        onFocus={showTooltip}
-        onBlur={hideTooltip}
-      >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-          <path
-            d="M8 5.33333V8M8 10.6667H8.00667M14.6667 8C14.6667 11.6819 11.6819 14.6667 8 14.6667C4.3181 14.6667 1.33333 11.6819 1.33333 8C1.33333 4.3181 4.3181 1.33333 8 1.33333C11.6819 1.33333 14.6667 4.3181 14.6667 8Z"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
-      {tooltipVisible &&
-        createPortal(
-          <div
-            id={tooltipId}
-            role="tooltip"
-            style={tooltipStyle}
-            className="pointer-events-none rounded-lg bg-[#262527] p-3 text-sm leading-5 text-white shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
-          >
-            {tooltip}
-          </div>,
-          document.body,
-        )}
+      <InfoTooltip id={tooltipId} label={`${children} information`} text={tooltip} />
     </div>
   )
 }
@@ -289,16 +231,14 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
     setParentCompany(companyParents[value] ?? '')
   }
 
-  // Space fields are optional, so we only surface a conflict when one already exists at this address.
-  const floorConflict = findSpaceConflict(address, 'Floor', floor)
-  const suiteUnitConflict = findSpaceConflict(address, suiteUnitType, suiteUnitNumber)
-  const floorError = floorConflict
-    ? `Floor ${floor.trim()} is already assigned to ${floorConflict} at this address.`
-    : null
-  const suiteUnitError = suiteUnitConflict
-    ? `${suiteUnitType} ${suiteUnitNumber.trim()} is already assigned to ${suiteUnitConflict} at this address.`
-    : null
-  const spaceConflict = Boolean(floorConflict || suiteUnitConflict)
+  // Format, duplicate and already-occupied checks, shared with the company modals.
+  const occupancy = validateOccupancy({
+    value: { floor, suiteUnitType, suiteUnitNumber },
+    occupants: buildOccupants(initialSpaceAssociations),
+  })
+  const floorError = occupancy.floorError
+  const suiteUnitError = occupancy.suiteUnitError
+  const spaceConflict = occupancy.hasErrors
   const assigneeError = submitAttempted && !assignee ? 'Select an assignee.' : null
 
   const handleCreate = () => {
@@ -310,7 +250,7 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
     }
     if (spaceConflict) {
       spaceFieldRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      if (suiteUnitConflict) suiteUnitNumberRef.current?.focus()
+      if (suiteUnitError) suiteUnitNumberRef.current?.focus()
       return
     }
     window.alert('Property created (prototype)')
@@ -416,7 +356,7 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                       />
                     </div>
                     <div className="flex min-w-0 flex-col gap-1.5">
-                      <DrawerLabel required>Hubspot Stage</DrawerLabel>
+                      <DrawerLabel required>{HUBSPOT_STAGE_LABEL}</DrawerLabel>
                       <DrawerSelect
                         id="create-property-hubspot"
                         value={hubspotStage}
@@ -495,8 +435,8 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                     </div>
                   </div>
                   <div className="flex w-full max-w-[359px] flex-col gap-1.5">
-                    <DrawerLabelWithInfo tooltip={CUT_OFF_DATE_HELP} tooltipId="create-property-cut-off-date-help">
-                      Company at property till date
+                    <DrawerLabelWithInfo tooltip={TILL_DATE_TOOLTIP} tooltipId="create-property-cut-off-date-help">
+                      {COMPANY_AT_PROPERTY.tillDateLabel}
                     </DrawerLabelWithInfo>
                     <ModalDateInput
                       id="create-property-cut-off-date"
@@ -505,7 +445,11 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                       onChange={setCutOffDate}
                     />
                   </div>
-                  <div ref={spaceFieldRef}>
+                  <div ref={spaceFieldRef} className="flex flex-col gap-2">
+                    <div>
+                      <p className="text-sm font-medium leading-5 text-[#86868b]">{OCCUPANCY_LABEL}</p>
+                      <p className="mt-0.5 text-xs leading-[18px] text-[#86868b]">{OCCUPANCY_DESCRIPTION}</p>
+                    </div>
                     <SpaceFields
                       idPrefix="create-property"
                       value={{ floor, suiteUnitType, suiteUnitNumber }}

@@ -26,6 +26,7 @@ import {
 } from '../data/leadActivities'
 import { formatShortDate } from '../data/dateFormat'
 import type { PropertyCompany, PropertyCompanyListStatus } from '../data/propertyCompanies'
+import { ContractProposalNotice } from './ContractProposalNotice'
 import { LeadActivityTabEmptyState } from './LeadActivityTabEmptyState'
 import { mainPanelLinkClass, mainPanelPrimaryButtonClass } from './mainPanelReadOnlyStyles'
 import { BillingAddressTabPanel, DealsTabPanel } from './PropertyDealsBillingPanels'
@@ -553,12 +554,15 @@ type PropertyLeadActivitiesProps = {
   company: PropertyCompany
   readOnly?: boolean
   showEmptyStates?: boolean
+  /** Passed to the Deals tab so a leaving date is seen before contract dates are set. */
+  tillDate?: string
 }
 
 export function PropertyLeadActivities({
   company,
   readOnly = false,
   showEmptyStates = false,
+  tillDate,
 }: PropertyLeadActivitiesProps) {
   const [activeTab, setActiveTab] = useState<LeadActivityTab>('Deals')
 
@@ -584,12 +588,20 @@ export function PropertyLeadActivities({
         </div>
       </div>
 
+      {/* A leaving date has to be read before any contract dates are set, so it
+          sits above the Deals tab whether or not there are deals yet. */}
+      {activeTab === 'Deals' && tillDate?.trim() && (
+        <div className="shrink-0 pt-4">
+          <ContractProposalNotice tillDate={tillDate} />
+        </div>
+      )}
+
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {showEmptyStates ? (
           <LeadActivityTabEmptyState tab={activeTab} readOnly={readOnly} />
         ) : (
           <>
-            {activeTab === 'Questions' && <PropertyQuestionsPanel readOnly={readOnly} />}
+            {activeTab === 'Convert Questions' && <PropertyQuestionsPanel readOnly={readOnly} />}
             {activeTab === 'Activity' && <ActivityPanel />}
             {activeTab === 'Notes' && <NotesPanel readOnly={readOnly} />}
             {activeTab === 'Emails' && <EmailsPanel readOnly={readOnly} />}

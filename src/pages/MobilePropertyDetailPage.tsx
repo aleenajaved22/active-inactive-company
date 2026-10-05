@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { affiliationsToBadges } from '../components/switchCompanyTypes'
+import { INACTIVE_BANNER, PENDING_BANNER } from '../data/companyAtPropertyCopy'
 import { leadActivityTabs } from '../data/leadActivities'
 import { formatPropertyTitle, type PropertyRow } from '../data/properties'
 import { getPropertyCompany } from '../data/propertyCompanies'
@@ -53,19 +54,24 @@ function ActionButton({
   icon,
   label,
   onClick,
+  disabled,
 }: {
   icon: React.ReactNode
   label: string
   onClick?: () => void
+  disabled?: boolean
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#f6f6f8] px-3"
+      disabled={disabled}
+      className={`flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#f6f6f8] px-3 ${
+        disabled ? 'text-[#86868b]' : 'text-black'
+      }`}
     >
       {icon}
-      <span className="truncate text-sm font-medium leading-5 text-black">{label}</span>
+      <span className="truncate text-sm font-medium leading-5">{label}</span>
     </button>
   )
 }
@@ -117,8 +123,10 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
   const company = getPropertyCompany(selectedAssociation.companyId)
   const listStatus = selectedAssociation.status
 
-  // Mirrors the web app: a pending or inactive association is read-only.
-  const readOnly = listStatus === 'Inactive' || listStatus === 'Pending'
+  // Mirrors the web app: a pending company can be prepared, so only an inactive
+  // one is read-only. Publishing a contract is what waits for the effective date.
+  const readOnly = listStatus === 'Inactive'
+  const showBanner = listStatus !== 'Active'
 
   // The toggle counts companies currently on the property, not the inactive history.
   const currentAssociations = associations.filter(
@@ -166,8 +174,8 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
             </div>
 
             <div className="flex gap-2 pt-3">
-              <ActionButton icon={<IconAdd size={18} />} label="Make a Deal" />
-              <ActionButton icon={<IconRepeat size={16} />} label="Follow Up" />
+              <ActionButton icon={<IconAdd size={18} />} label="Make a Deal" disabled={readOnly} />
+              <ActionButton icon={<IconRepeat size={16} />} label="Follow Up" disabled={readOnly} />
               <button
                 type="button"
                 aria-label="Edit property"
@@ -194,13 +202,11 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
           <div className="flex flex-col gap-3 px-4 pt-4">
             {activeTab === 'Information' ? (
               <>
-                {readOnly && (
+                {showBanner && (
                   <div className="flex items-start gap-2 rounded-lg bg-[#e5f6ff] p-3">
                     <IconAlert size={16} className="mt-px shrink-0 text-[#146dff]" />
                     <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-[#262527]">
-                      {listStatus === 'Pending'
-                        ? 'All features will become available once the effective date arrives'
-                        : 'This company has left the property, so its data is read-only'}
+                      {listStatus === 'Pending' ? PENDING_BANNER : INACTIVE_BANNER}
                     </p>
                   </div>
                 )}
@@ -212,11 +218,6 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
                       2 ($10k/month)
                       <IconChevronDown size={18} className="text-[#6a6a70]" />
                     </span>
-                  </InlineValueRow>
-                  <InlineValueRow label="Assigned to">
-                    <button type="button" className="text-sm leading-5 text-[#146dff] underline">
-                      Assign User
-                    </button>
                   </InlineValueRow>
                   <InlineValueRow label="Linked Franchise">
                     <span className="flex items-center gap-2 text-sm leading-5 text-[#6a6a70]">
@@ -257,6 +258,14 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
                   title={`Company • ${pad2(currentAssociations.length)}`}
                   summary={company.name}
                 >
+                  <div className="mb-3 flex flex-col rounded-lg bg-[#f6f6f8] px-3 py-2">
+                    <MobileDetailRow label="Industry Vertical" value={company.industryVertical} />
+                    <MobileDetailRow label="Parent Company" value={company.parentCompany ?? 'Not set'} />
+                    <MobileDetailRow label="Assignee" value={selectedAssociation.assignee} />
+                    {selectedAssociation.supervisor && (
+                      <MobileDetailRow label="Supervisor" value={selectedAssociation.supervisor} />
+                    )}
+                  </div>
                   <div className="flex flex-col gap-3">
                     {currentAssociations.map((association) => {
                       const item = getPropertyCompany(association.companyId)

@@ -212,7 +212,7 @@ export function DealsTabPanel({ company, readOnly = false }: DealsTabPanelProps)
         <table className="min-w-full border-collapse text-left text-sm">
           <thead className="border-b border-[#e6e6e7] bg-white">
             <tr>
-              {['Deal Name', 'Amount', 'Date ↓', 'Stage', ''].map((h) => (
+              {['Deal Name', 'Amount', 'Creation Date ↓', 'Stage', ''].map((h) => (
                 <th key={h || 'actions'} className="whitespace-nowrap px-4 py-3 text-xs font-medium text-[#5b5b5f]">
                   {h}
                 </th>

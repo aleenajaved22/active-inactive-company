@@ -1,10 +1,16 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import detailCompanyMenu from '../assets/detail-company-menu.svg'
-import { buildSpaceOptions } from '../data/companyAssociation'
+import {
+  associationToSpaceFields,
+  buildOccupants,
+  buildSpaceOptions,
+  spaceFieldsToAssociation,
+} from '../data/companyAssociation'
 import { getPropertyCompany } from '../data/propertyCompanies'
 import { spaceKeyOf, type SpaceAssociation } from '../data/propertySpaceAssociations'
 import type { PropertyModal } from '../prototype/screenLinks'
 import { EditCompanyModal } from './EditCompanyModal'
+import type { SpaceFieldsValue } from './PropertySpaceFields'
 import { SwitchCompanyModal } from './SwitchCompanyModal'
 import type {
   PropertyAffiliation,
@@ -134,6 +140,8 @@ export function useCompanyActions({
   const [editAffiliationsId, setEditAffiliationsId] = useState<string | null>(null)
 
   const spaceOptions = useMemo(() => buildSpaceOptions(associations), [associations])
+  // Who holds what on the property, so occupancy clashes can name the company.
+  const occupants = useMemo(() => buildOccupants(associations), [associations])
   const editingPending = associations.find((item) => item.id === editPendingId)
   const editingAffiliations = associations.find((item) => item.id === editAffiliationsId)
   const editingNextPending =
@@ -155,6 +163,8 @@ export function useCompanyActions({
             effectiveDate: editingPending.effectiveDate,
             cutOffDate: editingPending.endDate,
             affiliations: editingPending.affiliations,
+            assignee: editingPending.assignee,
+            supervisor: editingPending.supervisor,
           }
         : undefined,
     [editingPending],
@@ -186,6 +196,8 @@ export function useCompanyActions({
                 effectiveDate: payload.effectiveDate,
                 endDate: payload.cutOffDate,
                 affiliations: payload.affiliations,
+                assignee: payload.assignee,
+                supervisor: payload.supervisor,
               }
             : item,
         ),
@@ -210,6 +222,8 @@ export function useCompanyActions({
         effectiveDate: payload.effectiveDate,
         endDate: payload.cutOffDate,
         affiliations: payload.affiliations,
+        assignee: payload.assignee,
+        supervisor: payload.supervisor,
       },
     ])
     onSelectAssociation(id)
@@ -227,10 +241,33 @@ export function useCompanyActions({
     if (fallback) onSelectAssociation(fallback.id)
   }
 
-  const handleSaveCompany = ({ affiliations, endDate }: { affiliations: PropertyAffiliation[]; endDate: string }) => {
+  const handleSaveCompany = ({
+    affiliations,
+    endDate,
+    spaceFields,
+    assignee,
+    supervisor,
+  }: {
+    affiliations: PropertyAffiliation[]
+    endDate: string
+    spaceFields: SpaceFieldsValue
+    assignee: string
+    supervisor?: string
+  }) => {
     if (!editAffiliationsId) return
     onAssociationsChange(
-      associations.map((item) => (item.id === editAffiliationsId ? { ...item, affiliations, endDate } : item)),
+      associations.map((item) =>
+        item.id === editAffiliationsId
+          ? {
+              ...item,
+              affiliations,
+              endDate,
+              assignee,
+              supervisor,
+              ...spaceFieldsToAssociation(spaceFields),
+            }
+          : item,
+      ),
     )
     setEditAffiliationsId(null)
   }
@@ -261,6 +298,7 @@ export function useCompanyActions({
         open={switchModalOpen}
         mode={editingPending ? 'edit' : 'switch'}
         spaces={spaceOptions}
+        occupants={occupants}
         initialSpaceKey={editingPending ? undefined : switchSpaceKey}
         targetCompanyId={editingPending ? undefined : switchTargetCompanyId}
         initialForm={pendingInitialForm}
@@ -275,10 +313,20 @@ export function useCompanyActions({
         }}
       />
       <EditCompanyModal
+        // Remounts per company, so the fields seed from that company's record.
+        key={editAffiliationsId ?? 'none'}
         open={editingAffiliations !== undefined}
         company={editingAffiliations ? getPropertyCompany(editingAffiliations.companyId) : null}
         initialAffiliations={editingAffiliations?.affiliations ?? []}
         initialEndDate={editingAffiliations?.endDate ?? ''}
+        initialSpaceFields={
+          editingAffiliations
+            ? (associationToSpaceFields(editingAffiliations) as SpaceFieldsValue)
+            : undefined
+        }
+        occupants={occupants}
+        initialAssignee={editingAffiliations?.assignee ?? ''}
+        initialSupervisor={editingAffiliations?.supervisor}
         effectiveDate={editingAffiliations?.effectiveDate ?? ''}
         nextCompany={editingNextCompany}
         onClose={() => setEditAffiliationsId(null)}

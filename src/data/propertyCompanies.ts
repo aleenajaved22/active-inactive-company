@@ -32,8 +32,10 @@ export type PropertyCompany = {
   name: string
   /** Shown beside the name in the company picker. */
   listStatus?: 'Active' | 'Inactive'
-  /** The corporate parent that owns this company. */
+  /** The corporate parent that owns this company. Comes from HubSpot when set. */
   parentCompany?: string
+  /** Set per company, not per property — several companies share one property. */
+  industryVertical: string
   companyOwner: string
   phone: string
   spStatus: string
@@ -116,6 +118,7 @@ function usCompany(
     id,
     name,
     companyOwner: 'John Doe',
+    industryVertical: 'Retail',
     phone: '719-345-9821',
     spStatus: 'SP - Active',
     score: '75%',
@@ -145,6 +148,7 @@ export const propertyCompanies: PropertyCompany[] = [
     listStatus: 'Active',
     parentCompany: 'Seven & i Holdings',
     companyOwner: 'John Doe',
+    industryVertical: 'Convenience Retail',
     phone: 'N/A',
     spStatus: 'N/A',
     score: 'N/A',
@@ -216,6 +220,7 @@ export const propertyCompanies: PropertyCompany[] = [
     listStatus: 'Inactive',
     parentCompany: 'Costco Wholesale Corporation',
     companyOwner: 'Mike Smith',
+    industryVertical: 'Wholesale',
     phone: '719-345-9821',
     spStatus: 'SP - Active',
     score: '80%',
@@ -283,7 +288,8 @@ export const propertyCompanies: PropertyCompany[] = [
       zipcode: '64030',
     },
   },
-  usCompany('target', 'Target', { parentCompany: 'Target Corporation' }),
+  // Target has no parent on record, which is the only case where it is editable.
+  usCompany('target', 'Target', { industryVertical: 'General Merchandise' }),
   usCompany('walmart', 'Walmart', {
     parentCompany: 'Walmart Inc.',
     companyOwner: 'Trachise Withrow',
@@ -364,6 +370,7 @@ export const propertyCompanies: PropertyCompany[] = [
   }),
   usCompany('starbucks', 'Starbucks', {
     parentCompany: 'Starbucks Corporation',
+    industryVertical: 'Food & Beverage',
     billingAddress: {
       contact: 'District Manager',
       address: '2401 Utah Ave S, Seattle, Washington, 98134',

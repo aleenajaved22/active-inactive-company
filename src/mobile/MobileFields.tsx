@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { OCCUPANCY_PLACEHOLDERS, SUITE_UNIT_LABEL } from '../data/companyAtPropertyCopy'
 import { IconAlert, IconChevronDown } from './MobileIcons'
 
 /** Section heading inside a mobile form. */
@@ -222,7 +223,7 @@ export function MobileSuiteUnitField({
   return (
     <div className="flex w-full flex-col gap-1">
       <FieldShell invalid={Boolean(error)} disabled={disabled}>
-        <FieldLabel>Suite / Unit</FieldLabel>
+        <FieldLabel>{SUITE_UNIT_LABEL}</FieldLabel>
         <div className="flex w-full items-center gap-3">
           <div className="relative flex shrink-0 items-center gap-1">
             <span className="text-[15px] font-medium leading-5 text-black">{typeValue}</span>
@@ -251,7 +252,7 @@ export function MobileSuiteUnitField({
             value={numberValue}
             disabled={disabled}
             onChange={(event) => onNumberChange(event.target.value)}
-            placeholder="210B"
+            placeholder={OCCUPANCY_PLACEHOLDERS.suiteUnit}
             className="min-w-0 flex-1 bg-transparent text-[15px] font-medium leading-5 text-black outline-none placeholder:font-medium placeholder:text-[#86868b]"
           />
         </div>

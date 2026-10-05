@@ -11,8 +11,18 @@ import {
   describeSpaceInput,
   validateAssociationForm,
 } from '../data/companyAssociation'
-import { formatShortDate } from '../data/dateFormat'
+import {
+  COMPANY_AT_PROPERTY,
+  DISCARD_SWITCH,
+  EFFECTIVE_DATE_DESCRIPTION,
+  OCCUPANCY_DESCRIPTION,
+  OCCUPANCY_LABEL,
+  TILL_DATE_DESCRIPTION,
+} from '../data/companyAtPropertyCopy'
+import type { OccupantSpaces } from '../data/propertyOccupancy'
+import { formatShortDate, todayMMDDYYYY } from '../data/dateFormat'
 import { propertyCompanies } from '../data/propertyCompanies'
+import { AssigneeFields, emptyAssignee, type AssigneeValue } from './AssigneeFields'
 import { SpaceFields, emptySpaceFields, type SpaceFieldsValue } from './PropertySpaceFields'
 import {
   propertyAffiliationOptions,
@@ -26,6 +36,8 @@ type SwitchCompanyModalProps = {
   open: boolean
   mode?: 'switch' | 'edit'
   spaces: SwitchSpaceOption[]
+  /** Everyone already on the property, so occupancy can be checked against them. */
+  occupants?: OccupantSpaces[]
   /** Pre-selects and locks the space, e.g. when switching from a company's row menu. */
   initialSpaceKey?: string
   /** Pre-selects the company to switch to when opening in switch mode. */
@@ -93,6 +105,7 @@ export function SwitchCompanyModal({
   open,
   mode = 'switch',
   spaces,
+  occupants = [],
   initialSpaceKey,
   targetCompanyId,
   initialForm,
@@ -114,6 +127,7 @@ export function SwitchCompanyModal({
   const [pendingAffiliations, setPendingAffiliations] = useState<Set<PropertyAffiliation>>(new Set())
   const [effectiveDate, setEffectiveDate] = useState('')
   const [cutOffDate, setCutOffDate] = useState('')
+  const [assignee, setAssignee] = useState<AssigneeValue>(emptyAssignee)
   const [createCompanyOpen, setCreateCompanyOpen] = useState(false)
   const [pendingSubmit, setPendingSubmit] = useState<SwitchCompanySubmitPayload | null>(null)
   const [revertConfirmOpen, setRevertConfirmOpen] = useState(false)
@@ -143,12 +157,18 @@ export function SwitchCompanyModal({
       setEffectiveDate(initialForm.effectiveDate)
       setCutOffDate(initialForm.cutOffDate)
       setPendingAffiliations(new Set(initialForm.affiliations))
+      setAssignee({
+        assignee: initialForm.assignee,
+        assignSupervisor: Boolean(initialForm.supervisor),
+        supervisor: initialForm.supervisor ?? '',
+      })
     } else {
       setSpaceKey(initialSpaceKey ?? '')
       setPendingId(targetCompanyId ?? '')
-      setEffectiveDate('')
+      setEffectiveDate(todayMMDDYYYY())
       setCutOffDate('')
       setPendingAffiliations(new Set())
+      setAssignee(emptyAssignee())
     }
     const prefillSpace = !isEditMode && targetCompanyId ? spacesRef.current.find((space) => space.key === initialSpaceKey) : undefined
     setSpaceFields(prefillSpace ? lockedSpaceFields(prefillSpace) : emptySpaceFields())
@@ -214,28 +234,45 @@ export function SwitchCompanyModal({
   const spaceLocked = isEditMode || (Boolean(initialSpaceKey) && !isMakeActive)
   // Adding a company reuses the switch flow with no space preselected.
   const isAddMode = !isEditMode && !initialSpaceKey
-  const actionLabel = isEditMode ? 'Edit' : isAddMode ? 'Add company' : isMakeActive ? 'Make active' : 'Switch company'
+  // The row action that opens this says "Edit switch"; a bare "Edit" as a
+  // heading does not say what is being edited.
+  const actionLabel = isEditMode
+    ? 'Edit Switch'
+    : isAddMode
+      ? 'Add company'
+      : isMakeActive
+        ? 'Make active'
+        : 'Switch company'
 
   const effectiveSpaceKey = spaceLocked ? spaceKey : deriveSpaceKey(spaceFields)
   const addSpaceLabel = describeSpaceInput(spaceFields)
-  const occupiedField: 'floor' | 'suiteUnit' =
-    spaceFields.suiteUnitType && spaceFields.suiteUnitNumber.trim() ? 'suiteUnit' : 'floor'
-
-  const { spaceError, companyError, effectiveDateError, endDateError, occupied, hasErrors } =
-    validateAssociationForm({
-      spaces,
-      spaceKey,
-      effectiveSpaceKey,
-      spaceLocked,
-      isEditMode,
-      isMakeActive,
-      companyId: pendingId,
-      companyName: pendingCompany?.name,
-      effectiveDate,
-      cutOffDate,
-    })
-  const occupiedError = occupied ? spaceError : null
+  const {
+    spaceError,
+    companyError,
+    effectiveDateError,
+    endDateError,
+    floorError,
+    suiteUnitError,
+    affiliationError,
+    occupied,
+    hasErrors,
+  } = validateAssociationForm({
+    spaces,
+    spaceKey,
+    effectiveSpaceKey,
+    spaceLocked,
+    isEditMode,
+    isMakeActive,
+    companyId: pendingId,
+    companyName: pendingCompany?.name,
+    effectiveDate,
+    cutOffDate,
+    spaceFields,
+    occupants,
+    affiliations: [...pendingAffiliations],
+  })
   const showErrors = submitAttempted
+  const assigneeError = submitAttempted && !assignee.assignee ? 'Select an assignee.' : null
 
   const closeModal = () => {
     setPendingSubmit(null)
@@ -251,6 +288,8 @@ export function SwitchCompanyModal({
     effectiveDate,
     cutOffDate,
     affiliations: [...pendingAffiliations],
+    assignee: assignee.assignee,
+    supervisor: assignee.assignSupervisor ? assignee.supervisor : undefined,
   })
 
   const completeSubmit = (payload: SwitchCompanySubmitPayload) => {
@@ -295,17 +334,24 @@ export function SwitchCompanyModal({
               <img alt="" className="absolute inset-0 block size-full max-w-none" src={modalClose} />
             </button>
           </div>
-          <p className="w-full text-sm leading-5 text-[#6a6a70]">
-            You can edit the following information until the effective date
-          </p>
         </div>
 
         <div className="flex flex-col">
           <ModalFormRow
             label="Company"
-            description="Select the company that should be associated with this property."
+            description={
+              isMakeActive
+                ? 'This company is being made active again on this property.'
+                : 'Select the company that should be associated with this property.'
+            }
             required
           >
+            {isMakeActive ? (
+              // Make active brings this same company record back, so it cannot be swapped.
+              <div className="flex h-10 items-center rounded-lg border border-[#e6e6e7] bg-[#f5f5f6] px-3.5">
+                <span className="truncate text-sm leading-5 text-[#262527]">{pendingCompany?.name}</span>
+              </div>
+            ) : (
             <div ref={comboboxRef} className="relative flex flex-col gap-2">
               <div className="flex justify-end py-0">
                 <button
@@ -399,13 +445,10 @@ export function SwitchCompanyModal({
               </div>
               {showErrors && companyError && <ModalFieldError>{companyError}</ModalFieldError>}
             </div>
+            )}
           </ModalFormRow>
 
-          <ModalFormRow
-            label="Property Occupancy"
-            description="The floor, suite, unit or apartment for this company."
-            stacked
-          >
+          <ModalFormRow label={OCCUPANCY_LABEL} description={OCCUPANCY_DESCRIPTION} stacked>
             {spaceLocked && selectedSpace ? (
               <div className="flex flex-col gap-2">
                 <SpaceFields
@@ -425,15 +468,18 @@ export function SwitchCompanyModal({
                 size="sm"
                 value={spaceFields}
                 onChange={setSpaceFields}
-                invalidField={occupied ? occupiedField : undefined}
+                errors={{
+                  floor: showErrors || occupied ? floorError : null,
+                  suiteUnit: showErrors || occupied ? suiteUnitError : null,
+                }}
               />
             )}
-            {(showErrors || occupiedError) && spaceError && <ModalFieldError>{spaceError}</ModalFieldError>}
+            {showErrors && spaceError && <ModalFieldError>{spaceError}</ModalFieldError>}
           </ModalFormRow>
 
           <ModalFormRow
-            label="Company Effective Date - Association Switched"
-            description="On the Effective Date, this property is associated with the selected company and becomes active. A new company cannot be associated while the current company has active contracts"
+            label={COMPANY_AT_PROPERTY.effectiveDateLabel}
+            description={EFFECTIVE_DATE_DESCRIPTION}
             required
           >
             <div className="flex flex-col gap-1.5">
@@ -443,8 +489,8 @@ export function SwitchCompanyModal({
           </ModalFormRow>
 
           <ModalFormRow
-            label="Company at property till date"
-            description="Optional. The selected company stays at this property until this date, then is dissociated. A company with active contracts cannot be dissociated, close or complete them first"
+            label={COMPANY_AT_PROPERTY.tillDateLabel}
+            description={TILL_DATE_DESCRIPTION}
           >
             <ModalDateInput id="switch-company-cut-off-date" value={cutOffDate} onChange={setCutOffDate} />
             {showErrors && endDateError && <ModalFieldError>{endDateError}</ModalFieldError>}
@@ -453,7 +499,9 @@ export function SwitchCompanyModal({
           <ModalFormRow
             label="Property Affiliation"
             description="Select one or more affiliation types that apply to this property"
+            required
           >
+            <div className="flex flex-col gap-1.5">
             <div className="flex flex-wrap items-center gap-2">
               {propertyAffiliationOptions.map((label) => {
                 const selected = pendingAffiliations.has(label)
@@ -474,6 +522,21 @@ export function SwitchCompanyModal({
                 )
               })}
             </div>
+            {showErrors && affiliationError && <ModalFieldError>{affiliationError}</ModalFieldError>}
+            </div>
+          </ModalFormRow>
+
+          <ModalFormRow
+            label="Assign to"
+            description="Every property and company needs an assignee. Add a supervisor when one is needed."
+            required
+          >
+            <AssigneeFields
+              idPrefix="switch-company"
+              value={assignee}
+              onChange={setAssignee}
+              error={assigneeError}
+            />
           </ModalFormRow>
         </div>
 
@@ -484,7 +547,7 @@ export function SwitchCompanyModal({
               onClick={() => setRevertConfirmOpen(true)}
               className="text-sm font-medium leading-5 text-[#b32318]"
             >
-              Revert change
+              {DISCARD_SWITCH.action}
             </button>
           ) : (
             <span aria-hidden className="shrink-0" />
@@ -501,7 +564,7 @@ export function SwitchCompanyModal({
               type="button"
               onClick={() => {
                 setSubmitAttempted(true)
-                if (hasErrors) return
+                if (hasErrors || !assignee.assignee) return
                 const payload = buildSubmitPayload()
                 if (isEditMode) {
                   completeSubmit(payload)
@@ -537,12 +600,9 @@ export function SwitchCompanyModal({
               </span>
               <div className="min-w-0 flex-1">
                 <h3 id="revert-pending-confirm-title" className="text-lg font-bold leading-7 text-[#262527]">
-                  Revert change?
+                  {DISCARD_SWITCH.heading}
                 </h3>
-                <p className="mt-2 text-sm leading-5 text-[#6a6a70]">
-                  This will remove the pending company association from this property. You can switch company again
-                  later if needed.
-                </p>
+                <p className="mt-2 text-sm leading-5 text-[#6a6a70]">{DISCARD_SWITCH.body}</p>
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-3">
@@ -562,7 +622,7 @@ export function SwitchCompanyModal({
                 }}
                 className="rounded-lg border border-[#b32318] bg-[#b32318] px-3.5 py-2 text-sm font-medium leading-5 text-white shadow-[0px_1px_2px_0px_rgba(16,24,40,0.05)]"
               >
-                Revert change
+                {DISCARD_SWITCH.confirm}
               </button>
             </div>
           </div>

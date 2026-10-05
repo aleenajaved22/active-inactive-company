@@ -58,7 +58,7 @@ const emptyStateByTab: Record<LeadActivityTab, EmptyStateConfig> = {
     actionLabel: 'Connect Email',
     icon: 'link',
   },
-  Questions: {
+  'Convert Questions': {
     title: 'No questions available',
     description: 'Questions for this property will appear here when configured.',
     icon: 'handshake',

@@ -39,9 +39,6 @@ export const parentCompanyOptions = [
   ]),
 ].sort((a, b) => a.localeCompare(b))
 
-export const CUT_OFF_DATE_HELP =
-  'The date until which the current company is at this property, after which it is dissociated'
-
 /** Contact labels a property can be associated against. */
 export const contactRoles = [
   { label: 'Decision Maker', bg: '#f4edfd', text: '#9747ff' },

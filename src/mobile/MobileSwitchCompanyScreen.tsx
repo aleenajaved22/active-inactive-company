@@ -5,9 +5,21 @@ import {
   describeSpaceInput,
   validateAssociationForm,
 } from '../data/companyAssociation'
-import { formatShortDate } from '../data/dateFormat'
+import {
+  COMPANY_AT_PROPERTY,
+  DISCARD_SWITCH,
+  EFFECTIVE_DATE_DESCRIPTION,
+  OCCUPANCY_DESCRIPTION,
+  OCCUPANCY_LABEL,
+  OCCUPANCY_PLACEHOLDERS,
+  OCCUPANCY_TOOLTIPS,
+  TILL_DATE_DESCRIPTION,
+} from '../data/companyAtPropertyCopy'
+import type { OccupantSpaces } from '../data/propertyOccupancy'
+import { formatShortDate, todayMMDDYYYY } from '../data/dateFormat'
 import { propertyCompanies } from '../data/propertyCompanies'
 import { suiteUnitTypes } from '../data/propertySpaces'
+import { MobileAssigneeFields, emptyMobileAssignee, type MobileAssigneeValue } from './MobileAssigneeFields'
 import type { SwitchCompanyFormValues, SwitchCompanySubmitPayload, SwitchSpaceOption } from '../components/switchCompanyTypes'
 import { MobileActionFooter, MOBILE_ACTION_FOOTER_HEIGHT } from './MobileActionFooter'
 import { MobileCompanyPickerSheet } from './MobileCompanyPickerSheet'
@@ -39,6 +51,8 @@ export type SwitchCompanyMode = 'add' | 'switch' | 'make-active' | 'edit'
 type MobileSwitchCompanyScreenProps = {
   mode: SwitchCompanyMode
   spaces: SwitchSpaceOption[]
+  /** Everyone already on the property, so occupancy can be checked against them. */
+  occupants?: OccupantSpaces[]
   /** Pre-selects and locks the space, e.g. switching from a company's row. */
   initialSpaceKey?: string
   /** Pre-selects the company, e.g. making a past company active again. */
@@ -58,6 +72,7 @@ type MobileSwitchCompanyScreenProps = {
 export function MobileSwitchCompanyScreen({
   mode,
   spaces,
+  occupants = [],
   initialSpaceKey,
   targetCompanyId,
   initialForm,
@@ -74,7 +89,7 @@ export function MobileSwitchCompanyScreen({
 
   const [spaceKey] = useState(initialForm?.spaceKey ?? initialSpaceKey ?? '')
   const [companyId, setCompanyId] = useState(initialForm?.companyId ?? targetCompanyId ?? '')
-  const [effectiveDate, setEffectiveDate] = useState(initialForm?.effectiveDate ?? '')
+  const [effectiveDate, setEffectiveDate] = useState(initialForm?.effectiveDate ?? todayMMDDYYYY())
   const [cutOffDate, setCutOffDate] = useState(initialForm?.cutOffDate ?? '')
   const [affiliations, setAffiliations] = useState<Set<string>>(
     new Set<string>(initialForm?.affiliations ?? []),
@@ -86,6 +101,15 @@ export function MobileSwitchCompanyScreen({
     prefillSpace
       ? lockedSpaceFields(prefillSpace)
       : { floor: '', suiteUnitType: 'Suite', suiteUnitNumber: '' },
+  )
+  const [assignee, setAssignee] = useState<MobileAssigneeValue>(() =>
+    initialForm?.assignee
+      ? {
+          assignee: initialForm.assignee,
+          assignSupervisor: Boolean(initialForm.supervisor),
+          supervisor: initialForm.supervisor ?? '',
+        }
+      : emptyMobileAssignee(),
   )
   const [submitAttempted, setSubmitAttempted] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -102,7 +126,7 @@ export function MobileSwitchCompanyScreen({
   // The row action that opens this calls it "Edit switch"; a bare "Edit" as a
   // screen title does not say what is being edited.
   const actionLabel = isEditMode
-    ? 'Edit switch'
+    ? 'Edit Switch'
     : isAddMode
       ? 'Add company'
       : isMakeActive
@@ -120,8 +144,12 @@ export function MobileSwitchCompanyScreen({
     companyName: selectedCompany?.name,
     effectiveDate,
     cutOffDate,
+    spaceFields,
+    occupants,
+    affiliations: [...affiliations],
   })
   const showErrors = submitAttempted
+  const assigneeError = submitAttempted && !assignee.assignee ? 'Select an assignee.' : null
 
   const lockedFields = spaceLocked && selectedSpace ? lockedSpaceFields(selectedSpace) : null
   const fields = lockedFields ?? spaceFields
@@ -143,11 +171,13 @@ export function MobileSwitchCompanyScreen({
     effectiveDate,
     cutOffDate,
     affiliations: [...affiliations] as PropertyAffiliation[],
+    assignee: assignee.assignee,
+    supervisor: assignee.assignSupervisor ? assignee.supervisor : undefined,
   })
 
   const submit = () => {
     setSubmitAttempted(true)
-    if (errors.hasErrors) return
+    if (errors.hasErrors || !assignee.assignee) return
     // Editing a pending switch saves straight away; creating one confirms first.
     if (isEditMode) {
       onConfirm(payload())
@@ -164,39 +194,44 @@ export function MobileSwitchCompanyScreen({
         style={{ paddingTop: 100, paddingBottom: MOBILE_ACTION_FOOTER_HEIGHT + 24 }}
       >
         <div className="flex flex-col gap-5 px-4 pt-5">
-          <p className="text-sm leading-5 text-[#6a6a70]">
-            {isEditMode
-              ? 'You can edit this switch until the effective date.'
-              : 'You can edit these details until the effective date.'}
-          </p>
-
           <section className="flex flex-col gap-2">
-            <MobilePickerField
-              label="Company"
-              required
-              value={selectedCompany?.name ?? ''}
-              placeholder="Search by company name"
-              onOpen={() => setPickerOpen(true)}
-              error={showErrors ? errors.companyError : null}
-            />
+            {isMakeActive ? (
+              <MobileTextField
+                label="Company"
+                required
+                disabled
+                value={selectedCompany?.name ?? ''}
+                onChange={() => {}}
+              />
+            ) : (
+              <MobilePickerField
+                label="Company"
+                required
+                value={selectedCompany?.name ?? ''}
+                placeholder="Search by company name"
+                onOpen={() => setPickerOpen(true)}
+                error={showErrors ? errors.companyError : null}
+              />
+            )}
             <MobileFieldHint>
-              The company that should be associated with this property.
+              {isMakeActive
+                ? 'This company is being made active again on this property.'
+                : 'The company that should be associated with this property.'}
             </MobileFieldHint>
           </section>
 
           <section className="flex flex-col gap-2">
-            <MobileSectionHeading>Property Occupancy</MobileSectionHeading>
-            <MobileFieldHint>
-              The floor, suite, unit or apartment for this company.
-            </MobileFieldHint>
+            <MobileSectionHeading>{OCCUPANCY_LABEL}</MobileSectionHeading>
+            <MobileFieldHint>{OCCUPANCY_DESCRIPTION}</MobileFieldHint>
             <MobileTextField
               label="Floor"
               value={fields.floor}
               disabled={Boolean(lockedFields)}
               onChange={(floor) => setSpaceFields((prev) => ({ ...prev, floor }))}
-              placeholder="5"
-              inputMode="numeric"
+              placeholder={OCCUPANCY_PLACEHOLDERS.floor}
+              error={showErrors || errors.occupied ? errors.floorError : null}
             />
+            <MobileFieldHint>{OCCUPANCY_TOOLTIPS.floor}</MobileFieldHint>
             <MobileSuiteUnitField
               typeValue={fields.suiteUnitType || 'Suite'}
               onTypeChange={(suiteUnitType) => setSpaceFields((prev) => ({ ...prev, suiteUnitType }))}
@@ -206,7 +241,9 @@ export function MobileSwitchCompanyScreen({
                 setSpaceFields((prev) => ({ ...prev, suiteUnitNumber }))
               }
               disabled={Boolean(lockedFields)}
+              error={showErrors || errors.occupied ? errors.suiteUnitError : null}
             />
+            <MobileFieldHint>{OCCUPANCY_TOOLTIPS.suiteUnit}</MobileFieldHint>
             {lockedFields && selectedSpace?.currentCompanyName && (
               <MobileFieldHint>Current: {selectedSpace.currentCompanyName}</MobileFieldHint>
             )}
@@ -217,31 +254,24 @@ export function MobileSwitchCompanyScreen({
 
           <section className="flex flex-col gap-2">
             <MobileDateField
-              label="Company Effective Date"
+              label={COMPANY_AT_PROPERTY.effectiveDateLabel}
               required
               value={effectiveDate}
               onChange={setEffectiveDate}
               error={showErrors ? errors.effectiveDateError : null}
             />
-            <MobileFieldHint>
-              On the Effective Date, this property is associated with the selected company and
-              becomes active. A new company cannot be associated while the current company has
-              active contracts
-            </MobileFieldHint>
+            <MobileFieldHint>{EFFECTIVE_DATE_DESCRIPTION}</MobileFieldHint>
             <MobileDateField
-              label="Company at property till date"
+              label={COMPANY_AT_PROPERTY.tillDateLabel}
               value={cutOffDate}
               onChange={setCutOffDate}
               error={showErrors ? errors.endDateError : null}
             />
-            <MobileFieldHint>
-              Optional. The selected company stays at this property until this date, then is
-              dissociated.
-            </MobileFieldHint>
+            <MobileFieldHint>{TILL_DATE_DESCRIPTION}</MobileFieldHint>
           </section>
 
           <section className="flex flex-col gap-2">
-            <MobileSectionHeading>Property Affiliation</MobileSectionHeading>
+            <MobileSectionHeading>Property Affiliation *</MobileSectionHeading>
             <MobileFieldHint>
               Select one or more affiliation types that apply to this property
             </MobileFieldHint>
@@ -250,6 +280,17 @@ export function MobileSwitchCompanyScreen({
               selected={affiliations}
               onToggle={toggleAffiliation}
             />
+            {showErrors && errors.affiliationError && (
+              <MobileFieldError>{errors.affiliationError}</MobileFieldError>
+            )}
+          </section>
+
+          <section className="flex flex-col gap-2">
+            <MobileSectionHeading>Assign to</MobileSectionHeading>
+            <MobileFieldHint>
+              Every property and company needs an assignee. Add a supervisor when one is needed.
+            </MobileFieldHint>
+            <MobileAssigneeFields value={assignee} onChange={setAssignee} error={assigneeError} />
           </section>
 
           {isEditMode && associationId && onRevertPending && (
@@ -259,10 +300,10 @@ export function MobileSwitchCompanyScreen({
                 onClick={() => setRevertOpen(true)}
                 className="flex h-12 w-full items-center justify-center rounded-lg bg-[#fbeeed] text-base font-medium leading-5 text-[#b32318]"
               >
-                Revert change
+                {DISCARD_SWITCH.action}
               </button>
               <p className="pt-2 text-center text-xs leading-4 text-[#86868b]">
-                Removes the pending switch from this property.
+                Cancels the pending switch on this property.
               </p>
             </div>
           )}
@@ -319,12 +360,9 @@ export function MobileSwitchCompanyScreen({
         </div>
       </MobileSheet>
 
-      <MobileSheet open={revertOpen} onClose={() => setRevertOpen(false)} title="Revert change?">
+      <MobileSheet open={revertOpen} onClose={() => setRevertOpen(false)} title={DISCARD_SWITCH.heading}>
         <div className="flex flex-col gap-4 px-4 pb-8">
-          <p className="text-sm leading-5 text-[#6a6a70]">
-            This will remove the pending company association from this property. You can switch
-            company again later if needed.
-          </p>
+          <p className="text-sm leading-5 text-[#6a6a70]">{DISCARD_SWITCH.body}</p>
           <button
             type="button"
             onClick={() => {
@@ -334,7 +372,7 @@ export function MobileSwitchCompanyScreen({
             }}
             className="flex h-12 w-full items-center justify-center rounded-lg bg-[#b32318] text-base font-medium leading-5 text-white"
           >
-            Revert change
+            {DISCARD_SWITCH.confirm}
           </button>
           <button
             type="button"

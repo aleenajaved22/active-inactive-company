@@ -1,6 +1,14 @@
 import type { SwitchSpaceOption } from '../components/switchCompanyTypes'
+import { ERRORS } from './companyAtPropertyCopy'
 import { formatShortDate } from './dateFormat'
 import { getPropertyCompany } from './propertyCompanies'
+import {
+  occupancyRequiredError,
+  validateOccupancy,
+  type OccupancyFieldsValue,
+  type OccupancyUnit,
+  type OccupantSpaces,
+} from './propertyOccupancy'
 import { parseMMDDYYYY, spaceKeyOf, spaceLabelOf, type SpaceAssociation } from './propertySpaceAssociations'
 
 /**
@@ -33,6 +41,78 @@ export function buildSpaceOptions(associations: SpaceAssociation[]): SwitchSpace
   return [...options.values()].sort((a, b) =>
     a.label.localeCompare(b.label, undefined, { numeric: true }),
   )
+}
+
+/**
+ * The spaces each company holds on the property, used to check a new or edited
+ * occupancy against everyone else. Only the space itself is claimed: two
+ * companies can sit on the same floor in different suites, so the floor a suite
+ * happens to be on is not exclusive.
+ */
+export function buildOccupants(
+  associations: SpaceAssociation[],
+  statuses: SpaceAssociation['status'][] = ['Active', 'Pending'],
+): OccupantSpaces[] {
+  const byCompany = new Map<string, OccupantSpaces>()
+  for (const association of associations) {
+    if (!statuses.includes(association.status)) continue
+    const entry = byCompany.get(association.companyId) ?? {
+      companyId: association.companyId,
+      companyName: getPropertyCompany(association.companyId).name,
+      units: [] as OccupancyUnit[],
+    }
+    if (association.spaceNumber) {
+      entry.units.push(
+        association.spaceType === 'Floor'
+          ? { field: 'Floor', value: String(Number(association.spaceNumber)) }
+          : { field: association.spaceType, value: association.spaceNumber.toUpperCase() },
+      )
+    }
+    byCompany.set(association.companyId, entry)
+  }
+  return [...byCompany.values()]
+}
+
+/** An existing company's space, as the two occupancy fields show it. */
+export function associationToSpaceFields(
+  association: Pick<SpaceAssociation, 'spaceType' | 'spaceNumber' | 'floor'>,
+): SpaceInput {
+  if (association.spaceType === 'Floor') {
+    return { floor: association.spaceNumber, suiteUnitType: 'Suite', suiteUnitNumber: '' }
+  }
+  if (association.spaceType === 'Flat') {
+    return {
+      floor: association.floor ?? '',
+      suiteUnitType: 'Apartment',
+      suiteUnitNumber: association.spaceNumber,
+    }
+  }
+  return {
+    floor: association.floor ?? '',
+    suiteUnitType: association.spaceType,
+    suiteUnitNumber: association.spaceNumber,
+  }
+}
+
+/**
+ * The two occupancy fields written back onto an association. A company can hold
+ * several floors or suites, so the entry is kept as written ("1,3-5") rather
+ * than split — the label then reads back exactly what the user typed.
+ */
+export function spaceFieldsToAssociation(value: SpaceInput): Pick<
+  SpaceAssociation,
+  'spaceType' | 'spaceNumber' | 'floor'
+> {
+  const floor = value.floor.trim()
+  const suite = value.suiteUnitNumber.trim()
+  if (value.suiteUnitType && suite) {
+    return {
+      spaceType: value.suiteUnitType as SpaceAssociation['spaceType'],
+      spaceNumber: suite,
+      floor: floor || undefined,
+    }
+  }
+  return { spaceType: 'Floor', spaceNumber: floor, floor: undefined }
 }
 
 export type SpaceInput = {
@@ -77,6 +157,11 @@ export type AssociationValidationInput = {
   companyName?: string
   effectiveDate: string
   cutOffDate: string
+  /** What the user has typed into the two occupancy fields. */
+  spaceFields?: OccupancyFieldsValue
+  /** Everyone else on the property, for the one-company-per-space check. */
+  occupants?: OccupantSpaces[]
+  affiliations?: readonly string[]
 }
 
 export type AssociationErrors = {
@@ -84,6 +169,10 @@ export type AssociationErrors = {
   companyError: string | null
   effectiveDateError: string | null
   endDateError: string | null
+  /** Per-field occupancy messages: format, duplicates and conflicts. */
+  floorError: string | null
+  suiteUnitError: string | null
+  affiliationError: string | null
   /** Set when the chosen space is already taken, so the field can be marked. */
   occupied: boolean
   hasErrors: boolean
@@ -92,29 +181,34 @@ export type AssociationErrors = {
 export function validateAssociationForm({
   spaces,
   spaceKey,
-  effectiveSpaceKey,
   spaceLocked,
   isEditMode,
-  isMakeActive,
   companyId,
   companyName,
   effectiveDate,
   cutOffDate,
+  spaceFields,
+  occupants = [],
+  affiliations = [],
 }: AssociationValidationInput): AssociationErrors {
   const selectedSpace = spaces.find((space) => space.key === spaceKey)
 
-  // Making a company active on a space someone already holds is an error; name that company.
-  const occupiedSpace = isMakeActive
-    ? spaces.find(
-        (space) =>
-          space.key === effectiveSpaceKey && (space.currentCompanyName || space.pendingCompanyName),
-      )
-    : undefined
-  const occupiedError = occupiedSpace
-    ? occupiedSpace.currentCompanyName
-      ? `${occupiedSpace.label} already has an active company: ${occupiedSpace.currentCompanyName}.`
-      : `${occupiedSpace.label} already has a pending switch to ${occupiedSpace.pendingCompanyName}.`
-    : null
+  // The company being switched away from keeps its space until the effective
+  // date, so it is not a conflict for the company taking it over.
+  const outgoingCompanyId = spaceLocked && !isEditMode ? selectedSpace?.currentCompanyId : undefined
+  const others = occupants.filter(
+    (occupant) => occupant.companyId !== companyId && occupant.companyId !== outgoingCompanyId,
+  )
+
+  const occupancy = spaceFields
+    ? validateOccupancy({ value: spaceFields, occupants: others })
+    : { floorError: null, suiteUnitError: null, hasErrors: false }
+
+  // Sharing a property only works when every active company has its own space.
+  const missingOccupancy =
+    spaceFields && !spaceLocked
+      ? occupancyRequiredError({ value: spaceFields, occupants: others, adding: !isEditMode })
+      : null
 
   const effective = parseMMDDYYYY(effectiveDate)
   const end = cutOffDate.trim() ? parseMMDDYYYY(cutOffDate) : null
@@ -122,9 +216,10 @@ export function validateAssociationForm({
     ? parseMMDDYYYY(selectedSpace.currentContractEndDate)
     : null
 
-  // Space is optional. Only the locked switch flow warns about an existing pending switch.
+  // Only the locked switch flow warns about an existing pending switch; every
+  // other occupancy problem is reported against the field it came from.
   const spaceError =
-    occupiedError ??
+    missingOccupancy ??
     (spaceLocked && selectedSpace && !isEditMode && selectedSpace.pendingCompanyName
       ? `${selectedSpace.label} already has a pending switch to ${selectedSpace.pendingCompanyName}. Edit that switch instead.`
       : null)
@@ -140,23 +235,35 @@ export function validateAssociationForm({
     : !effective
       ? 'Enter a valid date (MM/DD/YYYY).'
       : contractEnd && effective <= contractEnd
-        ? `Effective Date must be after ${selectedSpace?.currentCompanyName}'s contract ends on ${formatShortDate(selectedSpace?.currentContractEndDate ?? '')}.`
+        ? ERRORS.activeContractConflict
         : null
 
   const endDateError =
     cutOffDate.trim() && !end
       ? 'Enter a valid date (MM/DD/YYYY).'
       : end && effective && end <= effective
-        ? 'End Date must be after the Effective Date.'
+        ? ERRORS.tillDateBeforeEffective
         : null
+
+  const affiliationError = affiliations.length === 0 ? ERRORS.affiliationRequired : null
 
   return {
     spaceError,
     companyError,
     effectiveDateError,
     endDateError,
-    occupied: Boolean(occupiedSpace),
-    hasErrors: Boolean(spaceError || companyError || effectiveDateError || endDateError),
+    floorError: occupancy.floorError,
+    suiteUnitError: occupancy.suiteUnitError,
+    affiliationError,
+    occupied: occupancy.hasErrors,
+    hasErrors: Boolean(
+      spaceError ||
+        companyError ||
+        effectiveDateError ||
+        endDateError ||
+        affiliationError ||
+        occupancy.hasErrors,
+    ),
   }
 }
 
@@ -176,10 +283,10 @@ export function validateCompanyEndDate({
   const nextStart = nextCompany ? parseMMDDYYYY(nextCompany.effectiveDate) : null
   if (endDate.trim() && !end) return 'Enter a valid date (MM/DD/YYYY).'
   if (end && start && end <= start) {
-    return `End Date must be after the Effective Date (${formatShortDate(effectiveDate)}).`
+    return ERRORS.tillDateBeforeEffective
   }
   if (nextCompany && nextStart && (!end || end >= nextStart)) {
-    return `End Date must be before ${nextCompany.name} starts on ${formatShortDate(nextCompany.effectiveDate)}.`
+    return `Select a Till Date before ${nextCompany.name} starts on ${formatShortDate(nextCompany.effectiveDate)}.`
   }
   return null
 }

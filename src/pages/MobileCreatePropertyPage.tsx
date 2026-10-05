@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
 import createPropertyMap from '../assets/create-property-map.png'
 import {
-  CUT_OFF_DATE_HELP,
   affiliationOptions,
   assigneeOptions,
   associatedFranchiseOptions,
@@ -15,7 +14,19 @@ import {
   supervisorOptions,
   type Affiliation,
 } from '../data/propertyFormOptions'
-import { companyParents, findSpaceConflict, suiteUnitTypes, type SpaceType } from '../data/propertySpaces'
+import {
+  COMPANY_AT_PROPERTY,
+  HUBSPOT_STAGE_LABEL,
+  OCCUPANCY_DESCRIPTION,
+  OCCUPANCY_LABEL,
+  OCCUPANCY_PLACEHOLDERS,
+  OCCUPANCY_TOOLTIPS,
+  TILL_DATE_TOOLTIP,
+} from '../data/companyAtPropertyCopy'
+import { buildOccupants } from '../data/companyAssociation'
+import { validateOccupancy } from '../data/propertyOccupancy'
+import { initialSpaceAssociations } from '../data/propertySpaceAssociations'
+import { companyParents, suiteUnitTypes, type SpaceType } from '../data/propertySpaces'
 import { MobileActionFooter, MOBILE_ACTION_FOOTER_HEIGHT } from '../mobile/MobileActionFooter'
 import {
   MobileCheckbox,
@@ -81,16 +92,14 @@ export function MobileCreatePropertyPage({ onBack, onSubmit }: MobileCreatePrope
     setParentCompany(companyParents[value] ?? '')
   }
 
-  // Space fields are optional, so a conflict only surfaces when one already exists at this address.
-  const floorConflict = findSpaceConflict(address, 'Floor', floor)
-  const suiteUnitConflict = findSpaceConflict(address, suiteUnitType, suiteUnitNumber)
-  const floorError = floorConflict
-    ? `Floor ${floor.trim()} is already assigned to ${floorConflict} at this address.`
-    : null
-  const suiteUnitError = suiteUnitConflict
-    ? `${suiteUnitType} ${suiteUnitNumber.trim()} is already assigned to ${suiteUnitConflict} at this address.`
-    : null
-  const spaceConflict = Boolean(floorConflict || suiteUnitConflict)
+  // Format, duplicate and already-occupied checks, shared with the web drawer.
+  const occupancy = validateOccupancy({
+    value: { floor, suiteUnitType, suiteUnitNumber },
+    occupants: buildOccupants(initialSpaceAssociations),
+  })
+  const floorError = occupancy.floorError
+  const suiteUnitError = occupancy.suiteUnitError
+  const spaceConflict = occupancy.hasErrors
   const assigneeError = submitAttempted && !assignee ? 'Select an assignee.' : null
 
   const handleSubmit = () => {
@@ -103,7 +112,7 @@ export function MobileCreatePropertyPage({ onBack, onSubmit }: MobileCreatePrope
     }
     if (spaceConflict) {
       spaceFieldRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      if (suiteUnitConflict) suiteUnitNumberRef.current?.focus()
+      if (suiteUnitError) suiteUnitNumberRef.current?.focus()
       return
     }
     onSubmit?.()
@@ -177,7 +186,7 @@ export function MobileCreatePropertyPage({ onBack, onSubmit }: MobileCreatePrope
                 options={associatedFranchiseOptions}
               />
               <MobileSelectField
-                label="Hubspot Stage"
+                label={HUBSPOT_STAGE_LABEL}
                 required
                 value={hubspotStage}
                 onChange={setHubspotStage}
@@ -233,7 +242,7 @@ export function MobileCreatePropertyPage({ onBack, onSubmit }: MobileCreatePrope
                 <label className="relative flex h-[62px] w-full items-center gap-0.5 rounded-lg bg-[#f6f6f8] px-4 py-3">
                   <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
                     <span className="text-xs leading-4 text-[#4d4d51]">
-                      Company at property till date
+                      {COMPANY_AT_PROPERTY.tillDateLabel}
                     </span>
                     <input
                       type="date"
@@ -246,17 +255,19 @@ export function MobileCreatePropertyPage({ onBack, onSubmit }: MobileCreatePrope
                   </span>
                   <IconCalendar size={20} className="pointer-events-none text-[#5b5b5f]" />
                 </label>
-                <MobileFieldHint>{CUT_OFF_DATE_HELP}</MobileFieldHint>
+                <MobileFieldHint>{TILL_DATE_TOOLTIP}</MobileFieldHint>
               </div>
-              <div ref={spaceFieldRef} className="flex flex-col gap-3">
+              <div ref={spaceFieldRef} className="flex flex-col gap-2 pt-1">
+                <span className="px-1 text-xs leading-4 text-[#4d4d51]">{OCCUPANCY_LABEL}</span>
+                <MobileFieldHint>{OCCUPANCY_DESCRIPTION}</MobileFieldHint>
                 <MobileTextField
                   label="Floor"
                   value={floor}
                   onChange={setFloor}
-                  placeholder="5"
-                  inputMode="numeric"
+                  placeholder={OCCUPANCY_PLACEHOLDERS.floor}
                   error={floorError}
                 />
+                <MobileFieldHint>{OCCUPANCY_TOOLTIPS.floor}</MobileFieldHint>
                 <MobileSuiteUnitField
                   typeValue={suiteUnitType}
                   onTypeChange={(value) => setSuiteUnitType(value as SpaceType)}
@@ -266,6 +277,7 @@ export function MobileCreatePropertyPage({ onBack, onSubmit }: MobileCreatePrope
                   numberRef={suiteUnitNumberRef}
                   error={suiteUnitError}
                 />
+                <MobileFieldHint>{OCCUPANCY_TOOLTIPS.suiteUnit}</MobileFieldHint>
               </div>
             </section>
 
