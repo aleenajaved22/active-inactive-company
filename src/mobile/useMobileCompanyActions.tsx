@@ -169,11 +169,13 @@ export function useMobileCompanyActions({
       return [
         {
           label: 'Switch company',
+          icon: 'switch',
           onSelect: () =>
             openFlow({ kind: 'switch', mode: 'switch', spaceKey: spaceKeyOf(association) }),
         },
         {
           label: 'Edit company',
+          icon: 'edit',
           onSelect: () => {
             onFlowOpen?.()
             setEditAffiliationsId(association.id)
@@ -185,6 +187,7 @@ export function useMobileCompanyActions({
       return [
         {
           label: 'Edit switch',
+          icon: 'edit',
           onSelect: () =>
             openFlow({
               kind: 'switch',
@@ -207,6 +210,7 @@ export function useMobileCompanyActions({
     return [
       {
         label: 'Make active',
+        icon: 'activate',
         onSelect: () =>
           openFlow({
             kind: 'switch',

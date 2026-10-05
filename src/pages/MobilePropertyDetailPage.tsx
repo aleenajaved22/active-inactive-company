@@ -13,7 +13,7 @@ import {
 import { initialSpaceAssociations, spaceLabelOf } from '../data/propertySpaceAssociations'
 import { MobileAccordion, MobileDetailRow } from '../mobile/MobileAccordion'
 import { MobileBottomNav } from '../mobile/MobileBottomNav'
-import { MobileCompanyToggle } from '../mobile/MobileCompanyToggle'
+import { MobileCompanyStrip } from '../mobile/MobileCompanyStrip'
 import { MobileFrame } from '../mobile/MobileFrame'
 import {
   IconAdd,
@@ -56,20 +56,26 @@ function ActionButton({
   label,
   onClick,
   disabled,
+  primary,
 }: {
   icon: React.ReactNode
   label: string
   onClick?: () => void
   disabled?: boolean
+  /** The action this row leads with. */
+  primary?: boolean
 }) {
+  const tone = disabled
+    ? 'bg-[#f6f6f8] text-[#86868b]'
+    : primary
+      ? 'bg-[#e8f1ff] text-[#146dff]'
+      : 'bg-[#f6f6f8] text-black'
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#f6f6f8] px-3 ${
-        disabled ? 'text-[#86868b]' : 'text-black'
-      }`}
+      className={`flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 ${tone}`}
     >
       {icon}
       <span className="truncate text-sm font-medium leading-5">{label}</span>
@@ -175,7 +181,7 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
             </div>
 
             <div className="flex gap-2 pt-3">
-              <ActionButton icon={<IconAdd size={18} />} label="Make a Deal" disabled={readOnly} />
+              <ActionButton primary icon={<IconAdd size={18} />} label="Make a Deal" disabled={readOnly} />
               <ActionButton icon={<IconRepeat size={16} />} label="Follow Up" disabled={readOnly} />
               <button
                 type="button"
@@ -190,8 +196,19 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
           <div className="h-2.5 w-full bg-[#eaecee]" />
 
           <div className="flex flex-col items-start bg-white px-4 pt-2.5">
-            <div className="w-full pb-4">
+            <div className="w-full pb-3">
               <MobileStageRail stages={stages} />
+            </div>
+            <div className="w-full pb-2">
+              <MobileCompanyStrip
+                companyName={company.name}
+                status={listStatus}
+                spaceLabel={spaceLabelOf(selectedAssociation)}
+                assignee={selectedAssociation.assignee}
+                position={currentIndex === -1 ? null : currentIndex + 1}
+                total={currentAssociations.length}
+                onClick={() => setSwitcherOpen(true)}
+              />
             </div>
             <div className="w-full">
               <MobileTabs tabs={detailTabs} active={activeTab} onChange={setActiveTab} />
@@ -199,7 +216,7 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
           </div>
         </div>
 
-        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto" style={{ paddingBottom: 160 }}>
+        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto" style={{ paddingBottom: 112 }}>
           <div className="flex flex-col gap-3 px-4 pt-4">
             {/* What state the company is in comes first, then what that means
                 for its contracts. Both sit outside the tabs, as on the web. */}
@@ -373,13 +390,6 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
             )}
           </div>
         </div>
-
-        <MobileCompanyToggle
-          companyName={company.name}
-          position={currentIndex === -1 ? null : currentIndex + 1}
-          total={currentAssociations.length}
-          onClick={() => setSwitcherOpen(true)}
-        />
 
         <MobileBottomNav active="properties" />
 

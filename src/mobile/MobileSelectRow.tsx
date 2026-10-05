@@ -20,7 +20,7 @@ type MobileSelectRowProps = {
   detail?: string
   checked: boolean
   onSelect: () => void
-  /** Status pill, on the name line at the end of the row. */
+  /** Status pill, centred on the row between the text and the actions button. */
   status?: ReactNode
   /** Opens the row's action drawer. */
   onMore?: () => void
@@ -48,18 +48,18 @@ export function MobileSelectRow({
       >
         <Radio checked={checked} />
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="truncate text-sm leading-5 text-black">{label}</span>
           {/*
-            The pill shares the name line rather than sitting beside the whole
-            column, so the detail underneath keeps the full width.
+            The pill now sits on the row's centre line, level with the radio and
+            the actions button, so the detail gives up some width. It wraps
+            instead of truncating: a Pending company's effective date is the
+            part of it that matters.
           */}
-          <span className="flex h-5 min-w-0 items-center gap-2">
-            <span className="min-w-0 flex-1 truncate text-sm leading-5 text-black">{label}</span>
-            {status}
-          </span>
           {detail && (
-            <span className="truncate text-xs leading-[18px] text-[#86868b]">{detail}</span>
+            <span className="line-clamp-2 text-xs leading-[18px] text-[#86868b]">{detail}</span>
           )}
         </span>
+        {status && <span className="flex shrink-0 items-center">{status}</span>}
       </button>
       {onMore && (
         <button

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { ActionMenuIcon, type ActionMenuIconName } from '../components/ActionMenuIcon'
 
 type MobileSheetProps = {
   open: boolean
@@ -81,12 +82,18 @@ export function MobileSheet({
 export type MobileActionItem = {
   label: string
   onSelect: () => void
+  /** The same glyph the web ⋮ menu shows for this action. */
+  icon?: ActionMenuIconName
   destructive?: boolean
 }
 
 /**
  * Action drawer, opened on top of another drawer. Replaces the web app's ⋮
  * popup menu, which is too small a target and positions badly inside a sheet.
+ *
+ * It is a drawer like the one beneath it — grabber, ruled header, left-aligned
+ * rows — rather than the iOS action-sheet idiom of floating cards and a Cancel
+ * button, so the two read as one family. Tapping outside dismisses it.
  */
 export function MobileActionSheet({
   open,
@@ -99,48 +106,33 @@ export function MobileActionSheet({
   items: MobileActionItem[]
   onClose: () => void
 }) {
-  if (!open) return null
-
   return (
-    <div className="absolute inset-0 z-50 flex flex-col justify-end p-3">
-      <button
-        type="button"
-        aria-label="Dismiss"
-        onClick={onClose}
-        className="mobile-scrim absolute inset-0 bg-black/40"
-      />
-      <div role="menu" className="mobile-sheet relative flex flex-col gap-2">
-        <div className="overflow-hidden rounded-2xl bg-white">
-          {title && (
-            <p className="border-b border-[#e6e6e7] px-4 py-3 text-center text-xs leading-[18px] text-[#86868b]">
-              {title}
-            </p>
-          )}
-          {items.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                onClose()
-                item.onSelect()
-              }}
-              className={`w-full border-b border-[#e6e6e7] px-4 py-3.5 text-center text-base leading-5 last:border-b-0 ${
-                item.destructive ? 'text-[#b32318]' : 'text-[#146dff]'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="w-full rounded-2xl bg-white px-4 py-3.5 text-center text-base font-medium leading-5 text-[#146dff]"
-        >
-          Cancel
-        </button>
+    <MobileSheet open={open} onClose={onClose} title={title} layer={50} maxHeight="60%">
+      <div role="menu" className="flex flex-col px-2 pb-6 pt-1">
+        {items.map((item) => (
+          <button
+            key={item.label}
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              onClose()
+              item.onSelect()
+            }}
+            className={`flex h-14 w-full items-center gap-3 rounded-lg px-[10px] text-left text-base leading-5 active:bg-[#f6f6f8] ${
+              item.destructive ? 'text-[#b32318]' : 'text-black'
+            }`}
+          >
+            {item.icon && (
+              <ActionMenuIcon
+                icon={item.icon}
+                size={20}
+                className={item.destructive ? 'text-[#b32318]' : 'text-[#6a6a70]'}
+              />
+            )}
+            {item.label}
+          </button>
+        ))}
       </div>
-    </div>
+    </MobileSheet>
   )
 }
