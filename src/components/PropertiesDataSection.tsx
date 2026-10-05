@@ -136,7 +136,7 @@ function CompaniesCell({ companies }: { companies: string[] }) {
 function PropertyNameCell({ name, sync, starred }: { name: string; sync?: boolean; starred?: boolean }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm font-medium leading-5 text-[#444446]">{name}</span>
+      <span className="text-sm leading-5 text-[#444446]">{name}</span>
       {sync && (
         <span className="flex size-4 items-center justify-center rounded bg-[#146dff]">
           <span className="relative size-2.5">
@@ -266,11 +266,11 @@ export function PropertiesDataSection({ onSelectProperty }: PropertiesDataSectio
                 <th className="sticky left-[64px] z-20 w-[96px] min-w-[96px] whitespace-nowrap border-t border-[#e6e6e7] bg-white px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f]">
                   ID
                 </th>
-                <th className="sticky left-[160px] z-20 min-w-[300px] whitespace-nowrap border-t border-[#e6e6e7] bg-white px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f] shadow-[6px_0_6px_-4px_rgba(0,0,0,0.08)]">
-                  Property Name
-                </th>
-                <th className="whitespace-nowrap border-t border-[#e6e6e7] px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f]">
+                <th className="sticky left-[160px] z-20 min-w-[340px] whitespace-nowrap border-t border-[#e6e6e7] bg-white px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f] shadow-[6px_0_6px_-4px_rgba(0,0,0,0.08)]">
                   Property Address
+                </th>
+                <th className="min-w-[240px] whitespace-nowrap border-t border-[#e6e6e7] px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f]">
+                  Property Name
                 </th>
                 <th className="whitespace-nowrap border-t border-[#e6e6e7] px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f]">
                   Companies
@@ -302,10 +302,12 @@ export function PropertiesDataSection({ onSelectProperty }: PropertiesDataSectio
                   <td className="sticky left-[64px] z-20 w-[96px] whitespace-nowrap bg-white px-6 py-4 text-sm font-medium leading-5 text-[#444446] group-hover:bg-[#f5f5f6]">
                     {row.id}
                   </td>
-                  <td className="sticky left-[160px] z-20 min-w-[300px] bg-white px-6 py-4 group-hover:bg-[#f5f5f6] shadow-[6px_0_6px_-4px_rgba(0,0,0,0.08)]">
+                  <td className="sticky left-[160px] z-20 min-w-[340px] whitespace-nowrap bg-white px-6 py-4 text-sm font-medium leading-5 text-[#444446] group-hover:bg-[#f5f5f6] shadow-[6px_0_6px_-4px_rgba(0,0,0,0.08)]">
+                    {row.address}
+                  </td>
+                  <td className="min-w-[240px] whitespace-nowrap px-6 py-4">
                     <PropertyNameCell name={row.name} sync={row.sync} starred={row.starred} />
                   </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm leading-5 text-[#86868b]">{row.address}</td>
                   <td className="px-6 py-4">
                     <CompaniesCell companies={row.companies} />
                   </td>

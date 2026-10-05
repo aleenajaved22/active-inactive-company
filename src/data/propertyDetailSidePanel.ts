@@ -20,7 +20,7 @@ export type CompanyAffiliationBadge = {
 
 export const propertyDetailsPanelData = {
   rows: [
-    { label: 'Name', value: 'Costco Wholesale - Boys Town' },
+    { label: 'Name', value: 'Elm Avenue Plaza' },
     { label: 'Industry vertical', value: 'Warehouse' },
     {
       label: 'Referred by',
@@ -34,7 +34,6 @@ export const propertyDetailsPanelData = {
     { label: 'Parent Company', value: 'Costco' },
     { label: 'Address', value: '456 Elm Ave, Westport Idencia, Kansas City, Kansas, 64030' },
     { label: 'Management Company', value: 'Costco' },
-    { label: 'Property Name', value: 'Americold' },
     { label: 'Tenancy', value: 'Multi' },
     { label: 'Amenities', value: '5' },
   ],

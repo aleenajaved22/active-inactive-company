@@ -42,7 +42,7 @@ export const affiliationStyles: Record<
 export const propertyRows: PropertyRow[] = [
   {
     id: '#2300',
-    name: 'Costco wholesale - Boys Town',
+    name: 'Elm Avenue Plaza',
     sync: true,
     starred: true,
     affiliation: 'corporate',
@@ -57,7 +57,7 @@ export const propertyRows: PropertyRow[] = [
   },
   {
     id: '#4500',
-    name: 'Mcdonalds - Y Block',
+    name: '1200 Market Tower',
     affiliation: 'owned-remote',
     company: 'Mcdonalds',
     companies: ['Mcdonalds', 'McCafe'],
@@ -70,7 +70,7 @@ export const propertyRows: PropertyRow[] = [
   },
   {
     id: '#0239',
-    name: 'H&M Store - X Sector',
+    name: 'Commerce Street Center',
     sync: true,
     affiliation: 'tenant',
     company: 'H&M Store',
@@ -84,7 +84,7 @@ export const propertyRows: PropertyRow[] = [
   },
   {
     id: '#2300',
-    name: 'Charleston - Maple 987',
+    name: 'Ocean Plaza',
     affiliation: 'occupied-primary',
     company: "Charleston's Restaurant",
     companies: ["Charleston's Restaurant", 'Charleston Catering'],
@@ -97,7 +97,7 @@ export const propertyRows: PropertyRow[] = [
   },
   {
     id: '#2941',
-    name: 'Milwaukee Tools - 432 Aspen',
+    name: 'Aspen Road Commons',
     affiliation: 'occupied-primary',
     company: 'Milwaukee Tools',
     companies: ['Milwaukee Tools', 'Empire Level', 'Ridgid'],
@@ -110,7 +110,7 @@ export const propertyRows: PropertyRow[] = [
   },
   {
     id: '#2300',
-    name: 'Brian Mart - DHA',
+    name: 'Main Street Square',
     sync: true,
     affiliation: 'corporate',
     company: 'Brian Mart',
@@ -124,7 +124,7 @@ export const propertyRows: PropertyRow[] = [
   },
   {
     id: '#4500',
-    name: 'Park - Downtown',
+    name: 'Park West Tower',
     affiliation: 'managed',
     company: 'Park',
     companies: ['Park', 'Central Park Conservancy', 'NYC Parks', 'Green Thumb'],
@@ -137,7 +137,7 @@ export const propertyRows: PropertyRow[] = [
   },
   {
     id: '#0239',
-    name: 'Zorinski Lake - Garden Down',
+    name: 'Lakeshore Center',
     affiliation: 'corporate',
     company: 'Zorinski Lake',
     companies: ['Zorinski Lake', 'Zorinski Marina'],

@@ -131,7 +131,7 @@ export const activityFeed: ActivityFeedItem[] = [
     iconBg: '#fef0c7',
     icon: 'task',
     title: 'Location synced from Hubspot',
-    subtitle: 'Costco Wholesale - Boys Town location synced from hubspot',
+    subtitle: 'Elm Avenue Plaza location synced from hubspot',
     showSeeMore: true,
     timestamp: '12-21-2023 02:45 AM',
   },
