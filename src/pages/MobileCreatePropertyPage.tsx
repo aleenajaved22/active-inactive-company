@@ -122,6 +122,77 @@ export function MobileCreatePropertyPage({ onBack, onSubmit }: MobileCreatePrope
           style={{ paddingTop: 100, paddingBottom: MOBILE_ACTION_FOOTER_HEIGHT + 24 }}
         >
           <div className="flex flex-col gap-6 px-4 pt-5">
+            {/* Company */}
+            <section className="flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-2">
+                <MobileSectionHeading>Company</MobileSectionHeading>
+                <button
+                  type="button"
+                  onClick={() => setCreateCompanyOpen(true)}
+                  className="flex items-center gap-1 text-sm font-medium leading-5 text-[#146dff]"
+                >
+                  <IconAdd size={18} />
+                  Create New
+                </button>
+              </div>
+              <MobileSelectField
+                label="Company"
+                required
+                value={company}
+                onChange={selectCompany}
+                options={companyOptions}
+              />
+              <div className="flex items-center gap-1.5 px-4">
+                <span className="text-xs leading-[18px] text-[#86868b]">
+                  Strategic Partnership Status:
+                </span>
+                <span className="rounded-2xl bg-[#eff8ef] px-2 py-0.5 text-xs font-medium leading-[18px] text-[#2e964b]">
+                  SP - Active
+                </span>
+              </div>
+              <MobileSelectField
+                label="Parent Company"
+                value={parentCompany}
+                onChange={setParentCompany}
+                options={parentCompanyOptions}
+                placeholder="Select parent company"
+              />
+              <div className="flex flex-col gap-1">
+                <label className="relative flex h-[62px] w-full items-center gap-0.5 rounded-lg bg-[#f6f6f8] px-4 py-3">
+                  <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+                    <span className="text-xs leading-4 text-[#4d4d51]">
+                      {COMPANY_AT_PROPERTY.tillDateLabel}
+                    </span>
+                    <input
+                      type="date"
+                      value={cutOffDate}
+                      min={new Date().toISOString().slice(0, 10)}
+                      onChange={(event) => setCutOffDate(event.target.value)}
+                      className={`w-full bg-transparent text-[15px] font-medium leading-5 outline-none [&::-webkit-calendar-picker-indicator]:opacity-0 ${
+                        cutOffDate ? 'text-black' : 'text-[#86868b]'
+                      }`}
+                    />
+                  </span>
+                  <IconCalendar size={20} className="pointer-events-none text-[#5b5b5f]" />
+                </label>
+                <MobileFieldHint>{TILL_DATE_TOOLTIP}</MobileFieldHint>
+              </div>
+              <div ref={spaceFieldRef} className="pt-2">
+                <MobileOccupancyFields
+                  subheading
+                  value={{ floor, suiteUnitType, suiteUnitNumber }}
+                  onChange={(next) => {
+                    setFloor(next.floor)
+                    setSuiteUnitType(next.suiteUnitType as SpaceType)
+                    setSuiteUnitNumber(next.suiteUnitNumber)
+                  }}
+                  floorError={submitAttempted ? floorError : null}
+                  suiteUnitError={submitAttempted ? suiteUnitError : null}
+                  numberRef={suiteUnitNumberRef}
+                />
+              </div>
+            </section>
+
             {/* Address */}
             <section className="flex flex-col gap-3">
               <MobileSectionHeading>Address</MobileSectionHeading>
@@ -195,77 +266,6 @@ export function MobileCreatePropertyPage({ onBack, onSubmit }: MobileCreatePrope
                   options={affiliationOptions as readonly Affiliation[]}
                   selected={affiliations}
                   onToggle={toggleAffiliation}
-                />
-              </div>
-            </section>
-
-            {/* Company */}
-            <section className="flex flex-col gap-3">
-              <div className="flex items-center justify-between gap-2">
-                <MobileSectionHeading>Company</MobileSectionHeading>
-                <button
-                  type="button"
-                  onClick={() => setCreateCompanyOpen(true)}
-                  className="flex items-center gap-1 text-sm font-medium leading-5 text-[#146dff]"
-                >
-                  <IconAdd size={18} />
-                  Create New
-                </button>
-              </div>
-              <MobileSelectField
-                label="Company"
-                required
-                value={company}
-                onChange={selectCompany}
-                options={companyOptions}
-              />
-              <div className="flex items-center gap-1.5 px-4">
-                <span className="text-xs leading-[18px] text-[#86868b]">
-                  Strategic Partnership Status:
-                </span>
-                <span className="rounded-2xl bg-[#eff8ef] px-2 py-0.5 text-xs font-medium leading-[18px] text-[#2e964b]">
-                  SP - Active
-                </span>
-              </div>
-              <MobileSelectField
-                label="Parent Company"
-                value={parentCompany}
-                onChange={setParentCompany}
-                options={parentCompanyOptions}
-                placeholder="Select parent company"
-              />
-              <div className="flex flex-col gap-1">
-                <label className="relative flex h-[62px] w-full items-center gap-0.5 rounded-lg bg-[#f6f6f8] px-4 py-3">
-                  <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
-                    <span className="text-xs leading-4 text-[#4d4d51]">
-                      {COMPANY_AT_PROPERTY.tillDateLabel}
-                    </span>
-                    <input
-                      type="date"
-                      value={cutOffDate}
-                      min={new Date().toISOString().slice(0, 10)}
-                      onChange={(event) => setCutOffDate(event.target.value)}
-                      className={`w-full bg-transparent text-[15px] font-medium leading-5 outline-none [&::-webkit-calendar-picker-indicator]:opacity-0 ${
-                        cutOffDate ? 'text-black' : 'text-[#86868b]'
-                      }`}
-                    />
-                  </span>
-                  <IconCalendar size={20} className="pointer-events-none text-[#5b5b5f]" />
-                </label>
-                <MobileFieldHint>{TILL_DATE_TOOLTIP}</MobileFieldHint>
-              </div>
-              <div ref={spaceFieldRef} className="pt-2">
-                <MobileOccupancyFields
-                  subheading
-                  value={{ floor, suiteUnitType, suiteUnitNumber }}
-                  onChange={(next) => {
-                    setFloor(next.floor)
-                    setSuiteUnitType(next.suiteUnitType as SpaceType)
-                    setSuiteUnitNumber(next.suiteUnitNumber)
-                  }}
-                  floorError={submitAttempted ? floorError : null}
-                  suiteUnitError={submitAttempted ? suiteUnitError : null}
-                  numberRef={suiteUnitNumberRef}
                 />
               </div>
             </section>

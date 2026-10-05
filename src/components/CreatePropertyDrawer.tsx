@@ -289,6 +289,81 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
             <div className="min-h-0 flex-1 overflow-y-auto">
               <div className="flex flex-col gap-6 pb-4">
                 <section className="flex flex-col gap-4">
+                  <SectionHeading title="Company" />
+                  <div className="grid grid-cols-2 items-start gap-6">
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <DrawerLabel required>Company</DrawerLabel>
+                        <button
+                          type="button"
+                          onClick={() => setCreateCompanyOpen(true)}
+                          className="flex items-center gap-1 text-sm font-medium text-primary"
+                        >
+                          <span className="relative size-5 shrink-0" aria-hidden>
+                            <img alt="" className="absolute inset-0 block size-full max-w-none" src={detailPlus} />
+                          </span>
+                          Create New
+                        </button>
+                      </div>
+                      <DrawerSelect
+                        id="create-property-company"
+                        value={company}
+                        onChange={selectCompany}
+                        options={companyOptions}
+                      />
+                      <div className="mt-1 flex items-center gap-1.5">
+                        <span className="text-xs leading-[18px] text-[#86868b]">Strategic Partnership Status:</span>
+                        <span className="rounded-2xl bg-[#eff8ef] px-2 py-0.5 text-xs font-medium leading-[18px] text-[#2e964b]">
+                          SP - Active
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <DrawerLabel>Parent Company</DrawerLabel>
+                      <DrawerSelect
+                        id="create-property-parent-company"
+                        value={parentCompany}
+                        onChange={setParentCompany}
+                        options={parentCompanyOptions}
+                        placeholder="Select parent company"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex w-full max-w-[359px] flex-col gap-1.5">
+                    <DrawerLabelWithInfo tooltip={TILL_DATE_TOOLTIP} tooltipId="create-property-cut-off-date-help">
+                      {COMPANY_AT_PROPERTY.tillDateLabel}
+                    </DrawerLabelWithInfo>
+                    <ModalDateInput
+                      id="create-property-cut-off-date"
+                      variant="drawer"
+                      value={cutOffDate}
+                      onChange={setCutOffDate}
+                    />
+                  </div>
+                  <div ref={spaceFieldRef} className="pt-2">
+                    <OccupancyGroup>
+                    <SpaceFields
+                      layout="even"
+                      idPrefix="create-property"
+                      value={{ floor, suiteUnitType, suiteUnitNumber }}
+                      onChange={(next) => {
+                        setFloor(next.floor)
+                        setSuiteUnitType(next.suiteUnitType)
+                        setSuiteUnitNumber(next.suiteUnitNumber)
+                      }}
+                      errors={{
+                        floor: submitAttempted ? floorError : null,
+                        suiteUnit: submitAttempted ? suiteUnitError : null,
+                      }}
+                      suiteUnitNumberRef={suiteUnitNumberRef}
+                    />
+                    </OccupancyGroup>
+                  </div>
+                </section>
+
+                <SectionDivider />
+
+                <section className="flex flex-col gap-4">
                   <SectionHeading title="Address" />
                   <div className="flex flex-col gap-1.5">
                     <DrawerLabel required>Address</DrawerLabel>
@@ -387,81 +462,6 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                         )
                       })}
                     </div>
-                  </div>
-                </section>
-
-                <SectionDivider />
-
-                <section className="flex flex-col gap-4">
-                  <SectionHeading title="Company" />
-                  <div className="grid grid-cols-2 items-start gap-6">
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <DrawerLabel required>Company</DrawerLabel>
-                        <button
-                          type="button"
-                          onClick={() => setCreateCompanyOpen(true)}
-                          className="flex items-center gap-1 text-sm font-medium text-primary"
-                        >
-                          <span className="relative size-5 shrink-0" aria-hidden>
-                            <img alt="" className="absolute inset-0 block size-full max-w-none" src={detailPlus} />
-                          </span>
-                          Create New
-                        </button>
-                      </div>
-                      <DrawerSelect
-                        id="create-property-company"
-                        value={company}
-                        onChange={selectCompany}
-                        options={companyOptions}
-                      />
-                      <div className="mt-1 flex items-center gap-1.5">
-                        <span className="text-xs leading-[18px] text-[#86868b]">Strategic Partnership Status:</span>
-                        <span className="rounded-2xl bg-[#eff8ef] px-2 py-0.5 text-xs font-medium leading-[18px] text-[#2e964b]">
-                          SP - Active
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <DrawerLabel>Parent Company</DrawerLabel>
-                      <DrawerSelect
-                        id="create-property-parent-company"
-                        value={parentCompany}
-                        onChange={setParentCompany}
-                        options={parentCompanyOptions}
-                        placeholder="Select parent company"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex w-full max-w-[359px] flex-col gap-1.5">
-                    <DrawerLabelWithInfo tooltip={TILL_DATE_TOOLTIP} tooltipId="create-property-cut-off-date-help">
-                      {COMPANY_AT_PROPERTY.tillDateLabel}
-                    </DrawerLabelWithInfo>
-                    <ModalDateInput
-                      id="create-property-cut-off-date"
-                      variant="drawer"
-                      value={cutOffDate}
-                      onChange={setCutOffDate}
-                    />
-                  </div>
-                  <div ref={spaceFieldRef} className="pt-2">
-                    <OccupancyGroup>
-                    <SpaceFields
-                      layout="even"
-                      idPrefix="create-property"
-                      value={{ floor, suiteUnitType, suiteUnitNumber }}
-                      onChange={(next) => {
-                        setFloor(next.floor)
-                        setSuiteUnitType(next.suiteUnitType)
-                        setSuiteUnitNumber(next.suiteUnitNumber)
-                      }}
-                      errors={{
-                        floor: submitAttempted ? floorError : null,
-                        suiteUnit: submitAttempted ? suiteUnitError : null,
-                      }}
-                      suiteUnitNumberRef={suiteUnitNumberRef}
-                    />
-                    </OccupancyGroup>
                   </div>
                 </section>
 
