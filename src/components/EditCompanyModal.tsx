@@ -8,8 +8,6 @@ import { validateCompanyEndDate } from '../data/companyAssociation'
 import {
   COMPANY_AT_PROPERTY,
   ERRORS,
-  OCCUPANCY_DESCRIPTION,
-  OCCUPANCY_LABEL,
   TILL_DATE_HELPER,
 } from '../data/companyAtPropertyCopy'
 import {
@@ -19,6 +17,7 @@ import {
 } from '../data/propertyOccupancy'
 import { AssigneeFields, emptyAssignee, type AssigneeValue } from './AssigneeFields'
 import { ModalDateInput } from './ModalDateInput'
+import { OccupancyGroup } from './OccupancyGroup'
 import { SpaceFields, emptySpaceFields, type SpaceFieldsValue } from './PropertySpaceFields'
 import {
   propertyAffiliationOptions,
@@ -272,7 +271,7 @@ export function EditCompanyModal({
       aria-labelledby="edit-company-title"
     >
       <button type="button" className="absolute inset-0 bg-[#262527]/40" aria-label="Close dialog" onClick={onClose} />
-      <div className="relative flex max-h-[calc(100vh-2rem)] w-full max-w-[560px] flex-col rounded-xl border border-[#e6e6e7] bg-white p-6 shadow-[0px_20px_24px_-4px_rgba(16,24,40,0.1),0px_8px_8px_-4px_rgba(16,24,40,0.04)]">
+      <div className="relative flex max-h-[calc(100vh-2rem)] w-full max-w-[640px] flex-col rounded-xl border border-[#e6e6e7] bg-white p-6 shadow-[0px_20px_24px_-4px_rgba(16,24,40,0.1),0px_8px_8px_-4px_rgba(16,24,40,0.04)]">
         <div className="mb-4 flex w-full shrink-0 items-start gap-2 border-b border-[#e6e6e7] pb-4">
           <h2 id="edit-company-title" className="min-w-0 flex-1 text-xl font-bold leading-7 text-[#262527]">
             Edit Company
@@ -296,12 +295,10 @@ export function EditCompanyModal({
           {submitAttempted && affiliationError && <ModalError>{affiliationError}</ModalError>}
         </div>
 
-        <div className="mt-4 flex flex-col gap-2">
-          <div>
-            <p className="text-sm font-medium leading-5 text-[#86868b]">{OCCUPANCY_LABEL}</p>
-            <p className="mt-0.5 text-xs leading-[18px] text-[#86868b]">{OCCUPANCY_DESCRIPTION}</p>
-          </div>
+        <div className="mt-5 flex flex-col gap-2">
+          <OccupancyGroup>
           <SpaceFields
+            layout="even"
             idPrefix="edit-company"
             size="sm"
             value={spaceFields}
@@ -311,6 +308,7 @@ export function EditCompanyModal({
               suiteUnit: submitAttempted ? occupancy.suiteUnitError : null,
             }}
           />
+          </OccupancyGroup>
           {submitAttempted && missingOccupancy && <ModalError>{missingOccupancy}</ModalError>}
         </div>
 

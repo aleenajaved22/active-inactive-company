@@ -17,16 +17,12 @@ import {
 import {
   COMPANY_AT_PROPERTY,
   HUBSPOT_STAGE_LABEL,
-  OCCUPANCY_DESCRIPTION,
-  OCCUPANCY_LABEL,
-  OCCUPANCY_PLACEHOLDERS,
-  OCCUPANCY_TOOLTIPS,
   TILL_DATE_TOOLTIP,
 } from '../data/companyAtPropertyCopy'
 import { buildOccupants } from '../data/companyAssociation'
 import { validateOccupancy } from '../data/propertyOccupancy'
 import { initialSpaceAssociations } from '../data/propertySpaceAssociations'
-import { companyParents, suiteUnitTypes, type SpaceType } from '../data/propertySpaces'
+import { companyParents, type SpaceType } from '../data/propertySpaces'
 import { MobileActionFooter, MOBILE_ACTION_FOOTER_HEIGHT } from '../mobile/MobileActionFooter'
 import {
   MobileCheckbox,
@@ -34,11 +30,11 @@ import {
   MobileFieldHint,
   MobileSectionHeading,
   MobileSelectField,
-  MobileSuiteUnitField,
   MobileTextAreaField,
   MobileTextField,
 } from '../mobile/MobileFields'
 import { MobileCreateCompanyScreen } from '../mobile/MobileCreateCompanyScreen'
+import { MobileOccupancyFields } from '../mobile/MobileOccupancyFields'
 import { MobileFrame } from '../mobile/MobileFrame'
 import { IconAdd, IconCalendar, IconExpand, IconMyLocation } from '../mobile/MobileIcons'
 import { MobilePageHeader } from '../mobile/MobilePageHeader'
@@ -258,27 +254,19 @@ export function MobileCreatePropertyPage({ onBack, onSubmit }: MobileCreatePrope
                 </label>
                 <MobileFieldHint>{TILL_DATE_TOOLTIP}</MobileFieldHint>
               </div>
-              <div ref={spaceFieldRef} className="flex flex-col gap-2 pt-1">
-                <span className="px-1 text-xs leading-4 text-[#4d4d51]">{OCCUPANCY_LABEL}</span>
-                <MobileFieldHint>{OCCUPANCY_DESCRIPTION}</MobileFieldHint>
-                <MobileTextField
-                  label="Floor"
-                  value={floor}
-                  onChange={setFloor}
-                  placeholder={OCCUPANCY_PLACEHOLDERS.floor}
-                  error={submitAttempted ? floorError : null}
-                />
-                <MobileFieldHint>{OCCUPANCY_TOOLTIPS.floor}</MobileFieldHint>
-                <MobileSuiteUnitField
-                  typeValue={suiteUnitType}
-                  onTypeChange={(value) => setSuiteUnitType(value as SpaceType)}
-                  typeOptions={suiteUnitTypes}
-                  numberValue={suiteUnitNumber}
-                  onNumberChange={setSuiteUnitNumber}
+              <div ref={spaceFieldRef} className="pt-2">
+                <MobileOccupancyFields
+                  subheading
+                  value={{ floor, suiteUnitType, suiteUnitNumber }}
+                  onChange={(next) => {
+                    setFloor(next.floor)
+                    setSuiteUnitType(next.suiteUnitType as SpaceType)
+                    setSuiteUnitNumber(next.suiteUnitNumber)
+                  }}
+                  floorError={submitAttempted ? floorError : null}
+                  suiteUnitError={submitAttempted ? suiteUnitError : null}
                   numberRef={suiteUnitNumberRef}
-                  error={submitAttempted ? suiteUnitError : null}
                 />
-                <MobileFieldHint>{OCCUPANCY_TOOLTIPS.suiteUnit}</MobileFieldHint>
               </div>
             </section>
 

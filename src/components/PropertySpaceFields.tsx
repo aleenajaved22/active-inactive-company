@@ -36,6 +36,35 @@ type FieldSize = 'sm' | 'md'
 
 const fieldHeight: Record<FieldSize, string> = { sm: 'h-10', md: 'h-11' }
 
+/**
+ * Modals (sm) set field text at 14px with a darker placeholder; the drawer (md)
+ * sets it at 16px with a light one. The occupancy fields follow whichever they
+ * sit in, instead of carrying the drawer's scale into a modal.
+ */
+const fieldText: Record<FieldSize, string> = {
+  sm: 'text-sm leading-5 placeholder:text-[#6a6a70]',
+  md: 'text-base leading-6 placeholder:text-[#ccc]',
+}
+const menuText: Record<FieldSize, string> = {
+  sm: 'text-sm leading-5',
+  md: 'text-base leading-6',
+}
+
+/** How the two fields share their row. */
+export type SpaceFieldsLayout =
+  /** Floor narrow, Suite / Unit / Apartment wide — for a single full-width column. */
+  | 'weighted'
+  /** Two equal columns, to line up with a two-column grid above or beside it. */
+  | 'even'
+  /** One above the other, each at the full width of the column it sits in. */
+  | 'stacked'
+
+const layoutClass: Record<SpaceFieldsLayout, string> = {
+  weighted: 'grid-cols-[minmax(0,0.7fr)_minmax(0,1.6fr)] gap-4',
+  even: 'grid-cols-2 gap-6',
+  stacked: 'grid-cols-1 gap-4',
+}
+
 function FieldLabel({ children, tooltip, tooltipLabel }: { children: ReactNode; tooltip?: string; tooltipLabel?: string }) {
   if (!tooltip) {
     return <span className="text-sm font-medium leading-5 text-[#86868b]">{children}</span>
@@ -72,12 +101,14 @@ function SuiteUnitTypeMenu({
   onChange,
   invalid,
   disabled,
+  size,
 }: {
   id: string
   value: SpaceType | ''
   onChange: (value: SpaceType) => void
   invalid?: boolean
   disabled?: boolean
+  size: FieldSize
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
@@ -135,7 +166,7 @@ function SuiteUnitTypeMenu({
         disabled={disabled}
         onClick={() => (open ? setOpen(false) : openMenu())}
         onKeyDown={onKeyDown}
-        className="flex h-full w-full items-center justify-between gap-2 rounded-l-lg bg-transparent pl-3 pr-2 text-left text-base leading-6 text-[#262527] outline-none"
+        className={`flex h-full w-full items-center justify-between gap-2 rounded-l-lg bg-transparent pl-3.5 pr-2 text-left text-[#262527] outline-none ${menuText[size]}`}
       >
         {value || 'Suite'}
         <span className="relative size-5 shrink-0" aria-hidden>
@@ -223,7 +254,7 @@ function TextField({
         placeholder={placeholder}
         aria-invalid={error || invalid ? true : undefined}
         disabled={disabled}
-        className={`${fieldHeight[size]} w-full rounded-lg border ${disabled ? 'bg-[#f5f5f6]' : 'bg-white'} px-3.5 text-base leading-6 text-[#262527] outline-none placeholder:text-[#ccc] ${
+        className={`${fieldHeight[size]} w-full rounded-lg border ${disabled ? 'bg-[#f5f5f6]' : 'bg-white'} px-3.5 text-[#262527] outline-none ${fieldText[size]} ${
           error || invalid ? 'border-[#d92d20]' : 'border-[#e6e6e7] focus:border-primary'
         }`}
       />
@@ -242,11 +273,13 @@ export function SpaceFields({
   invalidField,
   suiteUnitNumberRef,
   disabled,
+  layout = 'weighted',
 }: {
   value: SpaceFieldsValue
   onChange: (next: SpaceFieldsValue) => void
   idPrefix?: string
   size?: FieldSize
+  layout?: SpaceFieldsLayout
   errors?: SpaceFieldsErrors
   /** Marks one field red when its message is rendered outside this component. */
   invalidField?: 'floor' | 'suiteUnit'
@@ -256,7 +289,7 @@ export function SpaceFields({
 }) {
   const suiteUnitInvalid = Boolean(errors?.suiteUnit) || invalidField === 'suiteUnit'
   return (
-    <div className="grid grid-cols-[minmax(0,0.7fr)_minmax(0,1.6fr)] items-start gap-4">
+    <div className={`grid items-start ${layoutClass[layout]}`}>
       <TextField
         id={`${idPrefix}-floor`}
         label="Floor"
@@ -286,6 +319,7 @@ export function SpaceFields({
             onChange={(suiteUnitType) => onChange({ ...value, suiteUnitType })}
             invalid={suiteUnitInvalid}
             disabled={disabled}
+            size={size}
           />
           <div className="my-2.5 w-px shrink-0 bg-[#e6e6e7]" aria-hidden />
           <input
@@ -298,7 +332,7 @@ export function SpaceFields({
             disabled={disabled}
             onChange={(event) => onChange({ ...value, suiteUnitNumber: event.target.value })}
             placeholder={OCCUPANCY_PLACEHOLDERS.suiteUnit}
-            className="min-w-0 flex-1 rounded-r-lg bg-transparent px-3.5 text-base leading-6 text-[#262527] outline-none placeholder:text-[#ccc]"
+            className={`min-w-0 flex-1 rounded-r-lg bg-transparent px-3.5 text-[#262527] outline-none ${fieldText[size]}`}
           />
         </div>
         {errors?.suiteUnit && <FieldError>{errors.suiteUnit}</FieldError>}

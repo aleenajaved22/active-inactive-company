@@ -9,20 +9,16 @@ import {
   COMPANY_AT_PROPERTY,
   DISCARD_SWITCH,
   EFFECTIVE_DATE_DESCRIPTION,
-  OCCUPANCY_DESCRIPTION,
-  OCCUPANCY_LABEL,
-  OCCUPANCY_PLACEHOLDERS,
-  OCCUPANCY_TOOLTIPS,
   TILL_DATE_DESCRIPTION,
 } from '../data/companyAtPropertyCopy'
 import type { OccupantSpaces } from '../data/propertyOccupancy'
 import { formatShortDate, todayMMDDYYYY } from '../data/dateFormat'
 import { propertyCompanies } from '../data/propertyCompanies'
-import { suiteUnitTypes } from '../data/propertySpaces'
 import { MobileAssigneeFields, emptyMobileAssignee, type MobileAssigneeValue } from './MobileAssigneeFields'
 import type { SwitchCompanyFormValues, SwitchCompanySubmitPayload, SwitchSpaceOption } from '../components/switchCompanyTypes'
 import { MobileActionFooter, MOBILE_ACTION_FOOTER_HEIGHT } from './MobileActionFooter'
 import { MobileCompanyPickerSheet } from './MobileCompanyPickerSheet'
+import { MobileOccupancyFields } from './MobileOccupancyFields'
 import {
   MobileChoiceChips,
   MobileDateField,
@@ -30,7 +26,6 @@ import {
   MobileFieldHint,
   MobilePickerField,
   MobileSectionHeading,
-  MobileSuiteUnitField,
   MobileTextField,
 } from './MobileFields'
 import { MobilePageHeader } from './MobilePageHeader'
@@ -220,36 +215,19 @@ export function MobileSwitchCompanyScreen({
             </MobileFieldHint>
           </section>
 
-          <section className="flex flex-col gap-2">
-            <MobileSectionHeading>{OCCUPANCY_LABEL}</MobileSectionHeading>
-            <MobileFieldHint>{OCCUPANCY_DESCRIPTION}</MobileFieldHint>
-            <MobileTextField
-              label="Floor"
-              value={fields.floor}
+          <section>
+            <MobileOccupancyFields
+              value={fields}
               disabled={Boolean(lockedFields)}
-              onChange={(floor) => setSpaceFields((prev) => ({ ...prev, floor }))}
-              placeholder={OCCUPANCY_PLACEHOLDERS.floor}
-              error={showErrors ? errors.floorError : null}
-            />
-            <MobileFieldHint>{OCCUPANCY_TOOLTIPS.floor}</MobileFieldHint>
-            <MobileSuiteUnitField
-              typeValue={fields.suiteUnitType || 'Suite'}
-              onTypeChange={(suiteUnitType) => setSpaceFields((prev) => ({ ...prev, suiteUnitType }))}
-              typeOptions={suiteUnitTypes}
-              numberValue={fields.suiteUnitNumber}
-              onNumberChange={(suiteUnitNumber) =>
-                setSpaceFields((prev) => ({ ...prev, suiteUnitNumber }))
-              }
-              disabled={Boolean(lockedFields)}
-              error={showErrors ? errors.suiteUnitError : null}
-            />
-            <MobileFieldHint>{OCCUPANCY_TOOLTIPS.suiteUnit}</MobileFieldHint>
-            {lockedFields && selectedSpace?.currentCompanyName && (
-              <MobileFieldHint>Current: {selectedSpace.currentCompanyName}</MobileFieldHint>
-            )}
-            {showErrors && errors.spaceError && (
-              <MobileFieldError>{errors.spaceError}</MobileFieldError>
-            )}
+              onChange={(next) => setSpaceFields(next)}
+              floorError={showErrors ? errors.floorError : null}
+              suiteUnitError={showErrors ? errors.suiteUnitError : null}
+            >
+              {lockedFields && selectedSpace?.currentCompanyName && (
+                <MobileFieldHint>Current: {selectedSpace.currentCompanyName}</MobileFieldHint>
+              )}
+              {showErrors && errors.spaceError && <MobileFieldError>{errors.spaceError}</MobileFieldError>}
+            </MobileOccupancyFields>
           </section>
 
           <section className="flex flex-col gap-2">

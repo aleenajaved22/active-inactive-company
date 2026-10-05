@@ -20,8 +20,6 @@ import {
 import {
   COMPANY_AT_PROPERTY,
   HUBSPOT_STAGE_LABEL,
-  OCCUPANCY_DESCRIPTION,
-  OCCUPANCY_LABEL,
   TILL_DATE_TOOLTIP,
 } from '../data/companyAtPropertyCopy'
 import { buildOccupants } from '../data/companyAssociation'
@@ -31,6 +29,7 @@ import { companyParents, type SpaceType } from '../data/propertySpaces'
 import { CreateCompanyModal } from './CreateCompanyModal'
 import { InfoTooltip } from './InfoTooltip'
 import { ModalDateInput } from './ModalDateInput'
+import { OccupancyGroup } from './OccupancyGroup'
 import { SpaceFields } from './PropertySpaceFields'
 
 type CreatePropertyDrawerProps = {
@@ -445,12 +444,10 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                       onChange={setCutOffDate}
                     />
                   </div>
-                  <div ref={spaceFieldRef} className="flex flex-col gap-2">
-                    <div>
-                      <p className="text-sm font-medium leading-5 text-[#86868b]">{OCCUPANCY_LABEL}</p>
-                      <p className="mt-0.5 text-xs leading-[18px] text-[#86868b]">{OCCUPANCY_DESCRIPTION}</p>
-                    </div>
+                  <div ref={spaceFieldRef} className="pt-2">
+                    <OccupancyGroup>
                     <SpaceFields
+                      layout="even"
                       idPrefix="create-property"
                       value={{ floor, suiteUnitType, suiteUnitNumber }}
                       onChange={(next) => {
@@ -464,6 +461,7 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                       }}
                       suiteUnitNumberRef={suiteUnitNumberRef}
                     />
+                    </OccupancyGroup>
                   </div>
                 </section>
 

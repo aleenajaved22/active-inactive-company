@@ -52,7 +52,7 @@ function avatarSrc(name: string) {
 function HeaderLabeledBlock({
   label,
   children,
-  className = 'shrink-0',
+  className = '',
 }: {
   label: string
   children: ReactNode
@@ -60,14 +60,10 @@ function HeaderLabeledBlock({
 }) {
   return (
     <div className={`flex min-w-0 flex-col items-start gap-1 ${className}`}>
-      <span className="text-xs leading-[18px] text-[#86868b]">{label}</span>
+      <span className="text-xs font-medium leading-[18px] text-[#86868b]">{label}</span>
       {children}
     </div>
   )
-}
-
-function HeaderDivider() {
-  return <div className="w-px shrink-0 self-stretch bg-[#e6e6e7]" aria-hidden />
 }
 
 /** The pencil used to open an inline edit from the header. */
@@ -186,77 +182,73 @@ export function PropertyDetailCompanyHeader({
   // Parent Company comes from HubSpot. It is editable only while it is blank.
   const parentCompanyLocked = Boolean(parentCompany)
 
+  const statusBadge =
+    listStatus === 'Pending' && pendingEffectiveDate !== undefined ? (
+      <PendingStatusBadge
+        size="lg"
+        effectiveDate={pendingEffectiveDate}
+        tooltipId={pendingTooltipId ?? 'pending-effective-date-header'}
+      />
+    ) : (
+      <CompanyListStatusBadge status={listStatus} size="lg" />
+    )
+
   return (
     <div className="shrink-0 border-b border-[#e6e6e7] bg-[rgb(245_245_246/0.5)]">
-      {/* Name and status hold the top line; the company's details wrap beneath,
-          so a narrow main panel never strands the actions on their own row. */}
-      <div className="flex flex-col gap-3 px-8 py-4">
-      <div className="flex items-start gap-4">
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          {companyHref ? (
-            <a
-              href={companyHref}
-              title={`Open ${companyName}`}
-              className="group flex min-w-0 items-center gap-1 text-xl font-bold leading-7 text-[#262527] hover:text-primary"
-            >
-              <span className="truncate group-hover:underline">{companyName}</span>
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 16 16"
-                fill="none"
-                aria-hidden
-                className="shrink-0 text-[#86868b] group-hover:text-primary"
-              >
-                <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </a>
-          ) : (
-            <p className="truncate text-xl font-bold leading-7 text-[#262527]">{companyName}</p>
-          )}
-          {spaceLabel && (
-            <p className="truncate text-xs font-medium leading-[18px] text-[#262527]">{spaceLabel}</p>
-          )}
-        </div>
-
-        <div className="flex shrink-0 items-start gap-1">
-          <HeaderLabeledBlock label="Status">
-            {listStatus === 'Pending' && pendingEffectiveDate !== undefined ? (
-              <PendingStatusBadge
-                size="lg"
-                effectiveDate={pendingEffectiveDate}
-                tooltipId={pendingTooltipId ?? 'pending-effective-date-header'}
-              />
-            ) : (
-              <CompanyListStatusBadge status={listStatus} size="lg" />
-            )}
-          </HeaderLabeledBlock>
-          <div className="flex h-[48px] items-end">
-            <ActionMenu label={`Actions for ${companyName}`} items={actions} />
+      <div className="flex flex-col gap-4 px-8 py-5">
+        {/* Identity: who this is and what state it is in. The name leads, its
+            status sits beside it where it is read with it, and the actions
+            hold the far edge on the same line. */}
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <div className="flex min-w-0 items-center gap-3">
+              {companyHref ? (
+                <a
+                  href={companyHref}
+                  title={`Open ${companyName}`}
+                  className="group flex min-w-0 items-center gap-1 text-xl font-bold leading-7 text-[#262527] hover:text-primary"
+                >
+                  <span className="truncate group-hover:underline">{companyName}</span>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    aria-hidden
+                    className="shrink-0 text-[#86868b] group-hover:text-primary"
+                  >
+                    <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </a>
+              ) : (
+                <p className="truncate text-xl font-bold leading-7 text-[#262527]">{companyName}</p>
+              )}
+              {statusBadge}
+            </div>
+            {spaceLabel && <p className="truncate text-sm leading-5 text-[#6a6a70]">{spaceLabel}</p>}
           </div>
+          <ActionMenu label={`Actions for ${companyName}`} items={actions} />
         </div>
-      </div>
 
-      <div className="flex min-w-0 flex-wrap items-stretch gap-x-4 gap-y-3">
-          <HeaderLabeledBlock label="Industry Vertical" className="min-w-[88px] max-w-[160px] shrink">
-            <span
-              className="block h-[22px] max-w-full truncate text-sm font-medium leading-[22px] text-[#262527]"
-              title={industryVertical}
-            >
+        {/* Details: label over value, one rhythm throughout. The hairline above
+            separates them from the identity block instead of vertical rules,
+            which broke whenever the row wrapped. */}
+        <div className="flex flex-wrap items-start gap-x-10 gap-y-4 border-t border-[#e6e6e7] pt-4">
+          <HeaderLabeledBlock label="Industry Vertical" className="max-w-[200px]">
+            <span className="block max-w-full truncate text-sm font-medium leading-6 text-[#262527]" title={industryVertical}>
               {industryVertical}
             </span>
           </HeaderLabeledBlock>
-          <HeaderDivider />
 
-          <HeaderLabeledBlock label="Parent Company" className="min-w-[88px] max-w-[200px] shrink">
-            <span className="flex h-[22px] max-w-full items-center gap-1">
+          <HeaderLabeledBlock label="Parent Company" className="max-w-[240px]">
+            <span className="flex h-6 max-w-full items-center gap-1.5">
               {parentCompany ? (
                 <>
                   {parentCompanyHref ? (
                     <a
                       href={parentCompanyHref}
                       title={`Open ${parentCompany}`}
-                      className="group flex min-w-0 items-center gap-0.5 text-sm font-medium leading-[22px] text-[#262527] hover:text-primary"
+                      className="group flex min-w-0 items-center gap-0.5 text-sm font-medium leading-6 text-[#262527] hover:text-primary"
                     >
                       <span className="truncate group-hover:underline">{parentCompany}</span>
                       <svg
@@ -271,13 +263,12 @@ export function PropertyDetailCompanyHeader({
                       </svg>
                     </a>
                   ) : (
-                    <span className="truncate text-sm font-medium leading-[22px] text-[#262527]">
-                      {parentCompany}
-                    </span>
+                    <span className="truncate text-sm font-medium leading-6 text-[#262527]">{parentCompany}</span>
                   )}
-                  {/* Synced from HubSpot, so there is deliberately no edit control. */}
+                  {/* A lock, not an ⓘ: the value is fixed, and says why. */}
                   <InfoTooltip
-                    label="Why Parent Company cannot be edited"
+                    icon="lock"
+                    label="Parent Company is locked"
                     text="Parent Company is synced from HubSpot and cannot be edited here. It can only be set while it is blank."
                   />
                 </>
@@ -288,35 +279,42 @@ export function PropertyDetailCompanyHeader({
                     setParentDraft('')
                     setParentDialogOpen(true)
                   }}
-                  className="text-sm font-medium leading-[22px] text-primary hover:underline"
+                  className="text-sm font-medium leading-6 text-primary hover:underline"
                 >
                   Add parent company
                 </button>
               )}
             </span>
           </HeaderLabeledBlock>
-          <HeaderDivider />
 
-          <HeaderLabeledBlock label="Assignee" className="min-w-[100px] max-w-[200px] shrink">
-            <span className="flex h-[22px] max-w-full items-center gap-1.5">
-              <img alt="" className="size-[18px] shrink-0 rounded-full object-cover" src={avatarSrc(assignee)} />
-              <span className="truncate text-sm font-medium leading-[22px] text-[#262527]" title={assignee}>
+          <HeaderLabeledBlock label="Assignee" className="max-w-[220px]">
+            <span className="flex h-6 max-w-full items-center gap-2">
+              <img alt="" className="size-5 shrink-0 rounded-full object-cover" src={avatarSrc(assignee)} />
+              <span className="truncate text-sm font-medium leading-6 text-[#262527]" title={assignee}>
                 {assignee || 'Unassigned'}
               </span>
-              {supervisor && (
-                <InfoTooltip label={`Supervisor: ${supervisor}`} text={`Supervisor: ${supervisor}`} />
-              )}
               {onAssigneeChange && <EditButton label="Edit assignee and supervisor" onClick={openAssigneeDialog} />}
             </span>
           </HeaderLabeledBlock>
-          <HeaderDivider />
 
-          <HeaderLabeledBlock label="Affiliation" className="min-w-[96px] shrink">
-            <div className="flex max-w-[320px] flex-wrap gap-1.5">
+          {/* Shown, not hidden behind an icon: who supervises is as useful as who is assigned. */}
+          {supervisor && (
+            <HeaderLabeledBlock label="Supervisor" className="max-w-[220px]">
+              <span className="flex h-6 max-w-full items-center gap-2">
+                <img alt="" className="size-5 shrink-0 rounded-full object-cover" src={avatarSrc(supervisor)} />
+                <span className="truncate text-sm font-medium leading-6 text-[#262527]" title={supervisor}>
+                  {supervisor}
+                </span>
+              </span>
+            </HeaderLabeledBlock>
+          )}
+
+          <HeaderLabeledBlock label="Affiliation">
+            <div className="flex max-w-[360px] flex-wrap gap-1.5">
               {affiliations.map((badge) => (
                 <span
                   key={badge.label}
-                  className="rounded-2xl px-2 py-0.5 text-xs font-medium leading-[18px]"
+                  className="inline-flex h-6 items-center rounded-2xl px-2.5 text-xs font-medium leading-[18px]"
                   style={{ backgroundColor: badge.bg, color: badge.text }}
                 >
                   {badge.label}

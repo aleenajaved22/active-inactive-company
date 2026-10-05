@@ -10,11 +10,14 @@ export function InfoTooltip({
   label,
   text,
   id,
+  icon = 'info',
 }: {
   /** Named for screen readers, e.g. "Floor information". */
   label: string
   text: string
   id?: string
+  /** A lock marks a value that is fixed; the default ⓘ marks one that is explained. */
+  icon?: 'info' | 'lock'
 }) {
   const triggerRef = useRef<HTMLButtonElement>(null)
   const generatedId = useId()
@@ -66,13 +69,20 @@ export function InfoTooltip({
         onClick={(event) => event.preventDefault()}
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-          <path
-            d="M8 5.33333V8M8 10.6667H8.00667M14.6667 8C14.6667 11.6819 11.6819 14.6667 8 14.6667C4.3181 14.6667 1.33333 11.6819 1.33333 8C1.33333 4.3181 4.3181 1.33333 8 1.33333C11.6819 1.33333 14.6667 4.3181 14.6667 8Z"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          {icon === 'lock' ? (
+            <>
+              <rect x="3.25" y="7.25" width="9.5" height="6.5" rx="1.5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+              <path d="M5.25 7.25V5.25a2.75 2.75 0 0 1 5.5 0v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </>
+          ) : (
+            <path
+              d="M8 5.33333V8M8 10.6667H8.00667M14.6667 8C14.6667 11.6819 11.6819 14.6667 8 14.6667C4.3181 14.6667 1.33333 11.6819 1.33333 8C1.33333 4.3181 4.3181 1.33333 8 1.33333C11.6819 1.33333 14.6667 4.3181 14.6667 8Z"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          )}
         </svg>
       </button>
       {visible &&

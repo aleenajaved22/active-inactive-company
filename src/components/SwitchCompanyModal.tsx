@@ -447,12 +447,13 @@ export function SwitchCompanyModal({
             )}
           </ModalFormRow>
 
-          <ModalFormRow label={OCCUPANCY_LABEL} description={OCCUPANCY_DESCRIPTION} stacked>
+          <ModalFormRow label={OCCUPANCY_LABEL} description={OCCUPANCY_DESCRIPTION}>
             {spaceLocked && selectedSpace ? (
               <div className="flex flex-col gap-2">
                 <SpaceFields
                   idPrefix="switch-company-locked"
                   size="sm"
+                  layout="stacked"
                   disabled
                   value={lockedSpaceFields(selectedSpace)}
                   onChange={() => {}}
@@ -465,6 +466,7 @@ export function SwitchCompanyModal({
               <SpaceFields
                 idPrefix="switch-company"
                 size="sm"
+                layout="stacked"
                 value={spaceFields}
                 onChange={setSpaceFields}
                 errors={{

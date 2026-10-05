@@ -4,10 +4,6 @@ import { validateCompanyEndDate } from '../data/companyAssociation'
 import {
   COMPANY_AT_PROPERTY,
   ERRORS,
-  OCCUPANCY_DESCRIPTION,
-  OCCUPANCY_LABEL,
-  OCCUPANCY_PLACEHOLDERS,
-  OCCUPANCY_TOOLTIPS,
   TILL_DATE_HELPER,
 } from '../data/companyAtPropertyCopy'
 import {
@@ -16,7 +12,6 @@ import {
   type OccupancyFieldsValue,
   type OccupantSpaces,
 } from '../data/propertyOccupancy'
-import { suiteUnitTypes } from '../data/propertySpaces'
 import { MobileAssigneeFields, emptyMobileAssignee, type MobileAssigneeValue } from './MobileAssigneeFields'
 import {
   MobileChoiceChips,
@@ -24,9 +19,8 @@ import {
   MobileFieldError,
   MobileFieldHint,
   MobileSectionHeading,
-  MobileSuiteUnitField,
-  MobileTextField,
 } from './MobileFields'
+import { MobileOccupancyFields } from './MobileOccupancyFields'
 import { MobileSheet } from './MobileSheet'
 
 /**
@@ -129,30 +123,14 @@ export function MobileEditCompanySheet({
           {submitAttempted && affiliationError && <MobileFieldError>{affiliationError}</MobileFieldError>}
         </div>
 
-        <div className="flex flex-col gap-2">
-          <MobileSectionHeading>{OCCUPANCY_LABEL}</MobileSectionHeading>
-          <MobileFieldHint>{OCCUPANCY_DESCRIPTION}</MobileFieldHint>
-          <MobileTextField
-            label="Floor"
-            value={spaceFields.floor}
-            onChange={(floor) => setSpaceFields((prev) => ({ ...prev, floor }))}
-            placeholder={OCCUPANCY_PLACEHOLDERS.floor}
-            error={submitAttempted ? occupancy.floorError : null}
-          />
-          <MobileFieldHint>{OCCUPANCY_TOOLTIPS.floor}</MobileFieldHint>
-          <MobileSuiteUnitField
-            typeValue={spaceFields.suiteUnitType || 'Suite'}
-            onTypeChange={(suiteUnitType) => setSpaceFields((prev) => ({ ...prev, suiteUnitType }))}
-            typeOptions={suiteUnitTypes}
-            numberValue={spaceFields.suiteUnitNumber}
-            onNumberChange={(suiteUnitNumber) =>
-              setSpaceFields((prev) => ({ ...prev, suiteUnitNumber }))
-            }
-            error={submitAttempted ? occupancy.suiteUnitError : null}
-          />
-          <MobileFieldHint>{OCCUPANCY_TOOLTIPS.suiteUnit}</MobileFieldHint>
+        <MobileOccupancyFields
+          value={spaceFields}
+          onChange={setSpaceFields}
+          floorError={submitAttempted ? occupancy.floorError : null}
+          suiteUnitError={submitAttempted ? occupancy.suiteUnitError : null}
+        >
           {submitAttempted && missingOccupancy && <MobileFieldError>{missingOccupancy}</MobileFieldError>}
-        </div>
+        </MobileOccupancyFields>
 
         <div className="flex flex-col gap-1">
           <MobileDateField

@@ -49,7 +49,7 @@ export const OCCUPANCY_TOOLTIPS = {
 
 export const SUITE_UNIT_LABEL = 'Suite / Unit / Apartment'
 
-export const HUBSPOT_STAGE_LABEL = 'Choose a Hubspot Stage to map'
+export const HUBSPOT_STAGE_LABEL = 'Choose a Hubspot Stage to Map'
 
 /** Right panel banner while a company is pending — it can be prepared, not published. */
 export const PENDING_BANNER =
