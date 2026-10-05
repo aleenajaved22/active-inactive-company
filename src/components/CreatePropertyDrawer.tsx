@@ -5,33 +5,28 @@ import detailPlus from '../assets/detail-plus.svg'
 import modalClose from '../assets/modal-close.svg'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
 import tableSearch from '../assets/table-search.svg'
-import { propertyCompanies } from '../data/propertyCompanies'
+import {
+  CUT_OFF_DATE_HELP,
+  affiliationOptions,
+  assigneeOptions,
+  associatedFranchiseOptions,
+  companyOptions,
+  defaultAffiliations,
+  hubspotStageOptions,
+  parentCompanyOptions,
+  propertySourceOptions,
+  supervisorOptions,
+  type Affiliation,
+} from '../data/propertyFormOptions'
 import { companyParents, findSpaceConflict, type SpaceType } from '../data/propertySpaces'
 import { CreateCompanyModal } from './CreateCompanyModal'
 import { ModalDateInput } from './ModalDateInput'
 import { SpaceFields } from './PropertySpaceFields'
 
-const affiliationOptions = [
-  'Headquarters',
-  'Regional Office',
-  'Managed',
-  'Owned',
-  'Shared',
-  'Tenant',
-] as const
-
-type Affiliation = (typeof affiliationOptions)[number]
-
 type CreatePropertyDrawerProps = {
   open: boolean
   onClose: () => void
 }
-
-const CUT_OFF_DATE_HELP = 'The date until which the current company is at this property, after which it is dissociated'
-
-const parentCompanyOptions = [
-  ...new Set([...Object.values(companyParents), ...propertyCompanies.map((item) => item.parentCompany ?? '').filter(Boolean)]),
-].sort((a, b) => a.localeCompare(b))
 
 function DrawerLabel({ children, required }: { children: ReactNode; required?: boolean }) {
   return (
@@ -234,7 +229,7 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
   const [parentCompany, setParentCompany] = useState(companyParents['Costco Wholesale'] ?? '')
   const [cutOffDate, setCutOffDate] = useState('')
   const [hubspotStage, setHubspotStage] = useState('')
-  const [affiliations, setAffiliations] = useState<Set<Affiliation>>(new Set(['Headquarters', 'Managed']))
+  const [affiliations, setAffiliations] = useState<Set<Affiliation>>(new Set(defaultAffiliations))
   const [assignee, setAssignee] = useState('')
   const [assignSupervisor, setAssignSupervisor] = useState(false)
   const [supervisor, setSupervisor] = useState('')
@@ -272,7 +267,7 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
     setParentCompany(companyParents['Costco Wholesale'] ?? '')
     setCutOffDate('')
     setHubspotStage('')
-    setAffiliations(new Set(['Headquarters', 'Managed']))
+    setAffiliations(new Set(defaultAffiliations))
     setAssignee('')
     setAssignSupervisor(false)
     setSupervisor('')
@@ -408,7 +403,7 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                         id="create-property-source"
                         value="Referred"
                         onChange={() => {}}
-                        options={['Referred', 'Inbound', 'Outbound']}
+                        options={propertySourceOptions}
                       />
                     </div>
                     <div className="flex min-w-0 flex-col gap-1.5">
@@ -417,7 +412,7 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                         id="create-property-franchise"
                         value="402 - Central Valencia"
                         onChange={() => {}}
-                        options={['402 - Central Valencia', '420 - Automation']}
+                        options={associatedFranchiseOptions}
                       />
                     </div>
                     <div className="flex min-w-0 flex-col gap-1.5">
@@ -426,7 +421,7 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                         id="create-property-hubspot"
                         value={hubspotStage}
                         onChange={setHubspotStage}
-                        options={['Discovery', 'Qualified', 'Needs Assessment']}
+                        options={hubspotStageOptions}
                         placeholder="Choose Stage"
                       />
                     </div>
@@ -479,7 +474,7 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                         id="create-property-company"
                         value={company}
                         onChange={selectCompany}
-                        options={Object.keys(companyParents)}
+                        options={companyOptions}
                       />
                       <div className="mt-1 flex items-center gap-1.5">
                         <span className="text-xs leading-[18px] text-[#86868b]">Strategic Partnership Status:</span>
@@ -537,7 +532,7 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                           id="create-property-assignee"
                           value={assignee}
                           onChange={setAssignee}
-                          options={['Jeff Zolos', 'Henry Micheal']}
+                          options={assigneeOptions}
                           placeholder="Select Assignee"
                         />
                         {assigneeError && <FieldError id="create-property-assignee-error">{assigneeError}</FieldError>}
@@ -562,7 +557,7 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                           id="create-property-supervisor"
                           value={supervisor}
                           onChange={setSupervisor}
-                          options={['Jeff Zolos', 'Henry Micheal', 'Jerome Bell']}
+                          options={supervisorOptions}
                           placeholder="Select Supervisor"
                         />
                       </div>

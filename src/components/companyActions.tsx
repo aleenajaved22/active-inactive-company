@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import detailCompanyMenu from '../assets/detail-company-menu.svg'
+import { buildSpaceOptions } from '../data/companyAssociation'
 import { getPropertyCompany } from '../data/propertyCompanies'
-import { spaceKeyOf, spaceLabelOf, type SpaceAssociation } from '../data/propertySpaceAssociations'
+import { spaceKeyOf, type SpaceAssociation } from '../data/propertySpaceAssociations'
 import type { PropertyModal } from '../prototype/screenLinks'
 import { EditCompanyModal } from './EditCompanyModal'
 import { SwitchCompanyModal } from './SwitchCompanyModal'
@@ -9,7 +10,6 @@ import type {
   PropertyAffiliation,
   SwitchCompanyFormValues,
   SwitchCompanySubmitPayload,
-  SwitchSpaceOption,
 } from './switchCompanyTypes'
 
 export type ActionMenuIcon = 'switch' | 'edit' | 'activate'
@@ -105,26 +105,6 @@ export function ActionMenu({ label, items }: { label: string; items: ActionMenuI
   )
 }
 
-/** Builds one switch target per space, with its current and pending company. */
-function buildSpaceOptions(associations: SpaceAssociation[]): SwitchSpaceOption[] {
-  const options = new Map<string, SwitchSpaceOption>()
-  for (const association of associations) {
-    const key = spaceKeyOf(association)
-    const option = options.get(key) ?? { key, label: spaceLabelOf(association), floor: association.floor }
-    const companyName = getPropertyCompany(association.companyId).name
-    if (association.status === 'Active') {
-      option.currentCompanyId = association.companyId
-      option.currentCompanyName = companyName
-      option.currentContractEndDate = association.endDate || undefined
-    } else if (association.status === 'Pending') {
-      option.pendingAssociationId = association.id
-      option.pendingCompanyName = companyName
-    }
-    options.set(key, option)
-  }
-  return [...options.values()].sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }))
-}
-
 type UseCompanyActionsOptions = {
   associations: SpaceAssociation[]
   onAssociationsChange: (next: SpaceAssociation[]) => void
@@ -214,7 +194,10 @@ export function useCompanyActions({
       return
     }
 
-    const [spaceType, spaceNumber] = payload.spaceKey.split('|') as [SpaceAssociation['spaceType'], string]
+    const [spaceType, spaceNumber = ''] = payload.spaceKey.split('|') as [
+      SpaceAssociation['spaceType'],
+      string,
+    ]
     const id = `pending-${Date.now()}`
     onAssociationsChange([
       ...associations,

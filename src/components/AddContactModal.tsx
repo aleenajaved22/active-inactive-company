@@ -2,14 +2,7 @@ import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import modalClose from '../assets/modal-close.svg'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
-
-const contactRoles = [
-  { label: 'Decision Maker', bg: '#f4edfd', text: '#9747ff' },
-  { label: 'End User', bg: '#e5f6ff', text: '#146dff' },
-  { label: 'Billing', bg: '#eff8ef', text: '#2e964b' },
-  { label: 'Blocker', bg: '#fef3f2', text: '#d9534f' },
-  { label: 'Influencer', bg: '#ffeed4', text: '#ef5c07' },
-] as const
+import { contactRoles } from '../data/propertyFormOptions'
 
 type AddContactModalProps = {
   open: boolean

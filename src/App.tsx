@@ -6,10 +6,14 @@ import { usePrototypeScreen } from './hooks/usePrototypeScreen'
 import { prototypeScreenToHash, writePrototypeScreenToLocation } from './prototype/screenLinks'
 import { CompanyDetailPage } from './pages/CompanyDetailPage'
 import { LocationListingPage } from './pages/LocationListingPage'
+import { MobileCreatePropertyPage } from './pages/MobileCreatePropertyPage'
+import { MobilePropertyDetailPage } from './pages/MobilePropertyDetailPage'
+import { MobilePropertyListingPage } from './pages/MobilePropertyListingPage'
+import { MobilePropertyRequestSentPage } from './pages/MobilePropertyRequestSentPage'
 import { PropertyDetailPage } from './pages/PropertyDetailPage'
 
 function App() {
-  const { screen, openListing, openProperty, setPropertyModal } = usePrototypeScreen()
+  const { screen, navigate, openListing, openProperty, setPropertyModal } = usePrototypeScreen()
 
   useEffect(() => {
     if (!window.location.hash) {
@@ -17,7 +21,10 @@ function App() {
     }
   }, [])
 
-  const propertyIndex = screen.screen === 'listing' ? null : screen.propertyIndex
+  const propertyIndex =
+    screen.screen === 'property' || screen.screen === 'company' || screen.screen === 'parent-company'
+      ? screen.propertyIndex
+      : null
   const propertyModal = screen.screen === 'property' ? screen.modal : undefined
 
   const onPropertyModalChange = useCallback(
@@ -27,6 +34,58 @@ function App() {
     },
     [propertyIndex, setPropertyModal],
   )
+
+  if (screen.screen === 'mobile-listing') {
+    return (
+      <>
+        <MobilePropertyListingPage
+          onSelectProperty={(index) => navigate({ screen: 'mobile-property', propertyIndex: index })}
+          onCreateProperty={() => navigate({ screen: 'mobile-create-property' })}
+        />
+        <PrototypeScreenLinks />
+      </>
+    )
+  }
+
+  if (screen.screen === 'mobile-property') {
+    const property = propertyRows[screen.propertyIndex]
+    if (!property) {
+      navigate({ screen: 'mobile-listing' }, true)
+      return null
+    }
+    return (
+      <>
+        <MobilePropertyDetailPage
+          property={property}
+          onBack={() => navigate({ screen: 'mobile-listing' })}
+        />
+        <PrototypeScreenLinks />
+      </>
+    )
+  }
+
+  if (screen.screen === 'mobile-create-property') {
+    return (
+      <>
+        <MobileCreatePropertyPage
+          onBack={() => navigate({ screen: 'mobile-listing' })}
+          onSubmit={() => navigate({ screen: 'mobile-request-sent' })}
+        />
+        <PrototypeScreenLinks />
+      </>
+    )
+  }
+
+  if (screen.screen === 'mobile-request-sent') {
+    return (
+      <>
+        <MobilePropertyRequestSentPage
+          onBackToProperties={() => navigate({ screen: 'mobile-listing' })}
+        />
+        <PrototypeScreenLinks />
+      </>
+    )
+  }
 
   if (screen.screen === 'company' || screen.screen === 'parent-company') {
     const property = propertyRows[screen.propertyIndex]

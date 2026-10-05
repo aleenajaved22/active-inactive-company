@@ -134,10 +134,15 @@ export const initialSpaceAssociations: SpaceAssociation[] = [...currentSpaceAsso
 export const spaceKeyOf = (association: Pick<SpaceAssociation, 'spaceType' | 'spaceNumber'>) =>
   `${association.spaceType}|${association.spaceNumber}`
 
-export const spaceLabelOf = (association: Pick<SpaceAssociation, 'spaceType' | 'spaceNumber' | 'floor'>) =>
-  association.floor && association.spaceType !== 'Floor'
+export const spaceLabelOf = (
+  association: Pick<SpaceAssociation, 'spaceType' | 'spaceNumber' | 'floor'>,
+) => {
+  // The space is optional when adding a company, so it can legitimately be blank.
+  if (!association.spaceType || !association.spaceNumber) return 'Space not set'
+  return association.floor && association.spaceType !== 'Floor'
     ? `Floor ${association.floor}, ${association.spaceType} ${association.spaceNumber}`
     : `${association.spaceType} ${association.spaceNumber}`
+}
 
 export function parseMMDDYYYY(value: string): Date | null {
   const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(value.trim())

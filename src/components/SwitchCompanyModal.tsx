@@ -6,9 +6,13 @@ import detailPlus from '../assets/detail-plus.svg'
 import tableAlertCircleWarn from '../assets/table-alert-circle-warn.svg'
 import { CreateCompanyModal } from './CreateCompanyModal'
 import { ModalDateInput } from './ModalDateInput'
+import {
+  deriveSpaceKey,
+  describeSpaceInput,
+  validateAssociationForm,
+} from '../data/companyAssociation'
 import { formatShortDate } from '../data/dateFormat'
 import { propertyCompanies } from '../data/propertyCompanies'
-import { parseMMDDYYYY } from '../data/propertySpaceAssociations'
 import { SpaceFields, emptySpaceFields, type SpaceFieldsValue } from './PropertySpaceFields'
 import {
   propertyAffiliationOptions,
@@ -212,59 +216,25 @@ export function SwitchCompanyModal({
   const isAddMode = !isEditMode && !initialSpaceKey
   const actionLabel = isEditMode ? 'Edit' : isAddMode ? 'Add company' : isMakeActive ? 'Make active' : 'Switch company'
 
-  // When adding, the space comes from the free-form fields; build a key/label from whatever is filled.
-  const deriveSpaceKey = (v: SpaceFieldsValue) => {
-    if (v.suiteUnitType && v.suiteUnitNumber.trim()) return `${v.suiteUnitType}|${v.suiteUnitNumber.trim()}`
-    if (v.floor.trim()) return `Floor|${v.floor.trim()}`
-    return ''
-  }
-  const addSpaceLabel =
-    [
-      spaceFields.floor.trim() && `Floor ${spaceFields.floor.trim()}`,
-      spaceFields.suiteUnitType && spaceFields.suiteUnitNumber.trim() && `${spaceFields.suiteUnitType} ${spaceFields.suiteUnitNumber.trim()}`,
-    ]
-      .filter(Boolean)
-      .join(', ') || 'the selected property occupancy'
   const effectiveSpaceKey = spaceLocked ? spaceKey : deriveSpaceKey(spaceFields)
-  // Making a company active on a space someone already holds is an error; name that company.
-  const occupiedSpace = isMakeActive ? spaces.find((space) => space.key === effectiveSpaceKey && (space.currentCompanyName || space.pendingCompanyName)) : undefined
+  const addSpaceLabel = describeSpaceInput(spaceFields)
   const occupiedField: 'floor' | 'suiteUnit' =
     spaceFields.suiteUnitType && spaceFields.suiteUnitNumber.trim() ? 'suiteUnit' : 'floor'
-  const occupiedError = occupiedSpace
-    ? occupiedSpace.currentCompanyName
-      ? `${occupiedSpace.label} already has an active company: ${occupiedSpace.currentCompanyName}.`
-      : `${occupiedSpace.label} already has a pending switch to ${occupiedSpace.pendingCompanyName}.`
-    : null
-  const effective = parseMMDDYYYY(effectiveDate)
-  const end = cutOffDate.trim() ? parseMMDDYYYY(cutOffDate) : null
-  const contractEnd = selectedSpace?.currentContractEndDate
-    ? parseMMDDYYYY(selectedSpace.currentContractEndDate)
-    : null
 
-  // Space is optional. Only the locked switch flow warns about an existing pending switch.
-  const spaceError = occupiedError ??
-    (spaceLocked && selectedSpace && !isEditMode && selectedSpace.pendingCompanyName
-      ? `${selectedSpace.label} already has a pending switch to ${selectedSpace.pendingCompanyName}. Edit that switch instead.`
-      : null)
-  const companyError = !pendingId
-    ? 'Choose a company.'
-    : selectedSpace && pendingId === selectedSpace.currentCompanyId
-      ? `${pendingCompany?.name} is already the active company for ${selectedSpace.label}.`
-      : null
-  const effectiveDateError = !effectiveDate.trim()
-    ? 'Enter the effective date.'
-    : !effective
-      ? 'Enter a valid date (MM/DD/YYYY).'
-      : contractEnd && effective <= contractEnd
-        ? `Effective Date must be after ${selectedSpace?.currentCompanyName}'s contract ends on ${formatShortDate(selectedSpace?.currentContractEndDate ?? '')}.`
-        : null
-  const endDateError =
-    cutOffDate.trim() && !end
-      ? 'Enter a valid date (MM/DD/YYYY).'
-      : end && effective && end <= effective
-        ? 'End Date must be after the Effective Date.'
-        : null
-  const hasErrors = Boolean(spaceError || companyError || effectiveDateError || endDateError)
+  const { spaceError, companyError, effectiveDateError, endDateError, occupied, hasErrors } =
+    validateAssociationForm({
+      spaces,
+      spaceKey,
+      effectiveSpaceKey,
+      spaceLocked,
+      isEditMode,
+      isMakeActive,
+      companyId: pendingId,
+      companyName: pendingCompany?.name,
+      effectiveDate,
+      cutOffDate,
+    })
+  const occupiedError = occupied ? spaceError : null
   const showErrors = submitAttempted
 
   const closeModal = () => {
@@ -455,7 +425,7 @@ export function SwitchCompanyModal({
                 size="sm"
                 value={spaceFields}
                 onChange={setSpaceFields}
-                invalidField={occupiedSpace ? occupiedField : undefined}
+                invalidField={occupied ? occupiedField : undefined}
               />
             )}
             {(showErrors || occupiedError) && spaceError && <ModalFieldError>{spaceError}</ModalFieldError>}

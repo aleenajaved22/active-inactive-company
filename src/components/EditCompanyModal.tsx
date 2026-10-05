@@ -3,9 +3,8 @@ import { createPortal } from 'react-dom'
 import modalClose from '../assets/modal-close.svg'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
 import tableAlertCircleWarn from '../assets/table-alert-circle-warn.svg'
-import { formatShortDate } from '../data/dateFormat'
 import type { PropertyCompany } from '../data/propertyCompanies'
-import { parseMMDDYYYY } from '../data/propertySpaceAssociations'
+import { validateCompanyEndDate } from '../data/companyAssociation'
 import { ModalDateInput } from './ModalDateInput'
 import {
   propertyAffiliationOptions,
@@ -181,18 +180,7 @@ export function EditCompanyModal({
     setSubmitAttempted(false)
   }, [open, initialAffiliations, initialEndDate])
 
-  // Optional, but when set it must be a real date after the association starts.
-  const end = endDate.trim() ? parseMMDDYYYY(endDate) : null
-  const start = parseMMDDYYYY(effectiveDate)
-  const nextStart = nextCompany ? parseMMDDYYYY(nextCompany.effectiveDate) : null
-  const endDateError =
-    endDate.trim() && !end
-      ? 'Enter a valid date (MM/DD/YYYY).'
-      : end && start && end <= start
-        ? `End Date must be after the Effective Date (${formatShortDate(effectiveDate)}).`
-        : nextCompany && nextStart && (!end || end >= nextStart)
-          ? `End Date must be before ${nextCompany.name} starts on ${formatShortDate(nextCompany.effectiveDate)}.`
-          : null
+  const endDateError = validateCompanyEndDate({ endDate, effectiveDate, nextCompany })
 
   const handleSave = () => {
     setSubmitAttempted(true)

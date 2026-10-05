@@ -2,6 +2,10 @@ export type PropertyModal = 'switch-company' | 'create-company'
 
 export type PrototypeScreen =
   | { screen: 'listing' }
+  | { screen: 'mobile-listing' }
+  | { screen: 'mobile-create-property' }
+  | { screen: 'mobile-request-sent' }
+  | { screen: 'mobile-property'; propertyIndex: number }
   | { screen: 'property'; propertyIndex: number; modal?: PropertyModal }
   | { screen: 'company'; propertyIndex: number; companyId: string }
   | { screen: 'parent-company'; propertyIndex: number; parentName: string }
@@ -11,10 +15,18 @@ export const prototypeScreenCatalog: { label: string; screen: PrototypeScreen }[
   { label: 'Property detail', screen: { screen: 'property', propertyIndex: 0 } },
   { label: 'Switch company', screen: { screen: 'property', propertyIndex: 0, modal: 'switch-company' } },
   { label: 'Create company', screen: { screen: 'property', propertyIndex: 0, modal: 'create-company' } },
+  { label: 'Mobile — Property listing', screen: { screen: 'mobile-listing' } },
+  { label: 'Mobile — Create property', screen: { screen: 'mobile-create-property' } },
+  { label: 'Mobile — Request sent', screen: { screen: 'mobile-request-sent' } },
+  { label: 'Mobile — Property detail', screen: { screen: 'mobile-property', propertyIndex: 0 } },
 ]
 
 export function prototypeScreenToHash(screen: PrototypeScreen): string {
   if (screen.screen === 'listing') return '#/listing'
+  if (screen.screen === 'mobile-listing') return '#/mobile/listing'
+  if (screen.screen === 'mobile-create-property') return '#/mobile/create-property'
+  if (screen.screen === 'mobile-request-sent') return '#/mobile/request-sent'
+  if (screen.screen === 'mobile-property') return `#/mobile/property/${screen.propertyIndex}`
   if (screen.screen === 'company') return `#/property/${screen.propertyIndex}/company/${screen.companyId}`
   if (screen.screen === 'parent-company') {
     return `#/property/${screen.propertyIndex}/parent/${encodeURIComponent(screen.parentName)}`
@@ -28,6 +40,24 @@ export function parsePrototypeHash(rawHash: string): PrototypeScreen {
   const hash = rawHash.replace(/^#\/?/, '').trim()
   if (!hash || hash === 'listing') {
     return { screen: 'listing' }
+  }
+
+  if (hash === 'mobile' || hash === 'mobile/listing') {
+    return { screen: 'mobile-listing' }
+  }
+
+  if (hash === 'mobile/create-property') {
+    return { screen: 'mobile-create-property' }
+  }
+
+  if (hash === 'mobile/request-sent') {
+    return { screen: 'mobile-request-sent' }
+  }
+
+  const mobilePropertyMatch = /^mobile\/property\/(\d+)\/?$/.exec(hash)
+  if (mobilePropertyMatch) {
+    const index = Number(mobilePropertyMatch[1])
+    if (!Number.isNaN(index)) return { screen: 'mobile-property', propertyIndex: index }
   }
 
   const companyMatch = /^property\/(\d+)\/company\/([\w-]+)\/?$/.exec(hash)
