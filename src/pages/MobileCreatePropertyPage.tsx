@@ -177,9 +177,9 @@ export function MobileCreatePropertyPage({ onBack, onSubmit }: MobileCreatePrope
                 </label>
                 <MobileFieldHint>{TILL_DATE_TOOLTIP}</MobileFieldHint>
               </div>
-              <div ref={spaceFieldRef} className="pt-2">
+              <div ref={spaceFieldRef}>
                 <MobileOccupancyFields
-                  subheading
+                  hideHeading
                   value={{ floor, suiteUnitType, suiteUnitNumber }}
                   onChange={(next) => {
                     setFloor(next.floor)

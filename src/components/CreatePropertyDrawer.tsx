@@ -29,7 +29,6 @@ import { companyParents, type SpaceType } from '../data/propertySpaces'
 import { CreateCompanyModal } from './CreateCompanyModal'
 import { InfoTooltip } from './InfoTooltip'
 import { ModalDateInput } from './ModalDateInput'
-import { OccupancyGroup } from './OccupancyGroup'
 import { SpaceFields } from './PropertySpaceFields'
 
 type CreatePropertyDrawerProps = {
@@ -329,35 +328,37 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                       />
                     </div>
                   </div>
-                  <div className="flex w-full max-w-[359px] flex-col gap-1.5">
-                    <DrawerLabelWithInfo tooltip={TILL_DATE_TOOLTIP} tooltipId="create-property-cut-off-date-help">
-                      {COMPANY_AT_PROPERTY.tillDateLabel}
-                    </DrawerLabelWithInfo>
-                    <ModalDateInput
-                      id="create-property-cut-off-date"
-                      variant="drawer"
-                      value={cutOffDate}
-                      onChange={setCutOffDate}
-                    />
-                  </div>
-                  <div ref={spaceFieldRef} className="pt-2">
-                    <OccupancyGroup>
-                    <SpaceFields
-                      layout="even"
-                      idPrefix="create-property"
-                      value={{ floor, suiteUnitType, suiteUnitNumber }}
-                      onChange={(next) => {
-                        setFloor(next.floor)
-                        setSuiteUnitType(next.suiteUnitType)
-                        setSuiteUnitNumber(next.suiteUnitNumber)
-                      }}
-                      errors={{
-                        floor: submitAttempted ? floorError : null,
-                        suiteUnit: submitAttempted ? suiteUnitError : null,
-                      }}
-                      suiteUnitNumberRef={suiteUnitNumberRef}
-                    />
-                    </OccupancyGroup>
+                  {/* Till Date takes the left column; Floor and Suite / Unit / Apartment
+                      share the right one, lining up with Company and Parent Company above. */}
+                  <div className="grid grid-cols-2 items-start gap-6">
+                    <div className="flex min-w-0 flex-col gap-1.5">
+                      <DrawerLabelWithInfo tooltip={TILL_DATE_TOOLTIP} tooltipId="create-property-cut-off-date-help">
+                        {COMPANY_AT_PROPERTY.tillDateLabel}
+                      </DrawerLabelWithInfo>
+                      <ModalDateInput
+                        id="create-property-cut-off-date"
+                        variant="drawer"
+                        value={cutOffDate}
+                        onChange={setCutOffDate}
+                      />
+                    </div>
+                    <div ref={spaceFieldRef} className="min-w-0">
+                      <SpaceFields
+                        layout="compact"
+                        idPrefix="create-property"
+                        value={{ floor, suiteUnitType, suiteUnitNumber }}
+                        onChange={(next) => {
+                          setFloor(next.floor)
+                          setSuiteUnitType(next.suiteUnitType)
+                          setSuiteUnitNumber(next.suiteUnitNumber)
+                        }}
+                        errors={{
+                          floor: submitAttempted ? floorError : null,
+                          suiteUnit: submitAttempted ? suiteUnitError : null,
+                        }}
+                        suiteUnitNumberRef={suiteUnitNumberRef}
+                      />
+                    </div>
                   </div>
                 </section>
 

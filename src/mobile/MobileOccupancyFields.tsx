@@ -27,7 +27,7 @@ export function MobileOccupancyFields({
   suiteUnitError,
   disabled,
   numberRef,
-  subheading,
+  hideHeading,
   children,
 }: {
   value: MobileOccupancyValue
@@ -36,21 +36,19 @@ export function MobileOccupancyFields({
   suiteUnitError?: string | null
   disabled?: boolean
   numberRef?: RefObject<HTMLInputElement | null>
-  /** Sits inside a larger section rather than being a section of its own. */
-  subheading?: boolean
+  /** Leaves out the heading and its subtext, for a form that shows just the fields. */
+  hideHeading?: boolean
   /** Extra lines under the fields, e.g. a conflict message. */
   children?: React.ReactNode
 }) {
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        {subheading ? (
-          <h3 className="text-[15px] font-semibold leading-5 text-black">{OCCUPANCY_LABEL}</h3>
-        ) : (
+      {!hideHeading && (
+        <div className="flex flex-col gap-1">
           <MobileSectionHeading>{OCCUPANCY_LABEL}</MobileSectionHeading>
-        )}
-        <p className="text-sm leading-5 text-[#6a6a70]">{OCCUPANCY_DESCRIPTION}</p>
-      </div>
+          <p className="text-sm leading-5 text-[#6a6a70]">{OCCUPANCY_DESCRIPTION}</p>
+        </div>
+      )}
 
       <div className="flex flex-col gap-1.5">
         <MobileTextField

@@ -58,11 +58,18 @@ export type SpaceFieldsLayout =
   | 'even'
   /** One above the other, each at the full width of the column it sits in. */
   | 'stacked'
+  /**
+   * Side by side in a single column, Floor just wide enough for its hint, for a
+   * row shared with another field. Messages go below both so they get the full
+   * width, instead of wrapping inside the narrow Floor field.
+   */
+  | 'compact'
 
 const layoutClass: Record<SpaceFieldsLayout, string> = {
   weighted: 'grid-cols-[minmax(0,0.7fr)_minmax(0,1.6fr)] gap-4',
   even: 'grid-cols-2 gap-6',
   stacked: 'grid-cols-1 gap-4',
+  compact: 'grid-cols-[7rem_minmax(0,1fr)] gap-3',
 }
 
 function FieldLabel({ children, tooltip, tooltipLabel }: { children: ReactNode; tooltip?: string; tooltipLabel?: string }) {
@@ -254,7 +261,7 @@ function TextField({
         placeholder={placeholder}
         aria-invalid={error || invalid ? true : undefined}
         disabled={disabled}
-        className={`${fieldHeight[size]} w-full rounded-lg border ${disabled ? 'bg-[#f5f5f6]' : 'bg-white'} px-3.5 text-[#262527] outline-none ${fieldText[size]} ${
+        className={`${fieldHeight[size]} w-full rounded-lg border ${disabled ? 'bg-[#f5f5f6]' : 'bg-white'} px-3.5 text-[#262527] outline-none text-ellipsis ${fieldText[size]} ${
           error || invalid ? 'border-[#d92d20]' : 'border-[#e6e6e7] focus:border-primary'
         }`}
       />
@@ -288,7 +295,10 @@ export function SpaceFields({
   disabled?: boolean
 }) {
   const suiteUnitInvalid = Boolean(errors?.suiteUnit) || invalidField === 'suiteUnit'
+  // In a shared row the messages go beneath both fields, not inside each one.
+  const messagesBelow = layout === 'compact'
   return (
+    <div>
     <div className={`grid items-start ${layoutClass[layout]}`}>
       <TextField
         id={`${idPrefix}-floor`}
@@ -298,8 +308,8 @@ export function SpaceFields({
         placeholder={OCCUPANCY_PLACEHOLDERS.floor}
         tooltip={OCCUPANCY_TOOLTIPS.floor}
         size={size}
-        error={errors?.floor}
-        invalid={invalidField === 'floor'}
+        error={messagesBelow ? undefined : errors?.floor}
+        invalid={invalidField === 'floor' || (messagesBelow && Boolean(errors?.floor))}
         disabled={disabled}
       />
       <div className="flex flex-col gap-1.5">
@@ -332,11 +342,18 @@ export function SpaceFields({
             disabled={disabled}
             onChange={(event) => onChange({ ...value, suiteUnitNumber: event.target.value })}
             placeholder={OCCUPANCY_PLACEHOLDERS.suiteUnit}
-            className={`min-w-0 flex-1 rounded-r-lg bg-transparent px-3.5 text-[#262527] outline-none ${fieldText[size]}`}
+            className={`min-w-0 flex-1 rounded-r-lg bg-transparent px-3.5 text-[#262527] outline-none text-ellipsis ${fieldText[size]}`}
           />
         </div>
+        {!messagesBelow && errors?.suiteUnit && <FieldError>{errors.suiteUnit}</FieldError>}
+      </div>
+    </div>
+    {messagesBelow && (errors?.floor || errors?.suiteUnit) && (
+      <div className="mt-1.5 flex flex-col gap-1">
+        {errors?.floor && <FieldError>{errors.floor}</FieldError>}
         {errors?.suiteUnit && <FieldError>{errors.suiteUnit}</FieldError>}
       </div>
+    )}
     </div>
   )
 }
