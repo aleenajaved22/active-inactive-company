@@ -201,6 +201,8 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
 
         <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto" style={{ paddingBottom: 160 }}>
           <div className="flex flex-col gap-3 px-4 pt-4">
+            <ContractProposalNotice tillDate={selectedAssociation.endDate} />
+
             {activeTab === 'Information' ? (
               <>
                 {showBanner && (
@@ -365,10 +367,6 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
             ) : (
               <TabPlaceholder tab={activeTab} />
             )}
-
-            {/* Matches the web app: a leaving date rests at the foot of the
-                company panel rather than interrupting the tabs. */}
-            <ContractProposalNotice tillDate={selectedAssociation.endDate} />
           </div>
         </div>
 
