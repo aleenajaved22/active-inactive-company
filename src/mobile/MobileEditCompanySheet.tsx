@@ -137,7 +137,7 @@ export function MobileEditCompanySheet({
             value={spaceFields.floor}
             onChange={(floor) => setSpaceFields((prev) => ({ ...prev, floor }))}
             placeholder={OCCUPANCY_PLACEHOLDERS.floor}
-            error={occupancy.floorError}
+            error={submitAttempted ? occupancy.floorError : null}
           />
           <MobileFieldHint>{OCCUPANCY_TOOLTIPS.floor}</MobileFieldHint>
           <MobileSuiteUnitField
@@ -148,10 +148,10 @@ export function MobileEditCompanySheet({
             onNumberChange={(suiteUnitNumber) =>
               setSpaceFields((prev) => ({ ...prev, suiteUnitNumber }))
             }
-            error={occupancy.suiteUnitError}
+            error={submitAttempted ? occupancy.suiteUnitError : null}
           />
           <MobileFieldHint>{OCCUPANCY_TOOLTIPS.suiteUnit}</MobileFieldHint>
-          {missingOccupancy && <MobileFieldError>{missingOccupancy}</MobileFieldError>}
+          {submitAttempted && missingOccupancy && <MobileFieldError>{missingOccupancy}</MobileFieldError>}
         </div>
 
         <div className="flex flex-col gap-1">

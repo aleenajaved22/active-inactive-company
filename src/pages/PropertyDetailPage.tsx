@@ -302,7 +302,7 @@ export function PropertyDetailPage({
 
             {/* A leaving date is context for the whole company, so it rests at
                 the foot of the panel rather than interrupting the tabs. */}
-            {selectedAssociation.endDate.trim() && (
+            {listStatus !== 'Inactive' && selectedAssociation.endDate.trim() && (
               <div className="shrink-0 px-8 pb-5">
                 <ContractProposalNotice tillDate={selectedAssociation.endDate} />
               </div>

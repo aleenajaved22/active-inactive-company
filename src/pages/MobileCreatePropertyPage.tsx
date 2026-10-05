@@ -247,6 +247,7 @@ export function MobileCreatePropertyPage({ onBack, onSubmit }: MobileCreatePrope
                     <input
                       type="date"
                       value={cutOffDate}
+                      min={new Date().toISOString().slice(0, 10)}
                       onChange={(event) => setCutOffDate(event.target.value)}
                       className={`w-full bg-transparent text-[15px] font-medium leading-5 outline-none [&::-webkit-calendar-picker-indicator]:opacity-0 ${
                         cutOffDate ? 'text-black' : 'text-[#86868b]'
@@ -265,7 +266,7 @@ export function MobileCreatePropertyPage({ onBack, onSubmit }: MobileCreatePrope
                   value={floor}
                   onChange={setFloor}
                   placeholder={OCCUPANCY_PLACEHOLDERS.floor}
-                  error={floorError}
+                  error={submitAttempted ? floorError : null}
                 />
                 <MobileFieldHint>{OCCUPANCY_TOOLTIPS.floor}</MobileFieldHint>
                 <MobileSuiteUnitField
@@ -275,7 +276,7 @@ export function MobileCreatePropertyPage({ onBack, onSubmit }: MobileCreatePrope
                   numberValue={suiteUnitNumber}
                   onNumberChange={setSuiteUnitNumber}
                   numberRef={suiteUnitNumberRef}
-                  error={suiteUnitError}
+                  error={submitAttempted ? suiteUnitError : null}
                 />
                 <MobileFieldHint>{OCCUPANCY_TOOLTIPS.suiteUnit}</MobileFieldHint>
               </div>

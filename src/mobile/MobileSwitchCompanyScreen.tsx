@@ -229,7 +229,7 @@ export function MobileSwitchCompanyScreen({
               disabled={Boolean(lockedFields)}
               onChange={(floor) => setSpaceFields((prev) => ({ ...prev, floor }))}
               placeholder={OCCUPANCY_PLACEHOLDERS.floor}
-              error={showErrors || errors.occupied ? errors.floorError : null}
+              error={showErrors ? errors.floorError : null}
             />
             <MobileFieldHint>{OCCUPANCY_TOOLTIPS.floor}</MobileFieldHint>
             <MobileSuiteUnitField
@@ -241,13 +241,13 @@ export function MobileSwitchCompanyScreen({
                 setSpaceFields((prev) => ({ ...prev, suiteUnitNumber }))
               }
               disabled={Boolean(lockedFields)}
-              error={showErrors || errors.occupied ? errors.suiteUnitError : null}
+              error={showErrors ? errors.suiteUnitError : null}
             />
             <MobileFieldHint>{OCCUPANCY_TOOLTIPS.suiteUnit}</MobileFieldHint>
             {lockedFields && selectedSpace?.currentCompanyName && (
               <MobileFieldHint>Current: {selectedSpace.currentCompanyName}</MobileFieldHint>
             )}
-            {(showErrors || errors.occupied) && errors.spaceError && (
+            {showErrors && errors.spaceError && (
               <MobileFieldError>{errors.spaceError}</MobileFieldError>
             )}
           </section>

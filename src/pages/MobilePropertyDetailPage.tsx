@@ -211,7 +211,9 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
                 </p>
               </div>
             )}
-            <ContractProposalNotice tillDate={selectedAssociation.endDate} />
+            {listStatus !== 'Inactive' && (
+              <ContractProposalNotice tillDate={selectedAssociation.endDate} />
+            )}
 
             {activeTab === 'Information' ? (
               <>

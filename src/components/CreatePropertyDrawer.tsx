@@ -458,7 +458,10 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                         setSuiteUnitType(next.suiteUnitType)
                         setSuiteUnitNumber(next.suiteUnitNumber)
                       }}
-                      errors={{ floor: floorError, suiteUnit: suiteUnitError }}
+                      errors={{
+                        floor: submitAttempted ? floorError : null,
+                        suiteUnit: submitAttempted ? suiteUnitError : null,
+                      }}
                       suiteUnitNumberRef={suiteUnitNumberRef}
                     />
                   </div>

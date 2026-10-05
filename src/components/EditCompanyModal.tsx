@@ -306,9 +306,12 @@ export function EditCompanyModal({
             size="sm"
             value={spaceFields}
             onChange={setSpaceFields}
-            errors={{ floor: occupancy.floorError, suiteUnit: occupancy.suiteUnitError }}
+            errors={{
+              floor: submitAttempted ? occupancy.floorError : null,
+              suiteUnit: submitAttempted ? occupancy.suiteUnitError : null,
+            }}
           />
-          {missingOccupancy && <ModalError>{missingOccupancy}</ModalError>}
+          {submitAttempted && missingOccupancy && <ModalError>{missingOccupancy}</ModalError>}
         </div>
 
         <div className="mt-4 flex flex-col gap-1.5">

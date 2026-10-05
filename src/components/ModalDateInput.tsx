@@ -100,6 +100,9 @@ export function ModalDateInput({ id, value, onChange, variant = 'modal' }: Modal
 
   const selectedDate = parseDateMMDDYYYY(value)
   const today = new Date()
+  // Effective and Till dates never point backwards, so the past is greyed out
+  // in the calendar rather than accepted and then errored on save.
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate())
   const calendarDays = getCalendarDays(viewMonth)
 
   return (
@@ -167,20 +170,26 @@ export function ModalDateInput({ id, value, onChange, variant = 'modal' }: Modal
               }
               const selected = selectedDate ? isSameDay(day, selectedDate) : false
               const isToday = isSameDay(day, today)
+              const isPast = day < startOfToday
               return (
                 <button
                   key={day.toISOString()}
                   type="button"
+                  disabled={isPast}
+                  aria-disabled={isPast || undefined}
                   onClick={() => {
+                    if (isPast) return
                     onChange(formatDateMMDDYYYY(day))
                     setCalendarOpen(false)
                   }}
                   className={`size-8 rounded-md text-sm leading-5 ${
-                    selected
-                      ? 'bg-primary font-medium text-white'
-                      : isToday
-                        ? 'font-medium text-primary ring-1 ring-primary ring-inset'
-                        : 'text-[#262527] hover:bg-[#f5f5f6]'
+                    isPast
+                      ? 'cursor-not-allowed text-[#ccc]'
+                      : selected
+                        ? 'bg-primary font-medium text-white'
+                        : isToday
+                          ? 'font-medium text-primary ring-1 ring-primary ring-inset'
+                          : 'text-[#262527] hover:bg-[#f5f5f6]'
                   }`}
                 >
                   {day.getDate()}

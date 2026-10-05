@@ -254,7 +254,6 @@ export function SwitchCompanyModal({
     floorError,
     suiteUnitError,
     affiliationError,
-    occupied,
     hasErrors,
   } = validateAssociationForm({
     spaces,
@@ -469,8 +468,8 @@ export function SwitchCompanyModal({
                 value={spaceFields}
                 onChange={setSpaceFields}
                 errors={{
-                  floor: showErrors || occupied ? floorError : null,
-                  suiteUnit: showErrors || occupied ? suiteUnitError : null,
+                  floor: showErrors ? floorError : null,
+                  suiteUnit: showErrors ? suiteUnitError : null,
                 }}
               />
             )}

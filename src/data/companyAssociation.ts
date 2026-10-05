@@ -4,6 +4,8 @@ import { formatShortDate } from './dateFormat'
 import { getPropertyCompany } from './propertyCompanies'
 import {
   occupancyRequiredError,
+  parseFloorEntry,
+  parseSuiteEntry,
   validateOccupancy,
   type OccupancyFieldsValue,
   type OccupancyUnit,
@@ -62,11 +64,15 @@ export function buildOccupants(
       units: [] as OccupancyUnit[],
     }
     if (association.spaceNumber) {
-      entry.units.push(
-        association.spaceType === 'Floor'
-          ? { field: 'Floor', value: String(Number(association.spaceNumber)) }
-          : { field: association.spaceType, value: association.spaceNumber.toUpperCase() },
-      )
+      // A company can hold several floors or suites, and the entry is stored as
+      // it was written ("4,6"), so it is expanded with the same parser the
+      // fields use — otherwise a multi-value occupancy would match nothing.
+      const isFloor = association.spaceType === 'Floor'
+      const parsed = isFloor
+        ? parseFloorEntry(association.spaceNumber)
+        : parseSuiteEntry(association.spaceNumber)
+      const field = isFloor ? 'Floor' : association.spaceType
+      for (const value of parsed.values) entry.units.push({ field, value })
     }
     byCompany.set(association.companyId, entry)
   }
