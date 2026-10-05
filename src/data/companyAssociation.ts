@@ -297,13 +297,4 @@ export function validateCompanyEndDate({
   return null
 }
 
-export const marketVerticalOptions = [
-  'Retail',
-  'Food & Beverage',
-  'Healthcare',
-  'Technology',
-  'Real Estate',
-  'Other',
-] as const
-
 export const partnershipStatusOptions = ['Active', 'Prospective', 'Inactive', 'None'] as const

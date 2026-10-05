@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { marketVerticalOptions, partnershipStatusOptions } from '../data/companyAssociation'
+import { partnershipStatusOptions } from '../data/companyAssociation'
+import { industryVerticalOptions } from '../data/industryVerticals'
 import { MobileActionFooter, MOBILE_ACTION_FOOTER_HEIGHT } from './MobileActionFooter'
 import { MobileSelectField, MobileTextField } from './MobileFields'
 import { MobilePageHeader } from './MobilePageHeader'
@@ -51,12 +52,12 @@ export function MobileCreateCompanyScreen({
             error={nameError}
           />
           <MobileSelectField
-            label="Market Vertical"
+            label="Industry Vertical"
             required
             value={marketVertical}
             onChange={setMarketVertical}
-            options={marketVerticalOptions}
-            placeholder="Select market vertical"
+            options={industryVerticalOptions}
+            placeholder="Select industry vertical"
             error={verticalError}
           />
           <MobileSelectField

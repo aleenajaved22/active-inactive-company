@@ -78,16 +78,24 @@ export function AssigneeFields({
   onChange,
   size = 'sm',
   error,
+  showLabels,
 }: {
   idPrefix: string
   value: AssigneeValue
   onChange: (next: AssigneeValue) => void
   size?: FieldSize
   error?: string | null
+  /** Names each field above it, for a form that has no row label of its own. */
+  showLabels?: boolean
 }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1.5">
+        {showLabels && (
+          <label htmlFor={`${idPrefix}-assignee`} className="text-sm font-medium leading-5 text-[#86868b]">
+            Assignee<span className="text-[#b32318]"> *</span>
+          </label>
+        )}
         <FormSelect
           id={`${idPrefix}-assignee`}
           value={value.assignee}
@@ -128,14 +136,21 @@ export function AssigneeFields({
         <span className="text-sm leading-5 text-[#262527]">Assign Supervisor</span>
       </label>
       {value.assignSupervisor && (
-        <FormSelect
-          id={`${idPrefix}-supervisor`}
-          value={value.supervisor}
-          onChange={(supervisor) => onChange({ ...value, supervisor })}
-          options={supervisorOptions}
-          placeholder="Select Supervisor"
-          size={size}
-        />
+        <div className="flex flex-col gap-1.5">
+          {showLabels && (
+            <label htmlFor={`${idPrefix}-supervisor`} className="text-sm font-medium leading-5 text-[#86868b]">
+              Supervisor
+            </label>
+          )}
+          <FormSelect
+            id={`${idPrefix}-supervisor`}
+            value={value.supervisor}
+            onChange={(supervisor) => onChange({ ...value, supervisor })}
+            options={supervisorOptions}
+            placeholder="Select Supervisor"
+            size={size}
+          />
+        </div>
       )}
     </div>
   )

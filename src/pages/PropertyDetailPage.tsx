@@ -12,7 +12,6 @@ import { AppHeader } from '../components/AppHeader'
 import { ResizeHandle } from '../components/ResizeHandle'
 import { SidePanelToggle } from '../components/SidePanelToggle'
 import { CompanyListingPanel } from '../components/CompanyListingPanel'
-import { ContractProposalNotice } from '../components/ContractProposalNotice'
 import { useCompanyActions } from '../components/companyActions'
 import { EditDealDrawer } from '../components/EditDealDrawer'
 import { PropertyDetailSideSections } from '../components/PropertyDetailSideSections'
@@ -299,14 +298,6 @@ export function PropertyDetailPage({
                 showEmptyStates={mainPanelEmptyStates}
               />
             </div>
-
-            {/* A leaving date is context for the whole company, so it rests at
-                the foot of the panel rather than interrupting the tabs. */}
-            {listStatus !== 'Inactive' && selectedAssociation.endDate.trim() && (
-              <div className="shrink-0 px-8 pb-5">
-                <ContractProposalNotice tillDate={selectedAssociation.endDate} />
-              </div>
-            )}
           </section>
         </main>
       </div>

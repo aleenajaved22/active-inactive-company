@@ -2,15 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import modalClose from '../assets/modal-close.svg'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
-
-const marketVerticalOptions = [
-  'Retail',
-  'Food & Beverage',
-  'Healthcare',
-  'Technology',
-  'Real Estate',
-  'Other',
-] as const
+import { industryVerticalOptions } from '../data/industryVerticals'
 
 const partnershipStatusOptions = ['Active', 'Prospective', 'Inactive', 'None'] as const
 
@@ -166,13 +158,13 @@ export function CreateCompanyModal({ open, onClose, onCancel, onCreate }: Create
 
           <div className="grid grid-cols-2 gap-5">
             <div className="flex flex-col gap-1.5">
-              <FieldLabel required>Market Vertical</FieldLabel>
+              <FieldLabel required>Industry Vertical</FieldLabel>
               <SelectField
                 id="create-company-vertical"
                 value={marketVertical}
                 onChange={setMarketVertical}
-                placeholder="Select market vertical"
-                options={marketVerticalOptions}
+                placeholder="Select industry vertical"
+                options={industryVerticalOptions}
               />
             </div>
             <div className="flex flex-col gap-1.5">

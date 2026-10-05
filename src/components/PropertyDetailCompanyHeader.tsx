@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import avatarJeff from '../assets/avatar-jeff.png'
 import contactAvatarAleena from '../assets/contacts/avatar-aleena.png'
@@ -8,10 +8,10 @@ import modalClose from '../assets/modal-close.svg'
 import type { CompanyAffiliationBadge } from '../data/propertyDetailSidePanel'
 import type { PropertyCompanyListStatus } from '../data/propertyCompanies'
 import { parentCompanyOptions } from '../data/propertyFormOptions'
-import { AssigneeFields, FormSelect, type AssigneeValue } from './AssigneeFields'
-import { InfoTooltip } from './InfoTooltip'
+import type { IndustryVertical } from '../data/industryVerticals'
+import { AssigneeDrawer } from './AssigneeDrawer'
+import { FormSelect } from './AssigneeFields'
 import { PendingStatusBadge } from './PendingStatusBadge'
-import { CompanyListStatusBadge } from './PropertyLeadActivities'
 import { ActionMenu, type ActionMenuItem } from './companyActions'
 
 type PropertyDetailCompanyHeaderProps = {
@@ -24,10 +24,10 @@ type PropertyDetailCompanyHeaderProps = {
   spaceLabel?: string
   listStatus: PropertyCompanyListStatus
   /** From the company record, so it sits with the company rather than the property. */
-  industryVertical: string
+  industryVertical: IndustryVertical
   parentCompany?: string
   parentCompanyHref?: string
-  /** Only called when Parent Company is blank; a HubSpot value is locked. */
+  /** Only called when Parent Company is blank; a value that is already set cannot be edited here. */
   onParentCompanyChange?: (value: string) => void
   /** Set per property + company, which is why it lives here and not in the left panel. */
   assignee: string
@@ -49,6 +49,115 @@ function avatarSrc(name: string) {
   return avatarByName[name] ?? contactAvatarJohn
 }
 
+/**
+ * Whether a scrolling strip has more beyond its right edge. Drives the fade that
+ * tells the user the row continues, and clears it once they have scrolled to the end.
+ */
+function useMoreToScroll<T extends HTMLElement>(deps: unknown[]) {
+  const ref = useRef<T>(null)
+  const [more, setMore] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const check = () => setMore(el.scrollWidth - el.clientWidth - el.scrollLeft > 1)
+    check()
+    const observer = new ResizeObserver(check)
+    observer.observe(el)
+    if (el.firstElementChild) observer.observe(el.firstElementChild)
+    el.addEventListener('scroll', check, { passive: true })
+    return () => {
+      observer.disconnect()
+      el.removeEventListener('scroll', check)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps)
+
+  return { ref, more }
+}
+
+/**
+ * "+N" for the affiliations that did not fit. Hovering (or focusing) it lists
+ * them as the same coloured pills, in a popover that is portalled out because
+ * the strip around it scrolls and would clip anything absolutely positioned.
+ */
+function AffiliationOverflow({ items }: { items: CompanyAffiliationBadge[] }) {
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const id = useId()
+  const [style, setStyle] = useState<CSSProperties | null>(null)
+
+  const show = () => {
+    const rect = triggerRef.current?.getBoundingClientRect()
+    if (!rect) return
+    // Near the right edge the popover hangs from the chip's right side instead,
+    // so it is never pushed off screen.
+    const nearEdge = rect.left + 200 > window.innerWidth
+    setStyle({
+      position: 'fixed',
+      top: rect.bottom + 6,
+      zIndex: 80,
+      ...(nearEdge ? { right: window.innerWidth - rect.right } : { left: rect.left }),
+    })
+  }
+  const hide = () => setStyle(null)
+
+  // The strip scrolls under the pointer, so a popover left behind would drift.
+  useEffect(() => {
+    if (!style) return
+    window.addEventListener('scroll', hide, true)
+    window.addEventListener('resize', hide)
+    return () => {
+      window.removeEventListener('scroll', hide, true)
+      window.removeEventListener('resize', hide)
+    }
+  }, [style])
+
+  const names = items.map((badge) => badge.label).join(', ')
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-label={`${items.length} more ${items.length === 1 ? 'affiliation' : 'affiliations'}: ${names}`}
+        aria-describedby={style ? id : undefined}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        onFocus={show}
+        onBlur={hide}
+        className="inline-flex h-6 shrink-0 items-center rounded-2xl bg-[#ececed] px-2 text-xs font-medium leading-[18px] text-[#5b5b5f] outline-none hover:bg-[#e2e2e4] focus-visible:ring-2 focus-visible:ring-primary/40"
+      >
+        +{items.length}
+      </button>
+      {style &&
+        createPortal(
+          <div
+            id={id}
+            role="tooltip"
+            style={style}
+            className="pointer-events-none flex flex-col items-start gap-1.5 rounded-lg border border-[#e6e6e7] bg-white p-2 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
+          >
+            {items.map((badge) => (
+              <span
+                key={badge.label}
+                className="inline-flex h-6 items-center rounded-2xl px-2.5 text-xs font-medium leading-[18px]"
+                style={{ backgroundColor: badge.bg, color: badge.text }}
+              >
+                {badge.label}
+              </span>
+            ))}
+          </div>,
+          document.body,
+        )}
+    </>
+  )
+}
+
+/** A slight rule between attributes, short enough to read as a separator, not a border. */
+function HeaderDivider() {
+  return <span aria-hidden className="h-8 w-px shrink-0 bg-[#e6e6e7]" />
+}
+
 function HeaderLabeledBlock({
   label,
   children,
@@ -60,7 +169,7 @@ function HeaderLabeledBlock({
 }) {
   return (
     <div className={`flex min-w-0 flex-col items-start gap-1 ${className}`}>
-      <span className="text-xs font-medium leading-[18px] text-[#86868b]">{label}</span>
+      <span className="max-w-full truncate text-xs font-medium leading-[18px] text-[#86868b]">{label}</span>
       {children}
     </div>
   )
@@ -161,117 +270,137 @@ export function PropertyDetailCompanyHeader({
   pendingEffectiveDate,
   pendingTooltipId,
 }: PropertyDetailCompanyHeaderProps) {
-  const [assigneeDialogOpen, setAssigneeDialogOpen] = useState(false)
-  const [assigneeDraft, setAssigneeDraft] = useState<AssigneeValue>({
-    assignee: '',
-    assignSupervisor: false,
-    supervisor: '',
-  })
+  const [assigneeDrawerOpen, setAssigneeDrawerOpen] = useState(false)
   const [parentDialogOpen, setParentDialogOpen] = useState(false)
   const [parentDraft, setParentDraft] = useState('')
 
-  const openAssigneeDialog = () => {
-    setAssigneeDraft({
-      assignee,
-      assignSupervisor: Boolean(supervisor),
-      supervisor: supervisor ?? '',
-    })
-    setAssigneeDialogOpen(true)
-  }
+  const assigneeValue = useMemo(
+    () => ({ assignee, assignSupervisor: Boolean(supervisor), supervisor: supervisor ?? '' }),
+    [assignee, supervisor],
+  )
 
-  // Parent Company comes from HubSpot. It is editable only while it is blank.
+  // Parent Company comes from HubSpot, so it is only editable while it is blank.
   const parentCompanyLocked = Boolean(parentCompany)
 
-  const statusBadge =
-    listStatus === 'Pending' && pendingEffectiveDate !== undefined ? (
-      <PendingStatusBadge
-        size="lg"
-        effectiveDate={pendingEffectiveDate}
-        tooltipId={pendingTooltipId ?? 'pending-effective-date-header'}
-      />
-    ) : (
-      <CompanyListStatusBadge status={listStatus} size="lg" />
-    )
+  const strip = useMoreToScroll<HTMLDivElement>([assignee, parentCompany, industryVertical, affiliations.length, listStatus])
+
+  // Two affiliations are shown; any beyond that fold into a "+N" chip.
+  const visibleAffiliations = affiliations.slice(0, 2)
+  const hiddenAffiliations = affiliations.slice(2)
 
   return (
     <div className="shrink-0 border-b border-[#e6e6e7] bg-[rgb(245_245_246/0.5)]">
-      <div className="flex flex-col gap-4 px-8 py-5">
-        {/* Identity: who this is and what state it is in. The name leads, its
-            status sits beside it where it is read with it, and the actions
-            hold the far edge on the same line. */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <div className="flex min-w-0 items-center gap-3">
-              {companyHref ? (
-                <a
-                  href={companyHref}
-                  title={`Open ${companyName}`}
-                  className="group flex min-w-0 items-center gap-1 text-xl font-bold leading-7 text-[#262527] hover:text-primary"
+      {/* One row: the company on the left, what is known about it beside it,
+          and the actions on the far edge. Values truncate before anything wraps. */}
+      <div className="flex items-center gap-x-5 px-8 py-4">
+        <div className="flex max-w-[17rem] shrink-0 flex-col gap-0.5">
+          <div className="flex min-w-0 items-center gap-2.5">
+            {companyHref ? (
+              <a
+                href={companyHref}
+                title={`Open ${companyName}`}
+                className="group flex min-w-0 items-center gap-1 text-xl font-bold leading-7 text-[#262527] hover:text-primary"
+              >
+                <span className="truncate group-hover:underline">{companyName}</span>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  aria-hidden
+                  className="shrink-0 text-[#86868b] group-hover:text-primary"
                 >
-                  <span className="truncate group-hover:underline">{companyName}</span>
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    aria-hidden
-                    className="shrink-0 text-[#86868b] group-hover:text-primary"
-                  >
-                    <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </a>
-              ) : (
-                <p className="truncate text-xl font-bold leading-7 text-[#262527]">{companyName}</p>
-              )}
-              {statusBadge}
-            </div>
-            {spaceLabel && <p className="truncate text-sm leading-5 text-[#6a6a70]">{spaceLabel}</p>}
+                  <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </a>
+            ) : (
+              <p className="truncate text-xl font-bold leading-7 text-[#262527]">{companyName}</p>
+            )}
+            {/* Active is the normal state, so it is not announced. Only a company
+                that is not yet active says so. */}
+            {listStatus === 'Pending' && pendingEffectiveDate !== undefined && (
+              <PendingStatusBadge
+                size="lg"
+                effectiveDate={pendingEffectiveDate}
+                tooltipId={pendingTooltipId ?? 'pending-effective-date-header'}
+              />
+            )}
           </div>
-          <ActionMenu label={`Actions for ${companyName}`} items={actions} />
+          {spaceLabel && <p className="truncate text-sm leading-5 text-[#6a6a70]">{spaceLabel}</p>}
         </div>
 
-        {/* Details: label over value, one rhythm throughout. The hairline above
-            separates them from the identity block instead of vertical rules,
-            which broke whenever the row wrapped. */}
-        <div className="flex flex-wrap items-start gap-x-10 gap-y-4 border-t border-[#e6e6e7] pt-4">
-          <HeaderLabeledBlock label="Industry Vertical" className="max-w-[200px]">
-            <span className="block max-w-full truncate text-sm font-medium leading-6 text-[#262527]" title={industryVertical}>
-              {industryVertical}
+        {/* The attributes keep a readable size and scroll sideways when the panel is
+            too narrow for them, like the tab row beneath. A fade on the clipped
+            edge says there is more. The company's own name and status never scroll. */}
+        <div
+          ref={strip.ref}
+          className={`no-scrollbar min-w-0 flex-1 overflow-x-auto ${
+            strip.more
+              ? '[-webkit-mask-image:linear-gradient(to_right,black_calc(100%-32px),transparent)] [mask-image:linear-gradient(to_right,black_calc(100%-32px),transparent)]'
+              : ''
+          }`}
+        >
+        <div className="flex w-max min-w-full items-center justify-end gap-x-4">
+          <HeaderLabeledBlock label="Assignee" className="max-w-[13rem] shrink-0">
+            <span className="flex h-6 max-w-full items-center gap-2">
+              {/* With a supervisor, two avatars overlap: the assignee in front, the
+                  supervisor behind and to the right. Names are on hover. */}
+              <span
+                role="img"
+                aria-label={supervisor ? `Assignee ${assignee}, supervisor ${supervisor}` : `Assignee ${assignee}`}
+                title={supervisor ? `Assignee: ${assignee} · Supervisor: ${supervisor}` : assignee}
+                className="flex shrink-0 items-center -space-x-1.5"
+              >
+                <img
+                  alt=""
+                  className="relative z-10 size-5 rounded-full object-cover ring-2 ring-[#fafafa]"
+                  src={avatarSrc(assignee)}
+                />
+                {supervisor && (
+                  <img
+                    alt=""
+                    className="size-5 rounded-full object-cover ring-2 ring-[#fafafa]"
+                    src={avatarSrc(supervisor)}
+                  />
+                )}
+              </span>
+              <span className="truncate text-sm font-medium leading-6 text-[#262527]">
+                {assignee || 'Unassigned'}
+              </span>
+              {onAssigneeChange && (
+                <EditButton label="Edit assignee and supervisor" onClick={() => setAssigneeDrawerOpen(true)} />
+              )}
             </span>
           </HeaderLabeledBlock>
 
-          <HeaderLabeledBlock label="Parent Company" className="max-w-[240px]">
-            <span className="flex h-6 max-w-full items-center gap-1.5">
+          <HeaderDivider />
+
+          <HeaderLabeledBlock label="Parent Company" className="max-w-[13rem] shrink-0">
+            <span className="flex h-6 max-w-full items-center">
               {parentCompany ? (
-                <>
-                  {parentCompanyHref ? (
-                    <a
-                      href={parentCompanyHref}
-                      title={`Open ${parentCompany}`}
-                      className="group flex min-w-0 items-center gap-0.5 text-sm font-medium leading-6 text-[#262527] hover:text-primary"
+                parentCompanyHref ? (
+                  <a
+                    href={parentCompanyHref}
+                    title={`Open ${parentCompany}`}
+                    className="group flex min-w-0 items-center gap-0.5 text-sm font-medium leading-6 text-[#262527] hover:text-primary"
+                  >
+                    <span className="truncate group-hover:underline">{parentCompany}</span>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      aria-hidden
+                      className="shrink-0 text-[#86868b] group-hover:text-primary"
                     >
-                      <span className="truncate group-hover:underline">{parentCompany}</span>
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        aria-hidden
-                        className="shrink-0 text-[#86868b] group-hover:text-primary"
-                      >
-                        <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </a>
-                  ) : (
-                    <span className="truncate text-sm font-medium leading-6 text-[#262527]">{parentCompany}</span>
-                  )}
-                  {/* A lock, not an ⓘ: the value is fixed, and says why. */}
-                  <InfoTooltip
-                    icon="lock"
-                    label="Parent Company is locked"
-                    text="Parent Company is synced from HubSpot and cannot be edited here. It can only be set while it is blank."
-                  />
-                </>
+                      <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </a>
+                ) : (
+                  <span className="truncate text-sm font-medium leading-6 text-[#262527]" title={parentCompany}>
+                    {parentCompany}
+                  </span>
+                )
               ) : (
                 <button
                   type="button"
@@ -279,7 +408,7 @@ export function PropertyDetailCompanyHeader({
                     setParentDraft('')
                     setParentDialogOpen(true)
                   }}
-                  className="text-sm font-medium leading-6 text-primary hover:underline"
+                  className="whitespace-nowrap text-sm font-medium leading-6 text-primary hover:underline"
                 >
                   Add parent company
                 </button>
@@ -287,63 +416,47 @@ export function PropertyDetailCompanyHeader({
             </span>
           </HeaderLabeledBlock>
 
-          <HeaderLabeledBlock label="Assignee" className="max-w-[220px]">
-            <span className="flex h-6 max-w-full items-center gap-2">
-              <img alt="" className="size-5 shrink-0 rounded-full object-cover" src={avatarSrc(assignee)} />
-              <span className="truncate text-sm font-medium leading-6 text-[#262527]" title={assignee}>
-                {assignee || 'Unassigned'}
-              </span>
-              {onAssigneeChange && <EditButton label="Edit assignee and supervisor" onClick={openAssigneeDialog} />}
+          <HeaderDivider />
+
+          <HeaderLabeledBlock label="Industry Vertical" className="shrink-0">
+            <span className="block max-w-full truncate text-sm font-medium leading-6 text-[#262527]" title={industryVertical}>
+              {industryVertical}
             </span>
           </HeaderLabeledBlock>
 
-          {/* Shown, not hidden behind an icon: who supervises is as useful as who is assigned. */}
-          {supervisor && (
-            <HeaderLabeledBlock label="Supervisor" className="max-w-[220px]">
-              <span className="flex h-6 max-w-full items-center gap-2">
-                <img alt="" className="size-5 shrink-0 rounded-full object-cover" src={avatarSrc(supervisor)} />
-                <span className="truncate text-sm font-medium leading-6 text-[#262527]" title={supervisor}>
-                  {supervisor}
-                </span>
-              </span>
-            </HeaderLabeledBlock>
-          )}
+          <HeaderDivider />
 
-          <HeaderLabeledBlock label="Affiliation">
-            <div className="flex max-w-[360px] flex-wrap gap-1.5">
-              {affiliations.map((badge) => (
+          <HeaderLabeledBlock label="Affiliation" className="shrink-0">
+            <div className="flex h-6 items-center gap-1.5">
+              {visibleAffiliations.map((badge) => (
                 <span
                   key={badge.label}
-                  className="inline-flex h-6 items-center rounded-2xl px-2.5 text-xs font-medium leading-[18px]"
+                  className="inline-flex h-6 shrink-0 items-center rounded-2xl px-2.5 text-xs font-medium leading-[18px]"
                   style={{ backgroundColor: badge.bg, color: badge.text }}
                 >
                   {badge.label}
                 </span>
               ))}
+              {hiddenAffiliations.length > 0 && <AffiliationOverflow items={hiddenAffiliations} />}
             </div>
           </HeaderLabeledBlock>
         </div>
+        </div>
+
+        <ActionMenu label={`Actions for ${companyName}`} items={actions} />
       </div>
 
-      {assigneeDialogOpen && (
-        <HeaderEditDialog
-          title="Assign to"
-          onClose={() => setAssigneeDialogOpen(false)}
-          saveDisabled={!assigneeDraft.assignee}
-          onSave={() => {
-            onAssigneeChange?.({
-              assignee: assigneeDraft.assignee,
-              supervisor: assigneeDraft.assignSupervisor ? assigneeDraft.supervisor : undefined,
-            })
-            setAssigneeDialogOpen(false)
-          }}
-        >
-          <p className="mb-3 text-sm leading-5 text-[#6a6a70]">
-            Set for {companyName} at this property.
-          </p>
-          <AssigneeFields idPrefix="header-assignee" value={assigneeDraft} onChange={setAssigneeDraft} />
-        </HeaderEditDialog>
-      )}
+      <AssigneeDrawer
+        open={assigneeDrawerOpen}
+        companyName={companyName}
+        spaceLabel={spaceLabel}
+        initial={assigneeValue}
+        onClose={() => setAssigneeDrawerOpen(false)}
+        onSave={(next) => {
+          onAssigneeChange?.(next)
+          setAssigneeDrawerOpen(false)
+        }}
+      />
 
       {parentDialogOpen && !parentCompanyLocked && (
         <HeaderEditDialog
@@ -355,9 +468,6 @@ export function PropertyDetailCompanyHeader({
             setParentDialogOpen(false)
           }}
         >
-          <p className="mb-3 text-sm leading-5 text-[#6a6a70]">
-            Set the parent company for {companyName}. Once set from HubSpot it can no longer be edited here.
-          </p>
           <FormSelect
             id="header-parent-company"
             value={parentDraft}

@@ -1,4 +1,5 @@
 import type { TaskItem } from './leadActivities'
+import { type IndustryVertical } from './industryVerticals'
 import type { CompanyAffiliationBadge } from './propertyDetailSidePanel'
 
 export type DealFollowUp = {
@@ -35,7 +36,7 @@ export type PropertyCompany = {
   /** The corporate parent that owns this company. Comes from HubSpot when set. */
   parentCompany?: string
   /** Set per company, not per property — several companies share one property. */
-  industryVertical: string
+  industryVertical: IndustryVertical
   companyOwner: string
   phone: string
   spStatus: string
@@ -118,7 +119,7 @@ function usCompany(
     id,
     name,
     companyOwner: 'John Doe',
-    industryVertical: 'Retail',
+    industryVertical: 'Commercial',
     phone: '719-345-9821',
     spStatus: 'SP - Active',
     score: '75%',
@@ -148,7 +149,7 @@ export const propertyCompanies: PropertyCompany[] = [
     listStatus: 'Active',
     parentCompany: 'Seven & i Holdings',
     companyOwner: 'John Doe',
-    industryVertical: 'Convenience Retail',
+    industryVertical: 'Commercial',
     phone: 'N/A',
     spStatus: 'N/A',
     score: 'N/A',
@@ -220,7 +221,7 @@ export const propertyCompanies: PropertyCompany[] = [
     listStatus: 'Inactive',
     parentCompany: 'Costco Wholesale Corporation',
     companyOwner: 'Mike Smith',
-    industryVertical: 'Wholesale',
+    industryVertical: 'Distribution',
     phone: '719-345-9821',
     spStatus: 'SP - Active',
     score: '80%',
@@ -289,7 +290,7 @@ export const propertyCompanies: PropertyCompany[] = [
     },
   },
   // Target has no parent on record, which is the only case where it is editable.
-  usCompany('target', 'Target', { industryVertical: 'General Merchandise' }),
+  usCompany('target', 'Target', { industryVertical: 'Commercial' }),
   usCompany('walmart', 'Walmart', {
     parentCompany: 'Walmart Inc.',
     companyOwner: 'Trachise Withrow',
@@ -370,7 +371,7 @@ export const propertyCompanies: PropertyCompany[] = [
   }),
   usCompany('starbucks', 'Starbucks', {
     parentCompany: 'Starbucks Corporation',
-    industryVertical: 'Food & Beverage',
+    industryVertical: 'Commercial',
     billingAddress: {
       contact: 'District Manager',
       address: '2401 Utah Ave S, Seattle, Washington, 98134',
