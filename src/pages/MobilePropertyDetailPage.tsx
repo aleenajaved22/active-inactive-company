@@ -201,18 +201,20 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
 
         <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto" style={{ paddingBottom: 160 }}>
           <div className="flex flex-col gap-3 px-4 pt-4">
+            {/* What state the company is in comes first, then what that means
+                for its contracts. Both sit outside the tabs, as on the web. */}
+            {showBanner && (
+              <div className="flex items-start gap-2 rounded-lg bg-[#e5f6ff] p-3">
+                <IconAlert size={16} className="mt-px shrink-0 text-[#146dff]" />
+                <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-[#262527]">
+                  {listStatus === 'Pending' ? PENDING_BANNER : INACTIVE_BANNER}
+                </p>
+              </div>
+            )}
             <ContractProposalNotice tillDate={selectedAssociation.endDate} />
 
             {activeTab === 'Information' ? (
               <>
-                {showBanner && (
-                  <div className="flex items-start gap-2 rounded-lg bg-[#e5f6ff] p-3">
-                    <IconAlert size={16} className="mt-px shrink-0 text-[#146dff]" />
-                    <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-[#262527]">
-                      {listStatus === 'Pending' ? PENDING_BANNER : INACTIVE_BANNER}
-                    </p>
-                  </div>
-                )}
 
                 {/* Level / Assigned to / Linked Franchise */}
                 <div className="flex flex-col rounded-lg bg-white p-4 shadow-[0px_4px_12px_rgba(0,0,0,0.04)]">
