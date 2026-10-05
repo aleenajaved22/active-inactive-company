@@ -10,24 +10,26 @@ export type EmailTenant = 'Signal' | 'Filtergo'
 
 export const emailTenants: EmailTenant[] = ['Signal', 'Filtergo']
 
+/**
+ * What differs between the two tenants. The structure of the email is shared;
+ * only the logo, the colours and the contact address change.
+ *
+ * Filtergo's values are taken from its existing email. Signal's use its brand
+ * blue (the app's primary, #146dff) and the light blue from its mobile tokens.
+ */
 export const tenantBranding: Record<
   EmailTenant,
-  { name: string; accent: string; accentSoft: string; address: string; social: string[] }
+  {
+    name: string
+    /** The tint behind the whole email. */
+    pageBg: string
+    /** Button and footer band. */
+    accent: string
+    contact: string
+  }
 > = {
-  Signal: {
-    name: 'Signal',
-    accent: '#146dff',
-    accentSoft: '#e5f6ff',
-    address: '1200 Market St, San Francisco, CA 94102',
-    social: ['LinkedIn', 'X', 'Facebook'],
-  },
-  Filtergo: {
-    name: 'Filtergo',
-    accent: '#2e964b',
-    accentSoft: '#eff8ef',
-    address: '45 Park Ave, New York, NY 10016',
-    social: ['LinkedIn', 'X', 'Instagram'],
-  },
+  Signal: { name: 'Signal', pageBg: '#eff4fd', accent: '#146dff', contact: 'ask@signal.com' },
+  Filtergo: { name: 'Filtergo', pageBg: '#ecf4ef', accent: '#2da652', contact: 'ask@filtergo.com' },
 }
 
 export type FoEmailContract = {

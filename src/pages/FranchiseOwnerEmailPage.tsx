@@ -1,166 +1,176 @@
-import { useState } from 'react'
-import logo from '../assets/logo.svg'
+import type { ReactNode } from 'react'
+import filtergoLogo from '../assets/email/filtergo-logo.png'
+import socialFacebook from '../assets/email/social-facebook.png'
+import socialInstagram from '../assets/email/social-instagram.png'
+import socialLinkedin from '../assets/email/social-linkedin.png'
+import socialX from '../assets/email/social-x.png'
+import socialYoutube from '../assets/email/social-youtube.png'
 import {
-  emailTenants,
   foEmailBody,
   foEmailHeadline,
-  foEmailSendingRules,
-  foEmailSubject,
   sampleFoEmail,
   tenantBranding,
   type EmailTenant,
 } from '../data/foEmailTemplate'
 
-function DetailRow({ label, value }: { label: string; value: string }) {
+const socialLinks = [
+  { name: 'LinkedIn', icon: socialLinkedin },
+  { name: 'Facebook', icon: socialFacebook },
+  { name: 'X', icon: socialX },
+  { name: 'Instagram', icon: socialInstagram },
+  { name: 'YouTube', icon: socialYoutube },
+]
+
+/**
+ * Signal's mark, drawn from the same path as the app logo but cropped to the
+ * mark itself. The logo file keeps the mark in the middle of a larger canvas, so
+ * placing it beside the wordmark left a wide gap and sat it off the text's centre.
+ */
+function SignalMark({ className }: { className?: string }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-[#e6e6e7] py-2.5 last:border-b-0">
-      <span className="shrink-0 text-sm leading-5 text-[#86868b]">{label}</span>
-      <span className="min-w-0 text-right text-sm font-medium leading-5 text-[#262527]">{value}</span>
-    </div>
+    <svg viewBox="15.27 15.06 41.46 23.88" fill="none" aria-hidden className={className}>
+      <path d="M38.6728 19.1414L35.6889 24.5342C35.5681 24.7494 35.0245 25.6287 34.8373 25.7702C34.342 26.3666 33.6594 26.7602 32.8984 26.8955C32.7172 26.957 32.0044 26.9938 31.8051 26.9938H21.875L15.273 38.9354H25.1971C25.7709 38.9293 27.8608 38.8125 28.3803 38.6034C30.44 38.1791 32.2642 36.7833 33.3272 34.8586L36.3111 29.4658C36.4319 29.2506 36.9755 28.3713 37.1627 28.2298C37.6581 27.6334 38.3466 27.2398 39.1077 27.0984C39.2889 27.0369 39.9956 27 40.1949 27H50.125L56.727 15.0646H46.8089C46.2351 15.0707 44.1452 15.1875 43.6258 15.3966C41.56 15.8148 39.7359 17.2168 38.6728 19.1414Z" fill="#FF9332" />
+    </svg>
   )
 }
 
+/** Detail values are set in a wider face than the body copy, as in the design. */
+const VALUE_FONT = "'Host Grotesk', Inter, system-ui, sans-serif"
+
+function DetailLabel({ children }: { children: ReactNode }) {
+  return <p className="text-[13px] font-semibold leading-[18px] text-[#1f1f1f]">{children}</p>
+}
+
+function DetailValue({ children }: { children: ReactNode }) {
+  return (
+    <p className="mt-1 text-[15px] leading-4 text-[#3f3f3f]" style={{ fontFamily: VALUE_FONT }}>
+      {children}
+    </p>
+  )
+}
+
+function Divider() {
+  return <div className="h-px w-full bg-[#e5e5e5]" />
+}
+
 /**
- * The Franchise Owner email template, rendered at email width so the layout and
- * copy can be reviewed. Signal and Filtergo swap the branding; the structure —
- * headline, button, body, detail block, contracts table, footer — is shared.
+ * The Franchise Owner email, laid out to the existing Filtergo template: a
+ * tinted canvas, the logo, a rounded white card (centred headline, button, left
+ * aligned copy, ruled detail blocks) and a coloured footer band with the social
+ * links. Signal swaps the logo and the colours; the structure is shared.
  */
-export function FranchiseOwnerEmailPage() {
-  const [tenant, setTenant] = useState<EmailTenant>('Signal')
+export function FranchiseOwnerEmailPage({ tenant }: { tenant: EmailTenant }) {
   const brand = tenantBranding[tenant]
   const data = sampleFoEmail
+  const [greeting, ...paragraphs] = foEmailBody(data)
 
   return (
-    <div className="min-h-screen w-full bg-[#f5f5f6] py-10">
-      <div className="mx-auto flex w-full max-w-[720px] flex-col gap-5 px-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-bold leading-7 text-[#262527]">Franchise Owner email</h1>
-            <p className="mt-1 text-sm leading-5 text-[#6a6a70]">
-              Company leaving a property with active contracts running past the till date.
-            </p>
-          </div>
-          <div className="flex items-center gap-1 rounded-lg border border-[#e6e6e7] bg-white p-1">
-            {emailTenants.map((option) => (
-              <button
-                key={option}
-                type="button"
-                aria-pressed={tenant === option}
-                onClick={() => setTenant(option)}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium leading-5 ${
-                  tenant === option ? 'text-white' : 'text-[#5b5b5f] hover:bg-[#f5f5f6]'
-                }`}
-                style={tenant === option ? { backgroundColor: brand.accent } : undefined}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-        </div>
+    <div className="min-h-screen w-full" style={{ backgroundColor: brand.pageBg }}>
+      <style>{"@import url('https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@400;500&display=swap');"}</style>
 
-        <div className="rounded-lg border border-[#e6e6e7] bg-white px-4 py-3">
-          <p className="text-xs leading-[18px] text-[#86868b]">Subject</p>
-          <p className="mt-0.5 text-sm font-medium leading-5 text-[#262527]">{foEmailSubject(data)}</p>
-        </div>
-
-        {/* The email itself, at the width a mail client renders it. */}
-        <div className="overflow-hidden rounded-xl border border-[#e6e6e7] bg-white shadow-[0px_4px_12px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center gap-2 px-8 py-5" style={{ backgroundColor: brand.accentSoft }}>
-            <img alt="" className="h-6 max-w-none" src={logo} />
-            <span className="text-base font-bold leading-6" style={{ color: brand.accent }}>
-              {brand.name}
-            </span>
+      <div className="px-4 pb-16 pt-10">
+        <div className="mx-auto flex w-full max-w-[600px] flex-col items-center">
+          <div className="mb-8 flex h-[52px] items-center gap-2">
+            {tenant === 'Filtergo' ? (
+              <img alt="Filtergo" className="h-[52px] w-auto" src={filtergoLogo} />
+            ) : (
+              <>
+                <SignalMark className="h-[26px] w-auto" />
+                <span className="text-[34px] font-extrabold leading-none tracking-tight text-[#262527]">Signal</span>
+              </>
+            )}
           </div>
 
-          <div className="flex flex-col gap-5 px-8 py-7">
-            <h2 className="text-xl font-bold leading-7 text-[#262527]">{foEmailHeadline(data)}</h2>
+          <div className="w-full overflow-hidden rounded-2xl bg-white">
+            <div className="px-[60px] pb-6 pt-9">
+              <h2 className="mx-auto max-w-[440px] text-center text-[18px] font-normal leading-[26px] text-black">
+                {foEmailHeadline(data)}
+              </h2>
 
-            <a
-              href="#/property/0"
-              className="w-fit rounded-lg px-4 py-2.5 text-sm font-medium leading-5 text-white"
-              style={{ backgroundColor: brand.accent }}
-            >
-              View Property
-            </a>
-            <p className="-mt-3 text-xs leading-[18px] text-[#86868b]">
-              Opens the property with this company selected.
-            </p>
-
-            <div className="flex flex-col gap-3">
-              {foEmailBody(data).map((paragraph) => (
-                <p key={paragraph} className="text-sm leading-6 text-[#444446]">
-                  {paragraph}
-                </p>
-              ))}
-              <p className="text-sm leading-6 text-[#444446]">
-                Regards,
-                <br />
-                {brand.name}
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-[#e6e6e7] px-4 py-1">
-              <DetailRow label="Address" value={data.propertyAddress} />
-              <DetailRow label="Company" value={data.companyName} />
-              <DetailRow label="Company at Property - Till Date" value={data.tillDate} />
-            </div>
-
-            <div>
-              <p className="mb-2 text-sm font-bold leading-5 text-[#262527]">Active contracts</p>
-              <div className="overflow-x-auto rounded-lg border border-[#e6e6e7]">
-                <table className="min-w-full border-collapse text-left text-sm">
-                  <thead className="bg-[#f5f5f6]">
-                    <tr>
-                      {['Deal Name', 'Type', 'Date'].map((heading) => (
-                        <th
-                          key={heading}
-                          className="whitespace-nowrap px-4 py-2.5 text-xs font-medium leading-[18px] text-[#5b5b5f]"
-                        >
-                          {heading}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.contracts.map((contract) => (
-                      <tr key={contract.dealName} className="border-t border-[#e6e6e7]">
-                        <td className="px-4 py-2.5 font-medium text-[#262527]">{contract.dealName}</td>
-                        <td className="whitespace-nowrap px-4 py-2.5 text-[#86868b]">{contract.type}</td>
-                        <td className="whitespace-nowrap px-4 py-2.5 text-[#86868b]">{contract.date}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="mt-5 flex justify-center">
+                <a
+                  href="#/property/0"
+                  className="inline-flex h-9 items-center rounded-lg px-3.5 text-sm font-medium leading-5 text-white"
+                  style={{ backgroundColor: brand.accent }}
+                >
+                  View Property
+                </a>
               </div>
-              <p className="mt-2 text-xs leading-[18px] text-[#86868b]">
-                Contracts have no names of their own, so each row names the deal it came from.
+
+              <div className="mt-8 text-sm leading-5 text-[#3b3b3b]">
+                <p>
+                  <span className="font-semibold text-[#3e3e3e]">{greeting}</span>
+                  <br />
+                  {paragraphs[0]}
+                </p>
+                {paragraphs.slice(1).map((paragraph) => (
+                  <p key={paragraph} className="mt-5">
+                    {paragraph}
+                  </p>
+                ))}
+                <p className="mt-5">
+                  Regards,
+                  <br />
+                  {brand.name}
+                </p>
+              </div>
+
+              <div className="mt-9">
+                <Divider />
+
+                <div className="grid grid-cols-[247px_1fr] gap-y-4 py-4">
+                  <div>
+                    <DetailLabel>Company</DetailLabel>
+                    <DetailValue>{data.companyName}</DetailValue>
+                  </div>
+                  <div>
+                    <DetailLabel>Address</DetailLabel>
+                    <DetailValue>{data.propertyAddress}</DetailValue>
+                  </div>
+                  <div>
+                    <DetailLabel>Company at Property - Till Date</DetailLabel>
+                    <DetailValue>{data.tillDate}</DetailValue>
+                  </div>
+                </div>
+
+                <Divider />
+
+                <div className="pt-4">
+                  <div className="grid grid-cols-[1fr_96px_88px] gap-x-4 pb-2">
+                    <DetailLabel>Deal Name</DetailLabel>
+                    <DetailLabel>Type</DetailLabel>
+                    <DetailLabel>Date</DetailLabel>
+                  </div>
+                  {data.contracts.map((contract) => (
+                    <div
+                      key={contract.dealName}
+                      className="grid grid-cols-[1fr_96px_88px] gap-x-4 border-t border-[#efefef] py-2.5 text-[15px] leading-5 text-[#3f3f3f]"
+                      style={{ fontFamily: VALUE_FONT }}
+                    >
+                      <span className="min-w-0">{contract.dealName}</span>
+                      <span>{contract.type}</span>
+                      <span>{contract.date}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center px-6 pb-9 pt-[34px]" style={{ backgroundColor: brand.accent }}>
+              <div className="flex">
+                {socialLinks.map((link) => (
+                  <img key={link.name} alt={link.name} className="size-7" src={link.icon} />
+                ))}
+              </div>
+              <p className="mt-[9px] text-xs leading-[18px] text-white/90">
+                Reach out to{' '}
+                <a href={`mailto:${brand.contact}`} className="underline">
+                  {brand.contact}
+                </a>{' '}
+                for any queries
               </p>
             </div>
           </div>
-
-          <div className="flex flex-col gap-2 border-t border-[#e6e6e7] bg-[#f5f5f6] px-8 py-6">
-            <div className="flex flex-wrap gap-4">
-              {brand.social.map((channel) => (
-                <span key={channel} className="text-sm leading-5" style={{ color: brand.accent }}>
-                  {channel}
-                </span>
-              ))}
-            </div>
-            <p className="text-xs leading-[18px] text-[#86868b]">
-              {brand.name} · {brand.address}
-            </p>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-[#e6e6e7] bg-white px-6 py-5">
-          <p className="text-sm font-bold leading-5 text-[#262527]">Sending rules</p>
-          <ul className="mt-2 flex list-disc flex-col gap-1 pl-5">
-            {foEmailSendingRules.map((rule) => (
-              <li key={rule} className="text-sm leading-6 text-[#6a6a70]">
-                {rule}
-              </li>
-            ))}
-          </ul>
         </div>
       </div>
     </div>

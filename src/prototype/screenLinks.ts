@@ -6,13 +6,13 @@ export type PrototypeScreen =
   | { screen: 'mobile-create-property' }
   | { screen: 'mobile-request-sent' }
   | { screen: 'mobile-property'; propertyIndex: number }
-  | { screen: 'fo-email' }
+  | { screen: 'fo-email'; tenant: 'Signal' | 'Filtergo' }
   | { screen: 'property'; propertyIndex: number; modal?: PropertyModal }
   | { screen: 'company'; propertyIndex: number; companyId: string }
   | { screen: 'parent-company'; propertyIndex: number; parentName: string }
 
 export const prototypeScreenCatalog: { label: string; screen: PrototypeScreen }[] = [
-  { label: 'Location listing', screen: { screen: 'listing' } },
+  { label: 'Property listing', screen: { screen: 'listing' } },
   { label: 'Property detail', screen: { screen: 'property', propertyIndex: 0 } },
   { label: 'Switch company', screen: { screen: 'property', propertyIndex: 0, modal: 'switch-company' } },
   { label: 'Create company', screen: { screen: 'property', propertyIndex: 0, modal: 'create-company' } },
@@ -20,7 +20,8 @@ export const prototypeScreenCatalog: { label: string; screen: PrototypeScreen }[
   { label: 'Mobile — Create property', screen: { screen: 'mobile-create-property' } },
   { label: 'Mobile — Request sent', screen: { screen: 'mobile-request-sent' } },
   { label: 'Mobile — Property detail', screen: { screen: 'mobile-property', propertyIndex: 0 } },
-  { label: 'FO email template', screen: { screen: 'fo-email' } },
+  { label: 'FO email — Filtergo', screen: { screen: 'fo-email', tenant: 'Filtergo' } },
+  { label: 'FO email — Signal', screen: { screen: 'fo-email', tenant: 'Signal' } },
 ]
 
 export function prototypeScreenToHash(screen: PrototypeScreen): string {
@@ -29,7 +30,9 @@ export function prototypeScreenToHash(screen: PrototypeScreen): string {
   if (screen.screen === 'mobile-create-property') return '#/mobile/create-property'
   if (screen.screen === 'mobile-request-sent') return '#/mobile/request-sent'
   if (screen.screen === 'mobile-property') return `#/mobile/property/${screen.propertyIndex}`
-  if (screen.screen === 'fo-email') return '#/email/franchise-owner'
+  if (screen.screen === 'fo-email') {
+    return screen.tenant === 'Signal' ? '#/email/franchise-owner/signal' : '#/email/franchise-owner'
+  }
   if (screen.screen === 'company') return `#/property/${screen.propertyIndex}/company/${screen.companyId}`
   if (screen.screen === 'parent-company') {
     return `#/property/${screen.propertyIndex}/parent/${encodeURIComponent(screen.parentName)}`
@@ -58,7 +61,11 @@ export function parsePrototypeHash(rawHash: string): PrototypeScreen {
   }
 
   if (hash === 'email/franchise-owner') {
-    return { screen: 'fo-email' }
+    return { screen: 'fo-email', tenant: 'Filtergo' }
+  }
+
+  if (hash === 'email/franchise-owner/signal') {
+    return { screen: 'fo-email', tenant: 'Signal' }
   }
 
   const mobilePropertyMatch = /^mobile\/property\/(\d+)\/?$/.exec(hash)

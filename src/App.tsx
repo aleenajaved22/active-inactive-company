@@ -39,7 +39,7 @@ function App() {
   if (screen.screen === 'fo-email') {
     return (
       <>
-        <FranchiseOwnerEmailPage />
+        <FranchiseOwnerEmailPage tenant={screen.tenant} />
         <PrototypeScreenLinks />
       </>
     )
