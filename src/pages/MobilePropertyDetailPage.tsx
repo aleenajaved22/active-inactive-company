@@ -19,7 +19,6 @@ import {
   IconChevronDown,
   IconChevronLeft,
   IconEdit,
-  IconLocation,
   IconNavigate,
   IconRepeat,
 } from '../mobile/MobileIcons'
@@ -191,7 +190,7 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
                 <IconChevronLeft size={24} />
               </button>
               <h1 className="line-clamp-2 min-w-0 flex-1 text-xl font-bold leading-7 text-black">
-                {formatPropertyTitle(property.name)}
+                {property.address}
               </h1>
               <button
                 type="button"
@@ -202,12 +201,9 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
               </button>
             </div>
 
-            <div className="flex items-center gap-1.5 pl-7 pt-1">
-              <IconLocation size={16} className="shrink-0 text-[#6a6a70]" />
-              <span className="min-w-0 truncate text-sm leading-5 text-[#6a6a70]">
-                {property.address}
-              </span>
-            </div>
+            <p className="truncate pl-7 pt-1 text-sm leading-5 text-[#6a6a70]">
+              {formatPropertyTitle(property.name)}
+            </p>
 
             <div className="flex gap-2 pt-3">
               <ActionButton primary icon={<IconAdd size={18} />} label="Make a Deal" disabled={readOnly} />

@@ -93,7 +93,7 @@ export function PropertyDetailPage({
     <div className="flex h-screen w-full overflow-hidden bg-white">
       <SidebarNavigation />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <AppHeader propertyName={property.name} onNavigateProperties={onBack} />
+        <AppHeader propertyAddress={property.address} onNavigateProperties={onBack} />
         <main className="flex min-h-0 flex-1 overflow-hidden">
           <aside
             id="property-details-panel"
