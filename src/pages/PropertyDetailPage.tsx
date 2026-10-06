@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import detailChevronSm from '../assets/detail-chevron-sm.svg'
 import detailDividerH from '../assets/detail-divider-h.svg'
-import detailEdit from '../assets/detail-edit.svg'
 import detailPropertyPhoto from '../assets/detail-property-photo.png'
 import { AppHeader } from '../components/AppHeader'
 import { ResizeHandle } from '../components/ResizeHandle'
@@ -10,12 +9,14 @@ import { CompanyListingPanel } from '../components/CompanyListingPanel'
 import { useCompanyActions } from '../components/companyActions'
 import { EditDealDrawer } from '../components/EditDealDrawer'
 import { PropertyDetailSideSections } from '../components/PropertyDetailSideSections'
+import { PropertyStageActions } from '../components/PropertyStageActions'
 import { PropertyStagesPanel } from '../components/PropertyStagesPanel'
 import { PropertyDetailCompanyHeader } from '../components/PropertyDetailCompanyHeader'
 import { PropertyLeadActivities } from '../components/PropertyLeadActivities'
 import { SidebarNavigation } from '../components/SidebarNavigation'
 import { INACTIVE_BANNER, PENDING_BANNER } from '../data/companyAtPropertyCopy'
 import { getPropertyCompany } from '../data/propertyCompanies'
+import { usePropertyStages } from '../data/usePropertyStages'
 import { initialSpaceAssociations, spaceLabelOf, type SpaceAssociation } from '../data/propertySpaceAssociations'
 import { affiliationsToBadges } from '../components/switchCompanyTypes'
 import type { PropertyModal } from '../prototype/screenLinks'
@@ -51,6 +52,7 @@ export function PropertyDetailPage({
   parentCompanyHref,
 }: PropertyDetailPageProps) {
   const title = formatPropertyTitle(property.name)
+  const stageNav = usePropertyStages()
   const [associations, setAssociations] = useState<SpaceAssociation[]>(initialSpaceAssociations)
   const [selectedAssociationId, setSelectedAssociationId] = useState(initialSpaceAssociations[0].id)
   const selectedAssociation =
@@ -106,14 +108,13 @@ export function PropertyDetailPage({
                 <h1 title={title} className="line-clamp-2 min-w-0 flex-1 break-words text-xl font-bold leading-7 text-[#262527]">
                   {title}
                 </h1>
-                <button
-                  type="button"
-                  aria-label="Edit property"
-                  onClick={() => setEditDealOpen(true)}
-                  className="flex size-8 shrink-0 items-center justify-center rounded-lg hover:bg-[#f5f5f6]"
-                >
-                  <img alt="" className="size-4 max-w-none" src={detailEdit} />
-                </button>
+                <PropertyStageActions
+                  canGoBack={stageNav.canGoBack}
+                  canGoNext={stageNav.canGoNext}
+                  onBack={stageNav.goBack}
+                  onNext={stageNav.goNext}
+                  onEdit={() => setEditDealOpen(true)}
+                />
               </div>
               <div className="flex flex-col gap-2 text-sm leading-5 text-[#6a6a70]">
                 <p>{property.address}</p>
@@ -122,7 +123,7 @@ export function PropertyDetailPage({
             <div className="my-4 px-8">
               <img alt="" className="block w-full max-w-none" src={detailDividerH} />
             </div>
-            <PropertyStagesPanel />
+            <PropertyStagesPanel stages={stageNav.stages} />
             <div className="my-4 px-8">
               <img alt="" className="block w-full max-w-none" src={detailDividerH} />
             </div>
