@@ -6,11 +6,8 @@ import {
   OCCUPANCY_TOOLTIPS,
 } from '../data/companyAtPropertyCopy'
 import { suiteUnitTypes } from '../data/propertySpaces'
-import { GuideTarget } from './MobileFieldGuide'
 import {
-  MobileFieldError,
   MobileFieldHint,
-  MobileGroupLabel,
   MobileSectionHeading,
   MobileSuiteUnitField,
   MobileTextField,
@@ -36,7 +33,6 @@ export function MobileOccupancyFields({
   disabled,
   numberRef,
   hideHeading,
-  compact,
   children,
 }: {
   value: MobileOccupancyValue
@@ -47,32 +43,9 @@ export function MobileOccupancyFields({
   numberRef?: RefObject<HTMLInputElement | null>
   /** Leaves out the heading and its subtext, for a form that shows just the fields. */
   hideHeading?: boolean
-  /**
-   * Floor and Suite / Unit / Apartment on one row under a quiet label. Its
-   * description and format notes are shown by the form's hint strip.
-   * Any message goes beneath both fields. For forms that are already long.
-   */
-  compact?: boolean
   /** Extra lines under the fields, e.g. a conflict message. */
   children?: React.ReactNode
 }) {
-  if (compact) {
-    return (
-      <CompactOccupancy
-        {...{
-          value,
-          onChange,
-          floorError,
-          suiteUnitError,
-          disabled,
-          numberRef,
-        }}
-      >
-        {children}
-      </CompactOccupancy>
-    )
-  }
-
   return (
     <div className="flex flex-col gap-4">
       {!hideHeading && (
@@ -108,61 +81,6 @@ export function MobileOccupancyFields({
         <MobileFieldHint>{OCCUPANCY_TOOLTIPS.suiteUnit}</MobileFieldHint>
       </div>
 
-      {children}
-    </div>
-  )
-}
-
-type CompactProps = {
-  value: MobileOccupancyValue
-  onChange: (next: MobileOccupancyValue) => void
-  floorError?: string | null
-  suiteUnitError?: string | null
-  disabled?: boolean
-  numberRef?: RefObject<HTMLInputElement | null>
-  children?: React.ReactNode
-}
-
-function CompactOccupancy({
-  value,
-  onChange,
-  floorError,
-  suiteUnitError,
-  disabled,
-  numberRef,
-  children,
-}: CompactProps) {
-  return (
-    <div className="flex flex-col gap-2">
-      <GuideTarget id="occupancy">
-        <MobileGroupLabel>{OCCUPANCY_LABEL}</MobileGroupLabel>
-      </GuideTarget>
-      <div className="grid grid-cols-[7rem_minmax(0,1fr)] items-start gap-2">
-        <GuideTarget id="floor">
-          <MobileTextField
-            label="Floor"
-            value={value.floor}
-            disabled={disabled}
-            onChange={(floor) => onChange({ ...value, floor })}
-            placeholder={OCCUPANCY_PLACEHOLDERS.floor}
-            invalid={Boolean(floorError)}
-          />
-        </GuideTarget>
-        <GuideTarget id="suite">
-          <MobileSuiteUnitField
-            typeValue={value.suiteUnitType || 'Suite'}
-            onTypeChange={(suiteUnitType) => onChange({ ...value, suiteUnitType })}
-            typeOptions={suiteUnitTypes}
-            numberValue={value.suiteUnitNumber}
-            onNumberChange={(suiteUnitNumber) => onChange({ ...value, suiteUnitNumber })}
-            numberRef={numberRef}
-            disabled={disabled}
-            invalid={Boolean(suiteUnitError)}
-          />
-        </GuideTarget>
-      </div>
-      {floorError && <MobileFieldError>{floorError}</MobileFieldError>}
-      {suiteUnitError && <MobileFieldError>{suiteUnitError}</MobileFieldError>}
       {children}
     </div>
   )

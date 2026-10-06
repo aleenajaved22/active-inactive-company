@@ -1,7 +1,11 @@
 import { useState } from 'react'
 import { propertyAffiliationOptions, type PropertyAffiliation } from '../components/switchCompanyTypes'
 import { validateCompanyEndDate } from '../data/companyAssociation'
-import { COMPANY_AT_PROPERTY, ERRORS, TILL_DATE_HELPER } from '../data/companyAtPropertyCopy'
+import {
+  COMPANY_AT_PROPERTY,
+  ERRORS,
+  TILL_DATE_HELPER,
+} from '../data/companyAtPropertyCopy'
 import {
   occupancyRequiredError,
   validateOccupancy,
@@ -9,9 +13,13 @@ import {
   type OccupantSpaces,
 } from '../data/propertyOccupancy'
 import { MobileAssigneeFields, emptyMobileAssignee, type MobileAssigneeValue } from './MobileAssigneeFields'
-import { MobileChoiceChips, MobileDateField, MobileFieldError, MobileGroupLabel } from './MobileFields'
-import { GuideBar, GuideProvider, GuideTarget, type GuideStep } from './MobileFieldGuide'
-import { occupancyGuideSteps } from './guideSteps'
+import {
+  MobileChoiceChips,
+  MobileDateField,
+  MobileFieldError,
+  MobileFieldHint,
+  MobileSectionHeading,
+} from './MobileFields'
 import { MobileOccupancyFields } from './MobileOccupancyFields'
 import { MobileSheet } from './MobileSheet'
 
@@ -58,11 +66,7 @@ export function MobileEditCompanySheet({
   const [affiliations, setAffiliations] = useState<Set<string>>(new Set<string>(initialAffiliations))
   const [endDate, setEndDate] = useState(initialEndDate)
   const [spaceFields, setSpaceFields] = useState<OccupancyFieldsValue>(
-    initialSpaceFields ?? {
-      floor: '',
-      suiteUnitType: 'Suite',
-      suiteUnitNumber: '',
-    },
+    initialSpaceFields ?? { floor: '', suiteUnitType: 'Suite', suiteUnitNumber: '' },
   )
   const [assignee, setAssignee] = useState<MobileAssigneeValue>(() => ({
     ...emptyMobileAssignee(),
@@ -72,16 +76,9 @@ export function MobileEditCompanySheet({
   }))
   const [submitAttempted, setSubmitAttempted] = useState(false)
 
-  const endDateError = validateCompanyEndDate({
-    endDate,
-    effectiveDate,
-    nextCompany,
-  })
+  const endDateError = validateCompanyEndDate({ endDate, effectiveDate, nextCompany })
   const others = occupants.filter((occupant) => occupant.companyId !== companyId)
-  const occupancy = validateOccupancy({
-    value: spaceFields,
-    occupants: others,
-  })
+  const occupancy = validateOccupancy({ value: spaceFields, occupants: others })
   const missingOccupancy = occupancyRequiredError({
     value: spaceFields,
     occupants: others,
@@ -113,75 +110,51 @@ export function MobileEditCompanySheet({
     onClose()
   }
 
-  const guideSteps: GuideStep[] = [
-    {
-      id: 'affiliation',
-      title: 'Property Affiliation',
-      text: 'Select one or more affiliation types that apply to this property',
-    },
-    ...occupancyGuideSteps,
-    { id: 'till-date', title: COMPANY_AT_PROPERTY.tillDateLabel, text: TILL_DATE_HELPER },
-    {
-      id: 'assignee',
-      title: 'Assign to',
-      text: 'Every property and company needs an assignee. Add a supervisor when one is needed',
-    },
-  ]
-
   return (
     <MobileSheet open={open} onClose={onClose} title={`Edit ${companyName}`}>
-      <GuideProvider steps={guideSteps}>
-        <div className="no-scrollbar flex min-h-0 flex-col gap-5 overflow-y-auto px-4 pb-4">
-          <GuideTarget id="affiliation">
-            <div className="flex flex-col gap-2">
-              <MobileGroupLabel>Property Affiliation *</MobileGroupLabel>
-              <MobileChoiceChips
-                options={propertyAffiliationOptions}
-                selected={affiliations}
-                onToggle={toggle}
-              />
-              {submitAttempted && affiliationError && <MobileFieldError>{affiliationError}</MobileFieldError>}
-            </div>
-          </GuideTarget>
-
-          <MobileOccupancyFields
-            compact
-            value={spaceFields}
-            onChange={setSpaceFields}
-            floorError={submitAttempted ? occupancy.floorError : null}
-            suiteUnitError={submitAttempted ? occupancy.suiteUnitError : null}
-          >
-            {submitAttempted && missingOccupancy && <MobileFieldError>{missingOccupancy}</MobileFieldError>}
-          </MobileOccupancyFields>
-
-          <GuideTarget id="till-date">
-            <MobileDateField
-              label={COMPANY_AT_PROPERTY.tillDateLabel}
-              value={endDate}
-              onChange={setEndDate}
-              error={submitAttempted ? endDateError : null}
-            />
-          </GuideTarget>
-
-          <GuideTarget id="assignee">
-            <div className="flex flex-col gap-2">
-              <MobileGroupLabel>Assign to</MobileGroupLabel>
-              <MobileAssigneeFields value={assignee} onChange={setAssignee} error={assigneeError} />
-            </div>
-          </GuideTarget>
+      <div className="no-scrollbar flex min-h-0 flex-col gap-5 overflow-y-auto px-4 pb-8">
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium leading-5 text-[#262527]">Property Affiliation *</p>
+          <MobileChoiceChips
+            options={propertyAffiliationOptions}
+            selected={affiliations}
+            onToggle={toggle}
+          />
+          {submitAttempted && affiliationError && <MobileFieldError>{affiliationError}</MobileFieldError>}
         </div>
 
-        <div className="flex flex-col gap-3 px-4 pb-8 pt-2">
-          <GuideBar />
-          <button
-            type="button"
-            onClick={save}
-            className="flex h-12 w-full items-center justify-center rounded-lg bg-[#146dff] text-base font-medium leading-5 text-white"
-          >
-            Save
-          </button>
+        <MobileOccupancyFields
+          value={spaceFields}
+          onChange={setSpaceFields}
+          floorError={submitAttempted ? occupancy.floorError : null}
+          suiteUnitError={submitAttempted ? occupancy.suiteUnitError : null}
+        >
+          {submitAttempted && missingOccupancy && <MobileFieldError>{missingOccupancy}</MobileFieldError>}
+        </MobileOccupancyFields>
+
+        <div className="flex flex-col gap-1">
+          <MobileDateField
+            label={COMPANY_AT_PROPERTY.tillDateLabel}
+            value={endDate}
+            onChange={setEndDate}
+            error={submitAttempted ? endDateError : null}
+          />
+          <MobileFieldHint>{TILL_DATE_HELPER}</MobileFieldHint>
         </div>
-      </GuideProvider>
+
+        <div className="flex flex-col gap-2">
+          <MobileSectionHeading>Assign to</MobileSectionHeading>
+          <MobileAssigneeFields value={assignee} onChange={setAssignee} error={assigneeError} />
+        </div>
+
+        <button
+          type="button"
+          onClick={save}
+          className="flex h-12 w-full items-center justify-center rounded-lg bg-[#146dff] text-base font-medium leading-5 text-white"
+        >
+          Save
+        </button>
+      </div>
     </MobileSheet>
   )
 }
