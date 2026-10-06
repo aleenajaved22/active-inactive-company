@@ -269,9 +269,6 @@ export function MobileSwitchCompanyScreen({
 
           <section className="flex flex-col gap-2">
             <MobileSectionHeading>Assign to</MobileSectionHeading>
-            <MobileFieldHint>
-              Every property and company needs an assignee. Add a supervisor when one is needed
-            </MobileFieldHint>
             <MobileAssigneeFields value={assignee} onChange={setAssignee} error={assigneeError} />
           </section>
 
