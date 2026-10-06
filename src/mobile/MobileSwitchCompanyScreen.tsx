@@ -8,8 +8,6 @@ import {
 import {
   COMPANY_AT_PROPERTY,
   DISCARD_SWITCH,
-  EFFECTIVE_DATE_DESCRIPTION,
-  TILL_DATE_DESCRIPTION,
 } from '../data/companyAtPropertyCopy'
 import type { OccupantSpaces } from '../data/propertyOccupancy'
 import { formatShortDate, todayMMDDYYYY } from '../data/dateFormat'
@@ -25,7 +23,7 @@ import {
   MobileFieldError,
   MobileFieldHint,
   MobilePickerField,
-  MobileSectionHeading,
+  MobileGroupLabel,
   MobileTextField,
 } from './MobileFields'
 import { MobilePageHeader } from './MobilePageHeader'
@@ -189,48 +187,40 @@ export function MobileSwitchCompanyScreen({
         style={{ paddingTop: 100, paddingBottom: MOBILE_ACTION_FOOTER_HEIGHT + 24 }}
       >
         <div className="flex flex-col gap-5 px-4 pt-5">
-          <section className="flex flex-col gap-2">
-            {isMakeActive ? (
-              <MobileTextField
-                label="Company"
-                required
-                disabled
-                value={selectedCompany?.name ?? ''}
-                onChange={() => {}}
-              />
-            ) : (
-              <MobilePickerField
-                label="Company"
-                required
-                value={selectedCompany?.name ?? ''}
-                placeholder="Search by company name"
-                onOpen={() => setPickerOpen(true)}
-                error={showErrors ? errors.companyError : null}
-              />
+          {isMakeActive ? (
+            <MobileTextField
+              label="Company"
+              required
+              disabled
+              value={selectedCompany?.name ?? ''}
+              onChange={() => {}}
+            />
+          ) : (
+            <MobilePickerField
+              label="Company"
+              required
+              value={selectedCompany?.name ?? ''}
+              placeholder="Search by company name"
+              onOpen={() => setPickerOpen(true)}
+              error={showErrors ? errors.companyError : null}
+            />
+          )}
+
+          <MobileOccupancyFields
+            compact
+            value={fields}
+            disabled={Boolean(lockedFields)}
+            onChange={(next) => setSpaceFields(next)}
+            floorError={showErrors ? errors.floorError : null}
+            suiteUnitError={showErrors ? errors.suiteUnitError : null}
+          >
+            {lockedFields && selectedSpace?.currentCompanyName && (
+              <MobileFieldHint>Current: {selectedSpace.currentCompanyName}</MobileFieldHint>
             )}
-            <MobileFieldHint>
-              {isMakeActive
-                ? 'This company is being made active again on this property.'
-                : 'The company that should be associated with this property.'}
-            </MobileFieldHint>
-          </section>
+            {showErrors && errors.spaceError && <MobileFieldError>{errors.spaceError}</MobileFieldError>}
+          </MobileOccupancyFields>
 
-          <section>
-            <MobileOccupancyFields
-              value={fields}
-              disabled={Boolean(lockedFields)}
-              onChange={(next) => setSpaceFields(next)}
-              floorError={showErrors ? errors.floorError : null}
-              suiteUnitError={showErrors ? errors.suiteUnitError : null}
-            >
-              {lockedFields && selectedSpace?.currentCompanyName && (
-                <MobileFieldHint>Current: {selectedSpace.currentCompanyName}</MobileFieldHint>
-              )}
-              {showErrors && errors.spaceError && <MobileFieldError>{errors.spaceError}</MobileFieldError>}
-            </MobileOccupancyFields>
-          </section>
-
-          <section className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             <MobileDateField
               label={COMPANY_AT_PROPERTY.effectiveDateLabel}
               required
@@ -238,21 +228,16 @@ export function MobileSwitchCompanyScreen({
               onChange={setEffectiveDate}
               error={showErrors ? errors.effectiveDateError : null}
             />
-            <MobileFieldHint>{EFFECTIVE_DATE_DESCRIPTION}</MobileFieldHint>
             <MobileDateField
               label={COMPANY_AT_PROPERTY.tillDateLabel}
               value={cutOffDate}
               onChange={setCutOffDate}
               error={showErrors ? errors.endDateError : null}
             />
-            <MobileFieldHint>{TILL_DATE_DESCRIPTION}</MobileFieldHint>
-          </section>
+          </div>
 
-          <section className="flex flex-col gap-2">
-            <MobileSectionHeading>Property Affiliation *</MobileSectionHeading>
-            <MobileFieldHint>
-              Select one or more affiliation types that apply to this property
-            </MobileFieldHint>
+          <div className="flex flex-col gap-2">
+            <MobileGroupLabel>Property Affiliation *</MobileGroupLabel>
             <MobileChoiceChips
               options={propertyAffiliationOptions}
               selected={affiliations}
@@ -261,29 +246,21 @@ export function MobileSwitchCompanyScreen({
             {showErrors && errors.affiliationError && (
               <MobileFieldError>{errors.affiliationError}</MobileFieldError>
             )}
-          </section>
+          </div>
 
-          <section className="flex flex-col gap-2">
-            <MobileSectionHeading>Assign to</MobileSectionHeading>
-            <MobileFieldHint>
-              Every property and company needs an assignee. Add a supervisor when one is needed.
-            </MobileFieldHint>
+          <div className="flex flex-col gap-2">
+            <MobileGroupLabel>Assign to</MobileGroupLabel>
             <MobileAssigneeFields value={assignee} onChange={setAssignee} error={assigneeError} />
-          </section>
+          </div>
 
           {isEditMode && associationId && onRevertPending && (
-            <div className="mt-2 border-t border-[#e6e6e7] pt-4">
-              <button
-                type="button"
-                onClick={() => setRevertOpen(true)}
-                className="flex h-12 w-full items-center justify-center rounded-lg bg-[#fbeeed] text-base font-medium leading-5 text-[#b32318]"
-              >
-                {DISCARD_SWITCH.action}
-              </button>
-              <p className="pt-2 text-center text-xs leading-4 text-[#86868b]">
-                Cancels the pending switch on this property.
-              </p>
-            </div>
+            <button
+              type="button"
+              onClick={() => setRevertOpen(true)}
+              className="mt-1 flex h-12 w-full items-center justify-center rounded-lg bg-[#fbeeed] text-base font-medium leading-5 text-[#b32318]"
+            >
+              {DISCARD_SWITCH.action}
+            </button>
           )}
         </div>
       </div>

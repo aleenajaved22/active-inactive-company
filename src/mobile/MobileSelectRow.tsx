@@ -69,9 +69,9 @@ export function MobileSelectRow({
           className="-mr-1.5 flex h-11 w-8 shrink-0 items-center justify-center rounded-lg text-[#6a6a70]"
         >
           <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-            <circle cx="4" cy="10" r="1.5" />
+            <circle cx="10" cy="4" r="1.5" />
             <circle cx="10" cy="10" r="1.5" />
-            <circle cx="16" cy="10" r="1.5" />
+            <circle cx="10" cy="16" r="1.5" />
           </svg>
         </button>
       )}

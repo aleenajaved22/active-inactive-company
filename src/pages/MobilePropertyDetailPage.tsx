@@ -1,15 +1,13 @@
 import { useMemo, useState } from 'react'
-import { affiliationsToBadges } from '../components/switchCompanyTypes'
-import { ContractProposalNotice } from '../components/ContractProposalNotice'
+import { StagePill } from '../components/StagePill'
+import { stageBadgeClass } from '../components/PropertyDealsBillingPanels'
 import { INACTIVE_BANNER, PENDING_BANNER } from '../data/companyAtPropertyCopy'
+import { formatShortDate } from '../data/dateFormat'
 import { leadActivityTabs } from '../data/leadActivities'
 import { formatPropertyTitle, type PropertyRow } from '../data/properties'
-import { getPropertyCompany } from '../data/propertyCompanies'
-import {
-  billingAddressPanelData,
-  franchiseAssociatedPanelData,
-  propertyDetailsPanelData,
-} from '../data/propertyDetailSidePanel'
+import { getPropertyCompany, type PropertyCompany } from '../data/propertyCompanies'
+import { initialReachedStages, propertyStageLabels } from '../data/propertyStages'
+import { franchiseAssociatedPanelData, propertyDetailsPanelData } from '../data/propertyDetailSidePanel'
 import { initialSpaceAssociations, spaceLabelOf } from '../data/propertySpaceAssociations'
 import { MobileAccordion, MobileDetailRow } from '../mobile/MobileAccordion'
 import { MobileBottomNav } from '../mobile/MobileBottomNav'
@@ -25,26 +23,14 @@ import {
   IconNavigate,
   IconRepeat,
 } from '../mobile/MobileIcons'
-import { MobileStageRail, type MobileStage } from '../mobile/MobileStageRail'
 import { MobileStatusBar } from '../mobile/MobileStatusBar'
-import {
-  MobileAffiliationBadges,
-  MobileListStatusBadge,
-  MobilePendingBadge,
-} from '../mobile/MobileStatusPills'
 import { MobileCompaniesSheet } from '../mobile/MobileCompaniesSheet'
 import { MobileTabs } from '../mobile/MobileTabs'
 import { useMobileCompanyActions } from '../mobile/useMobileCompanyActions'
 
-/** The web app's property stages. */
-const stageSteps = ['Discovery', 'Qualified', 'Needs Assessment']
-const currentStage = 'Needs Assessment'
-
 /** Mobile folds the web app's left details panel into an Information tab. */
 const detailTabs = ['Information', ...leadActivityTabs] as const
 type DetailTab = (typeof detailTabs)[number]
-
-const pad2 = (value: number) => String(value).padStart(2, '0')
 
 type MobilePropertyDetailPageProps = {
   property: PropertyRow
@@ -98,6 +84,54 @@ function InlineValueRow({
   )
 }
 
+/** The selected company's deals, with the same fields as the web table. */
+function MobileDealsTab({ company }: { company: PropertyCompany }) {
+  if (company.deals.length === 0) {
+    return (
+      <p className="rounded-lg bg-white px-4 py-8 text-center text-sm leading-5 text-[#86868b] shadow-[0px_4px_12px_rgba(0,0,0,0.04)]">
+        No deals added yet
+      </p>
+    )
+  }
+  return (
+    <ul className="flex flex-col gap-3">
+      {company.deals.map((deal) => (
+        <li
+          key={deal.id}
+          className="flex flex-col gap-2 rounded-lg bg-white p-4 shadow-[0px_4px_12px_rgba(0,0,0,0.04)]"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <span className="min-w-0 text-sm font-medium leading-5 text-[#262527]">{deal.name}</span>
+            <span className="shrink-0 text-sm leading-5 text-[#6a6a70]">{deal.amount}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className={`rounded-2xl px-2 py-0.5 text-xs font-medium leading-[18px] ${stageBadgeClass(deal.stage)}`}>
+              {deal.stage}
+            </span>
+            <span className="text-xs leading-[18px] text-[#86868b]">Created {formatShortDate(deal.date)}</span>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+/** The selected company's billing address, from the same record the web tab reads. */
+function MobileBillingTab({ company }: { company: PropertyCompany }) {
+  const billing = company.billingAddress
+  return (
+    <div className="flex flex-col rounded-lg bg-white p-4 shadow-[0px_4px_12px_rgba(0,0,0,0.04)]">
+      <p className="pb-2 text-sm font-semibold leading-5 text-[#262527]">Billing Address</p>
+      <MobileDetailRow label="Contact" value={billing.contact} />
+      <MobileDetailRow label="Address" value={billing.address} />
+      <MobileDetailRow label="Country" value={billing.country} />
+      <MobileDetailRow label="State" value={billing.state} />
+      <MobileDetailRow label="City" value={billing.city} />
+      <MobileDetailRow label="Zipcode" value={billing.zipcode} />
+    </div>
+  )
+}
+
 function TabPlaceholder({ tab }: { tab: string }) {
   return (
     <div className="flex flex-col items-center gap-2 rounded-lg bg-white px-6 py-10 text-center shadow-[0px_4px_12px_rgba(0,0,0,0.04)]">
@@ -141,13 +175,8 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
   )
   const currentIndex = currentAssociations.findIndex((item) => item.id === selectedAssociation.id)
 
-  const stages: MobileStage[] = stageSteps.map((label, index) => {
-    const currentIndex = stageSteps.indexOf(currentStage)
-    return {
-      label,
-      state: index < currentIndex ? 'complete' : index === currentIndex ? 'current' : 'upcoming',
-    }
-  })
+  // The same stages, at the same progress, as the web app's property column.
+  const stages = propertyStageLabels.map((label, index) => ({ label, reached: index < initialReachedStages }))
 
   return (
     <MobileFrame caption="Mobile — Property detail">
@@ -197,7 +226,7 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
 
           <div className="flex flex-col items-start bg-white px-4 pt-2.5">
             <div className="w-full pb-3">
-              <MobileStageRail stages={stages} />
+              <StagePill size="sm" stages={stages} />
             </div>
             <div className="w-full pb-2">
               <MobileCompanyStrip
@@ -228,9 +257,6 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
                 </p>
               </div>
             )}
-            {listStatus !== 'Inactive' && (
-              <ContractProposalNotice tillDate={selectedAssociation.endDate} />
-            )}
 
             {activeTab === 'Information' ? (
               <>
@@ -257,112 +283,8 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
                 >
                   <div className="flex flex-col">
                     {propertyDetailsPanelData.rows.map((row) => (
-                      <MobileDetailRow
-                        key={row.label}
-                        label={row.label}
-                        value={
-                          'referral' in row && row.referral ? (
-                            <span className="flex min-w-0 flex-col">
-                              <span>{row.value as string}</span>
-                              <span className="text-[#1c1c1c]">{row.referral.name}</span>
-                              {/* The 0.25px tracking pushes a full email onto a second line. */}
-                              <span className="leading-5 tracking-normal">{row.referral.email}</span>
-                              <span className="leading-5 tracking-normal">{row.referral.phone}</span>
-                            </span>
-                          ) : (
-                            (row.value as string)
-                          )
-                        }
-                      />
+                      <MobileDetailRow key={row.label} label={row.label} value={row.value} />
                     ))}
-                  </div>
-                </MobileAccordion>
-
-                <MobileAccordion
-                  title={`Company • ${pad2(currentAssociations.length)}`}
-                  summary={company.name}
-                >
-                  <div className="mb-3 flex flex-col rounded-lg bg-[#f6f6f8] px-3 py-2">
-                    <MobileDetailRow label="Industry Vertical" value={company.industryVertical} />
-                    <MobileDetailRow label="Parent Company" value={company.parentCompany ?? 'Not set'} />
-                    <MobileDetailRow label="Assignee" value={selectedAssociation.assignee} />
-                    {selectedAssociation.supervisor && (
-                      <MobileDetailRow label="Supervisor" value={selectedAssociation.supervisor} />
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    {currentAssociations.map((association) => {
-                      const item = getPropertyCompany(association.companyId)
-                      const selected = association.id === selectedAssociation.id
-                      return (
-                        <button
-                          key={association.id}
-                          type="button"
-                          onClick={() => setSelectedAssociationId(association.id)}
-                          className={`flex w-full flex-col items-start gap-1.5 rounded-lg p-2 text-left ${
-                            selected ? 'bg-[#eff4fd]' : ''
-                          }`}
-                        >
-                          <span className="flex w-full items-center justify-between gap-2">
-                            <span className="min-w-0 truncate text-sm font-medium leading-5 text-[#262527]">
-                              {item.name}
-                            </span>
-                            {association.status === 'Pending' ? (
-                              <MobilePendingBadge effectiveDate={association.effectiveDate} />
-                            ) : (
-                              <MobileListStatusBadge status={association.status} />
-                            )}
-                          </span>
-                          <span className="text-xs leading-[18px] text-[#86868b]">
-                            {spaceLabelOf(association)}
-                            {item.parentCompany ? ` · ${item.parentCompany}` : ''}
-                          </span>
-                          <MobileAffiliationBadges
-                            badges={affiliationsToBadges(association.affiliations)}
-                          />
-                        </button>
-                      )
-                    })}
-                  </div>
-                </MobileAccordion>
-
-                <MobileAccordion
-                  title={`Deals • ${pad2(company.deals.length)}`}
-                  summary={company.deals[0]?.name ?? 'No deals yet'}
-                >
-                  <div className="flex flex-col gap-3">
-                    {company.deals.map((deal) => (
-                      <div key={deal.id} className="flex flex-col gap-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="min-w-0 truncate text-sm font-medium leading-5 text-[#262527]">
-                            {deal.name}
-                          </span>
-                          <span className="shrink-0 text-sm leading-5 text-[#262527]">
-                            {deal.amount}
-                          </span>
-                        </div>
-                        <span className="text-xs leading-[18px] text-[#86868b]">
-                          {deal.stage} · {deal.date}
-                        </span>
-                      </div>
-                    ))}
-                    {company.deals.length === 0 && (
-                      <p className="text-sm leading-5 text-[#86868b]">No deals yet.</p>
-                    )}
-                  </div>
-                </MobileAccordion>
-
-                <MobileAccordion
-                  title="Billing Address"
-                  summary={billingAddressPanelData.contact}
-                >
-                  <div className="flex flex-col">
-                    <MobileDetailRow label="Contact" value={billingAddressPanelData.contact} />
-                    <MobileDetailRow label="Address" value={billingAddressPanelData.address} />
-                    <MobileDetailRow label="Country" value={billingAddressPanelData.country} />
-                    <MobileDetailRow label="State" value={billingAddressPanelData.state} />
-                    <MobileDetailRow label="City" value={billingAddressPanelData.city} />
-                    <MobileDetailRow label="Zipcode" value={billingAddressPanelData.zipcode} />
                   </div>
                 </MobileAccordion>
 
@@ -385,6 +307,10 @@ export function MobilePropertyDetailPage({ property, onBack }: MobilePropertyDet
                   <p className="py-2 text-sm leading-5 text-[#86868b]">No attachments yet.</p>
                 </MobileAccordion>
               </>
+            ) : activeTab === 'Deals' ? (
+              <MobileDealsTab company={company} />
+            ) : activeTab === 'Billing' ? (
+              <MobileBillingTab company={company} />
             ) : (
               <TabPlaceholder tab={activeTab} />
             )}

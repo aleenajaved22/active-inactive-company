@@ -6,7 +6,14 @@ import {
   OCCUPANCY_TOOLTIPS,
 } from '../data/companyAtPropertyCopy'
 import { suiteUnitTypes } from '../data/propertySpaces'
-import { MobileFieldHint, MobileSectionHeading, MobileSuiteUnitField, MobileTextField } from './MobileFields'
+import {
+  MobileFieldError,
+  MobileFieldHint,
+  MobileGroupLabel,
+  MobileSectionHeading,
+  MobileSuiteUnitField,
+  MobileTextField,
+} from './MobileFields'
 
 type MobileOccupancyValue = {
   floor: string
@@ -28,6 +35,7 @@ export function MobileOccupancyFields({
   disabled,
   numberRef,
   hideHeading,
+  compact,
   children,
 }: {
   value: MobileOccupancyValue
@@ -38,9 +46,46 @@ export function MobileOccupancyFields({
   numberRef?: RefObject<HTMLInputElement | null>
   /** Leaves out the heading and its subtext, for a form that shows just the fields. */
   hideHeading?: boolean
+  /**
+   * Floor and Suite / Unit / Apartment on one row under a quiet label, with no
+   * description and no format hints — the formats are in the placeholders — and
+   * any message beneath both. For forms that are already long.
+   */
+  compact?: boolean
   /** Extra lines under the fields, e.g. a conflict message. */
   children?: React.ReactNode
 }) {
+  if (compact) {
+    return (
+      <div className="flex flex-col gap-2">
+        <MobileGroupLabel>{OCCUPANCY_LABEL}</MobileGroupLabel>
+        <div className="grid grid-cols-[7rem_minmax(0,1fr)] items-start gap-2">
+          <MobileTextField
+            label="Floor"
+            value={value.floor}
+            disabled={disabled}
+            onChange={(floor) => onChange({ ...value, floor })}
+            placeholder={OCCUPANCY_PLACEHOLDERS.floor}
+            invalid={Boolean(floorError)}
+          />
+          <MobileSuiteUnitField
+            typeValue={value.suiteUnitType || 'Suite'}
+            onTypeChange={(suiteUnitType) => onChange({ ...value, suiteUnitType })}
+            typeOptions={suiteUnitTypes}
+            numberValue={value.suiteUnitNumber}
+            onNumberChange={(suiteUnitNumber) => onChange({ ...value, suiteUnitNumber })}
+            numberRef={numberRef}
+            disabled={disabled}
+            invalid={Boolean(suiteUnitError)}
+          />
+        </div>
+        {floorError && <MobileFieldError>{floorError}</MobileFieldError>}
+        {suiteUnitError && <MobileFieldError>{suiteUnitError}</MobileFieldError>}
+        {children}
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {!hideHeading && (

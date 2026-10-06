@@ -234,10 +234,10 @@ export function MobileCreatePropertyPage({ onBack, onSubmit }: MobileCreatePrope
             <section className="flex flex-col gap-3">
               <MobileSectionHeading>Property Details</MobileSectionHeading>
               <MobileTextField
-                label="Location / Property Name"
+                label="Property Name"
                 value={propertyName}
                 onChange={setPropertyName}
-                placeholder="Add Location / Property Name"
+                placeholder="Add Property Name"
               />
               <MobileSelectField
                 label="Property Source"

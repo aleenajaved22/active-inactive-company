@@ -2,6 +2,11 @@ import type { ReactNode } from 'react'
 import { OCCUPANCY_PLACEHOLDERS, SUITE_UNIT_LABEL } from '../data/companyAtPropertyCopy'
 import { IconAlert, IconChevronDown } from './MobileIcons'
 
+/** A quiet label over a group of fields, for forms where a full heading would outweigh the fields. */
+export function MobileGroupLabel({ children }: { children: ReactNode }) {
+  return <h2 className="px-1 text-sm font-semibold leading-5 text-[#262527]">{children}</h2>
+}
+
 /** Section heading inside a mobile form. */
 export function MobileSectionHeading({ children }: { children: ReactNode }) {
   return <h2 className="text-lg font-semibold leading-6 text-black">{children}</h2>
@@ -63,6 +68,8 @@ type FieldBaseProps = {
   label: string
   required?: boolean
   error?: string | null
+  /** Red border with no message under the field, when the message is shown elsewhere. */
+  invalid?: boolean
 }
 
 type SelectFieldProps = FieldBaseProps & {
@@ -134,10 +141,11 @@ export function MobileTextField({
   error,
   inputMode = 'text',
   disabled,
+  invalid,
 }: TextFieldProps) {
   return (
     <div className="flex w-full flex-col gap-1">
-      <FieldShell invalid={Boolean(error)} disabled={disabled}>
+      <FieldShell invalid={Boolean(error) || invalid} disabled={disabled}>
         <FieldLabel required={required}>{label}</FieldLabel>
         <input
           id={id}
@@ -210,6 +218,7 @@ export function MobileSuiteUnitField({
   numberRef,
   error,
   disabled,
+  invalid,
 }: {
   typeValue: string
   onTypeChange: (value: string) => void
@@ -219,10 +228,11 @@ export function MobileSuiteUnitField({
   numberRef?: React.RefObject<HTMLInputElement | null>
   error?: string | null
   disabled?: boolean
+  invalid?: boolean
 }) {
   return (
     <div className="flex w-full flex-col gap-1">
-      <FieldShell invalid={Boolean(error)} disabled={disabled}>
+      <FieldShell invalid={Boolean(error) || invalid} disabled={disabled}>
         <FieldLabel>{SUITE_UNIT_LABEL}</FieldLabel>
         <div className="flex w-full items-center gap-3">
           <div className="relative flex shrink-0 items-center gap-1">
@@ -253,7 +263,7 @@ export function MobileSuiteUnitField({
             disabled={disabled}
             onChange={(event) => onNumberChange(event.target.value)}
             placeholder={OCCUPANCY_PLACEHOLDERS.suiteUnit}
-            className="min-w-0 flex-1 bg-transparent text-[15px] font-medium leading-5 text-black outline-none placeholder:font-medium placeholder:text-[#86868b]"
+            className="min-w-0 flex-1 text-ellipsis bg-transparent text-[15px] font-medium leading-5 text-black outline-none placeholder:font-medium placeholder:text-[#86868b]"
           />
         </div>
       </FieldShell>

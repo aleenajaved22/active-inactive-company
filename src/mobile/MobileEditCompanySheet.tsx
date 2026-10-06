@@ -124,6 +124,7 @@ export function MobileEditCompanySheet({
         </div>
 
         <MobileOccupancyFields
+          compact
           value={spaceFields}
           onChange={setSpaceFields}
           floorError={submitAttempted ? occupancy.floorError : null}
