@@ -13,7 +13,8 @@ export function usePropertyStages() {
 
   return {
     stages,
-    canGoNext: reached < total,
+    /** The stage the property would move to, for labelling the action. */
+    nextStageLabel: propertyStageLabels[reached],
     goNext: () => setReached((count) => Math.min(total, count + 1)),
   }
 }

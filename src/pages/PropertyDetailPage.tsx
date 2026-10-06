@@ -104,7 +104,7 @@ export function PropertyDetailPage({
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto py-6" style={{ width: detailsWidth }}>
             <div className="flex flex-col gap-5 px-8">
               <PropertyStageActions
-                canGoNext={stageNav.canGoNext}
+                nextStageLabel={stageNav.nextStageLabel}
                 onBack={onBack}
                 onNext={stageNav.goNext}
                 onEdit={() => setEditDealOpen(true)}

@@ -101,12 +101,13 @@ function StageActionMenu({ items }: { items: StageAction[] }) {
  * the right. Action moves the property to its next stage, or edits it.
  */
 export function PropertyStageActions({
-  canGoNext,
+  nextStageLabel,
   onBack,
   onNext,
   onEdit,
 }: {
-  canGoNext: boolean
+  /** The stage the property moves to; none once it has reached the last. */
+  nextStageLabel?: string
   onBack: () => void
   onNext: () => void
   onEdit: () => void
@@ -135,8 +136,10 @@ export function PropertyStageActions({
       </button>
       <StageActionMenu
         items={[
-          { label: 'Mark as Next Stage', icon: 'activate', disabled: !canGoNext, onSelect: onNext },
-          { label: 'Edit', icon: 'edit', onSelect: onEdit },
+          ...(nextStageLabel
+            ? [{ label: `Mark as ${nextStageLabel}`, icon: 'activate' as const, onSelect: onNext }]
+            : []),
+          { label: 'Edit', icon: 'edit' as const, onSelect: onEdit },
         ]}
       />
     </div>
