@@ -1,10 +1,6 @@
 import { useMemo, useState } from 'react'
 import { propertyAffiliationOptions, type PropertyAffiliation } from '../components/switchCompanyTypes'
-import {
-  deriveSpaceKey,
-  describeSpaceInput,
-  validateAssociationForm,
-} from '../data/companyAssociation'
+import { deriveSpaceKey, describeSpaceInput, validateAssociationForm } from '../data/companyAssociation'
 import {
   COMPANY_AT_PROPERTY,
   EFFECTIVE_DATE_DESCRIPTION,
@@ -15,9 +11,14 @@ import type { OccupantSpaces } from '../data/propertyOccupancy'
 import { formatShortDate, todayMMDDYYYY } from '../data/dateFormat'
 import { propertyCompanies } from '../data/propertyCompanies'
 import { MobileAssigneeFields, emptyMobileAssignee, type MobileAssigneeValue } from './MobileAssigneeFields'
-import type { SwitchCompanyFormValues, SwitchCompanySubmitPayload, SwitchSpaceOption } from '../components/switchCompanyTypes'
+import type {
+  SwitchCompanyFormValues,
+  SwitchCompanySubmitPayload,
+  SwitchSpaceOption,
+} from '../components/switchCompanyTypes'
 import { MobileActionFooter, MOBILE_ACTION_FOOTER_HEIGHT } from './MobileActionFooter'
 import { MobileCompanyPickerSheet } from './MobileCompanyPickerSheet'
+import { GuideProvider, GuideToggle, GuidedField, GuidedGroup } from './MobileFieldGuide'
 import { MobileOccupancyFields } from './MobileOccupancyFields'
 import {
   MobileChoiceChips,
@@ -25,7 +26,6 @@ import {
   MobileFieldError,
   MobileFieldHint,
   MobilePickerField,
-  MobileGroupLabel,
   MobileTextField,
 } from './MobileFields'
 import { MobilePageHeader } from './MobilePageHeader'
@@ -36,9 +36,17 @@ function lockedSpaceFields(space: SwitchSpaceOption) {
   const [type, number = ''] = space.key.split('|')
   if (type === 'Floor') return { floor: number, suiteUnitType: '', suiteUnitNumber: '' }
   if (type === 'Flat') {
-    return { floor: space.floor ?? '', suiteUnitType: 'Apartment', suiteUnitNumber: number }
+    return {
+      floor: space.floor ?? '',
+      suiteUnitType: 'Apartment',
+      suiteUnitNumber: number,
+    }
   }
-  return { floor: space.floor ?? '', suiteUnitType: type, suiteUnitNumber: number }
+  return {
+    floor: space.floor ?? '',
+    suiteUnitType: type,
+    suiteUnitNumber: number,
+  }
 }
 
 export type SwitchCompanyMode = 'add' | 'switch' | 'make-active' | 'edit'
@@ -89,9 +97,7 @@ export function MobileSwitchCompanyScreen({
   const [affiliations, setAffiliations] = useState<Set<string>>(
     new Set<string>(initialForm?.affiliations ?? []),
   )
-  const prefillSpace = isMakeActive
-    ? spaces.find((space) => space.key === initialSpaceKey)
-    : undefined
+  const prefillSpace = isMakeActive ? spaces.find((space) => space.key === initialSpaceKey) : undefined
   const [spaceFields, setSpaceFields] = useState(
     prefillSpace
       ? lockedSpaceFields(prefillSpace)
@@ -186,107 +192,120 @@ export function MobileSwitchCompanyScreen({
     <div className="absolute inset-0 z-50 flex flex-col overflow-hidden bg-white">
       <div
         className="no-scrollbar absolute inset-0 overflow-y-auto"
-        style={{ paddingTop: 100, paddingBottom: MOBILE_ACTION_FOOTER_HEIGHT + 24 }}
+        style={{
+          paddingTop: 100,
+          paddingBottom: MOBILE_ACTION_FOOTER_HEIGHT + 24,
+        }}
       >
-        <div className="flex flex-col gap-6 px-4 pt-5">
-          <div className="flex flex-col gap-1.5">
-            {isMakeActive ? (
-              <MobileTextField
-                label="Company"
-                required
-                disabled
-                value={selectedCompany?.name ?? ''}
-                onChange={() => {}}
-              />
-            ) : (
-              <MobilePickerField
-                label="Company"
-                required
-                value={selectedCompany?.name ?? ''}
-                placeholder="Search by company name"
-                onOpen={() => setPickerOpen(true)}
-                error={showErrors ? errors.companyError : null}
-              />
-            )}
-            <MobileFieldHint>
-              {isMakeActive
-                ? 'This company is being made active again on this property'
-                : 'Select the company that should be associated with this property'}
-            </MobileFieldHint>
-          </div>
+        <GuideProvider>
+          <div className="flex flex-col gap-5 px-4 pt-4">
+            <GuideToggle />
 
-          <MobileOccupancyFields
-            compact
-            value={fields}
-            disabled={Boolean(lockedFields)}
-            onChange={(next) => setSpaceFields(next)}
-            floorError={showErrors ? errors.floorError : null}
-            suiteUnitError={showErrors ? errors.suiteUnitError : null}
-          >
-            {lockedFields && selectedSpace?.currentCompanyName && (
-              <MobileFieldHint>Current: {selectedSpace.currentCompanyName}</MobileFieldHint>
-            )}
-            {showErrors && errors.spaceError && <MobileFieldError>{errors.spaceError}</MobileFieldError>}
-          </MobileOccupancyFields>
-
-          <div className="flex flex-col gap-1.5">
-            <MobileDateField
-              label={COMPANY_AT_PROPERTY.effectiveDateLabel}
-              required
-              value={effectiveDate}
-              onChange={setEffectiveDate}
-              error={showErrors ? errors.effectiveDateError : null}
-            />
-            <MobileFieldHint>{EFFECTIVE_DATE_DESCRIPTION}</MobileFieldHint>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <MobileDateField
-              label={COMPANY_AT_PROPERTY.tillDateLabel}
-              value={cutOffDate}
-              onChange={setCutOffDate}
-              error={showErrors ? errors.endDateError : null}
-            />
-            <MobileFieldHint>{TILL_DATE_DESCRIPTION}</MobileFieldHint>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-col gap-0.5">
-              <MobileGroupLabel>Property Affiliation *</MobileGroupLabel>
-              <p className="px-1 text-xs leading-4 text-[#86868b]">
-                Select one or more affiliation types that apply to this property
-              </p>
-            </div>
-            <MobileChoiceChips
-              options={propertyAffiliationOptions}
-              selected={affiliations}
-              onToggle={toggleAffiliation}
-            />
-            {showErrors && errors.affiliationError && (
-              <MobileFieldError>{errors.affiliationError}</MobileFieldError>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-col gap-0.5">
-              <MobileGroupLabel>Assign to</MobileGroupLabel>
-              <p className="px-1 text-xs leading-4 text-[#86868b]">
-                Every property and company needs an assignee. Add a supervisor when one is needed
-              </p>
-            </div>
-            <MobileAssigneeFields value={assignee} onChange={setAssignee} error={assigneeError} />
-          </div>
-
-          {isEditMode && associationId && onRevertPending && (
-            <button
-              type="button"
-              onClick={() => setRevertOpen(true)}
-              className="mt-1 flex h-12 w-full items-center justify-center rounded-lg bg-[#fbeeed] text-base font-medium leading-5 text-[#b32318]"
+            <GuidedField
+              id="company"
+              label="Company"
+              hasTrailingIcon={!isMakeActive}
+              hint={
+                isMakeActive
+                  ? 'This company is being made active again on this property'
+                  : 'Select the company that should be associated with this property'
+              }
             >
-              {DISCARD_SWITCH.action}
-            </button>
-          )}
-        </div>
+              {isMakeActive ? (
+                <MobileTextField
+                  label="Company"
+                  required
+                  disabled
+                  value={selectedCompany?.name ?? ''}
+                  onChange={() => {}}
+                />
+              ) : (
+                <MobilePickerField
+                  label="Company"
+                  required
+                  value={selectedCompany?.name ?? ''}
+                  placeholder="Search by company name"
+                  onOpen={() => setPickerOpen(true)}
+                  error={showErrors ? errors.companyError : null}
+                />
+              )}
+            </GuidedField>
+
+            <MobileOccupancyFields
+              compact
+              value={fields}
+              disabled={Boolean(lockedFields)}
+              onChange={(next) => setSpaceFields(next)}
+              floorError={showErrors ? errors.floorError : null}
+              suiteUnitError={showErrors ? errors.suiteUnitError : null}
+            >
+              {lockedFields && selectedSpace?.currentCompanyName && (
+                <MobileFieldHint>Current: {selectedSpace.currentCompanyName}</MobileFieldHint>
+              )}
+              {showErrors && errors.spaceError && <MobileFieldError>{errors.spaceError}</MobileFieldError>}
+            </MobileOccupancyFields>
+
+            <GuidedField
+              id="effective-date"
+              label={COMPANY_AT_PROPERTY.effectiveDateLabel}
+              hint={EFFECTIVE_DATE_DESCRIPTION}
+            >
+              <MobileDateField
+                label={COMPANY_AT_PROPERTY.effectiveDateLabel}
+                required
+                value={effectiveDate}
+                onChange={setEffectiveDate}
+                error={showErrors ? errors.effectiveDateError : null}
+              />
+            </GuidedField>
+
+            <GuidedField
+              id="till-date"
+              label={COMPANY_AT_PROPERTY.tillDateLabel}
+              hint={TILL_DATE_DESCRIPTION}
+            >
+              <MobileDateField
+                label={COMPANY_AT_PROPERTY.tillDateLabel}
+                value={cutOffDate}
+                onChange={setCutOffDate}
+                error={showErrors ? errors.endDateError : null}
+              />
+            </GuidedField>
+
+            <GuidedGroup
+              id="affiliation"
+              label="Property Affiliation *"
+              hint="Select one or more affiliation types that apply to this property"
+            >
+              <MobileChoiceChips
+                options={propertyAffiliationOptions}
+                selected={affiliations}
+                onToggle={toggleAffiliation}
+              />
+              {showErrors && errors.affiliationError && (
+                <MobileFieldError>{errors.affiliationError}</MobileFieldError>
+              )}
+            </GuidedGroup>
+
+            <GuidedGroup
+              id="assignee"
+              label="Assign to"
+              hint="Every property and company needs an assignee. Add a supervisor when one is needed"
+            >
+              <MobileAssigneeFields value={assignee} onChange={setAssignee} error={assigneeError} />
+            </GuidedGroup>
+
+            {isEditMode && associationId && onRevertPending && (
+              <button
+                type="button"
+                onClick={() => setRevertOpen(true)}
+                className="mt-1 flex h-12 w-full items-center justify-center rounded-lg bg-[#fbeeed] text-base font-medium leading-5 text-[#b32318]"
+              >
+                {DISCARD_SWITCH.action}
+              </button>
+            )}
+          </div>
+        </GuideProvider>
       </div>
 
       <MobilePageHeader title={actionLabel} onBack={onClose} />
@@ -307,8 +326,7 @@ export function MobileSwitchCompanyScreen({
       <MobileSheet open={confirmOpen} onClose={() => setConfirmOpen(false)} title={`${actionLabel}?`}>
         <div className="flex flex-col gap-4 px-4 pb-8">
           <p className="text-sm leading-5 text-[#6a6a70]">
-            <span className="font-medium text-[#262527]">{selectedCompany?.name}</span> will take
-            over{' '}
+            <span className="font-medium text-[#262527]">{selectedCompany?.name}</span> will take over{' '}
             <span className="font-medium text-[#262527]">
               {selectedSpace?.label ?? describeSpaceInput(spaceFields)}
             </span>{' '}

@@ -1,11 +1,7 @@
 import { useState } from 'react'
 import { propertyAffiliationOptions, type PropertyAffiliation } from '../components/switchCompanyTypes'
 import { validateCompanyEndDate } from '../data/companyAssociation'
-import {
-  COMPANY_AT_PROPERTY,
-  ERRORS,
-  TILL_DATE_HELPER,
-} from '../data/companyAtPropertyCopy'
+import { COMPANY_AT_PROPERTY, ERRORS, TILL_DATE_HELPER } from '../data/companyAtPropertyCopy'
 import {
   occupancyRequiredError,
   validateOccupancy,
@@ -13,13 +9,8 @@ import {
   type OccupantSpaces,
 } from '../data/propertyOccupancy'
 import { MobileAssigneeFields, emptyMobileAssignee, type MobileAssigneeValue } from './MobileAssigneeFields'
-import {
-  MobileChoiceChips,
-  MobileDateField,
-  MobileFieldError,
-  MobileFieldHint,
-  MobileSectionHeading,
-} from './MobileFields'
+import { MobileChoiceChips, MobileDateField, MobileFieldError, MobileSectionHeading } from './MobileFields'
+import { GuideProvider, GuideToggle, GuidedField } from './MobileFieldGuide'
 import { MobileOccupancyFields } from './MobileOccupancyFields'
 import { MobileSheet } from './MobileSheet'
 
@@ -66,7 +57,11 @@ export function MobileEditCompanySheet({
   const [affiliations, setAffiliations] = useState<Set<string>>(new Set<string>(initialAffiliations))
   const [endDate, setEndDate] = useState(initialEndDate)
   const [spaceFields, setSpaceFields] = useState<OccupancyFieldsValue>(
-    initialSpaceFields ?? { floor: '', suiteUnitType: 'Suite', suiteUnitNumber: '' },
+    initialSpaceFields ?? {
+      floor: '',
+      suiteUnitType: 'Suite',
+      suiteUnitNumber: '',
+    },
   )
   const [assignee, setAssignee] = useState<MobileAssigneeValue>(() => ({
     ...emptyMobileAssignee(),
@@ -76,9 +71,16 @@ export function MobileEditCompanySheet({
   }))
   const [submitAttempted, setSubmitAttempted] = useState(false)
 
-  const endDateError = validateCompanyEndDate({ endDate, effectiveDate, nextCompany })
+  const endDateError = validateCompanyEndDate({
+    endDate,
+    effectiveDate,
+    nextCompany,
+  })
   const others = occupants.filter((occupant) => occupant.companyId !== companyId)
-  const occupancy = validateOccupancy({ value: spaceFields, occupants: others })
+  const occupancy = validateOccupancy({
+    value: spaceFields,
+    occupants: others,
+  })
   const missingOccupancy = occupancyRequiredError({
     value: spaceFields,
     occupants: others,
@@ -113,48 +115,50 @@ export function MobileEditCompanySheet({
   return (
     <MobileSheet open={open} onClose={onClose} title={`Edit ${companyName}`}>
       <div className="no-scrollbar flex min-h-0 flex-col gap-5 overflow-y-auto px-4 pb-8">
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium leading-5 text-[#262527]">Property Affiliation *</p>
-          <MobileChoiceChips
-            options={propertyAffiliationOptions}
-            selected={affiliations}
-            onToggle={toggle}
-          />
-          {submitAttempted && affiliationError && <MobileFieldError>{affiliationError}</MobileFieldError>}
-        </div>
+        <GuideProvider>
+          <GuideToggle />
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium leading-5 text-[#262527]">Property Affiliation *</p>
+            <MobileChoiceChips
+              options={propertyAffiliationOptions}
+              selected={affiliations}
+              onToggle={toggle}
+            />
+            {submitAttempted && affiliationError && <MobileFieldError>{affiliationError}</MobileFieldError>}
+          </div>
 
-        <MobileOccupancyFields
-          compact
-          value={spaceFields}
-          onChange={setSpaceFields}
-          floorError={submitAttempted ? occupancy.floorError : null}
-          suiteUnitError={submitAttempted ? occupancy.suiteUnitError : null}
-        >
-          {submitAttempted && missingOccupancy && <MobileFieldError>{missingOccupancy}</MobileFieldError>}
-        </MobileOccupancyFields>
+          <MobileOccupancyFields
+            compact
+            value={spaceFields}
+            onChange={setSpaceFields}
+            floorError={submitAttempted ? occupancy.floorError : null}
+            suiteUnitError={submitAttempted ? occupancy.suiteUnitError : null}
+          >
+            {submitAttempted && missingOccupancy && <MobileFieldError>{missingOccupancy}</MobileFieldError>}
+          </MobileOccupancyFields>
 
-        <div className="flex flex-col gap-1">
-          <MobileDateField
-            label={COMPANY_AT_PROPERTY.tillDateLabel}
-            value={endDate}
-            onChange={setEndDate}
-            error={submitAttempted ? endDateError : null}
-          />
-          <MobileFieldHint>{TILL_DATE_HELPER}</MobileFieldHint>
-        </div>
+          <GuidedField id="till-date" label={COMPANY_AT_PROPERTY.tillDateLabel} hint={TILL_DATE_HELPER}>
+            <MobileDateField
+              label={COMPANY_AT_PROPERTY.tillDateLabel}
+              value={endDate}
+              onChange={setEndDate}
+              error={submitAttempted ? endDateError : null}
+            />
+          </GuidedField>
 
-        <div className="flex flex-col gap-2">
-          <MobileSectionHeading>Assign to</MobileSectionHeading>
-          <MobileAssigneeFields value={assignee} onChange={setAssignee} error={assigneeError} />
-        </div>
+          <div className="flex flex-col gap-2">
+            <MobileSectionHeading>Assign to</MobileSectionHeading>
+            <MobileAssigneeFields value={assignee} onChange={setAssignee} error={assigneeError} />
+          </div>
 
-        <button
-          type="button"
-          onClick={save}
-          className="flex h-12 w-full items-center justify-center rounded-lg bg-[#146dff] text-base font-medium leading-5 text-white"
-        >
-          Save
-        </button>
+          <button
+            type="button"
+            onClick={save}
+            className="flex h-12 w-full items-center justify-center rounded-lg bg-[#146dff] text-base font-medium leading-5 text-white"
+          >
+            Save
+          </button>
+        </GuideProvider>
       </div>
     </MobileSheet>
   )
