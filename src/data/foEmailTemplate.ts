@@ -14,8 +14,8 @@ export const emailTenants: EmailTenant[] = ['Signal', 'Filtergo']
  * What differs between the two tenants. The structure of the email is shared;
  * only the logo, the colours and the contact address change.
  *
- * Filtergo's values are taken from its existing email. Signal's use its brand
- * blue (the app's primary, #146dff) and the light blue from its mobile tokens.
+ * Both are taken from each tenant's own email design. Signal's button is the
+ * app's primary blue and its footer the deeper Basic Blue.
  */
 export const tenantBranding: Record<
   EmailTenant,
@@ -23,13 +23,15 @@ export const tenantBranding: Record<
     name: string
     /** The tint behind the whole email. */
     pageBg: string
-    /** Button and footer band. */
+    /** The button. */
     accent: string
+    /** The footer band, which is a different shade from the button for Signal. */
+    footer: string
     contact: string
   }
 > = {
-  Signal: { name: 'Signal', pageBg: '#eff4fd', accent: '#146dff', contact: 'ask@signal.com' },
-  Filtergo: { name: 'Filtergo', pageBg: '#ecf4ef', accent: '#2da652', contact: 'ask@filtergo.com' },
+  Signal: { name: 'Signal', pageBg: '#f3f5f8', accent: '#146dff', footer: '#004fe3', contact: 'ask@signal.com' },
+  Filtergo: { name: 'Filtergo', pageBg: '#ecf4ef', accent: '#2da652', footer: '#2da652', contact: 'ask@filtergo.com' },
 }
 
 export type FoEmailContract = {
@@ -55,14 +57,29 @@ export function foEmailHeadline({ companyName, tillDate }: FoEmailData): string 
   return `${companyName} leaves this property on ${tillDate}`
 }
 
-/** The body, one paragraph per line, with the system values already filled in. */
-export function foEmailBody({ foName, companyName, tillDate }: FoEmailData): string[] {
+/** A run of body text; `bold` marks the values a design may emphasise. */
+export type BodySegment = string | { bold: string }
+
+/** The body, one paragraph per entry, with the system values filled in. */
+export function foEmailBodyRich({ foName, companyName, tillDate }: FoEmailData): BodySegment[][] {
   return [
-    `Hi ${foName},`,
-    `${companyName} is scheduled to be dissociated from this property on ${tillDate}. There are active contracts at this property that run past that date.`,
-    `Close or complete these contracts, or use an addendum to adjust their dates, before ${tillDate}.`,
-    `On ${tillDate}, any contract still active will be terminated and the company will be made inactive on this property.`,
+    [`Hi ${foName},`],
+    [
+      { bold: companyName },
+      ' is scheduled to be dissociated from this property on ',
+      { bold: tillDate },
+      '. There are active contracts at this property that run past that date.',
+    ],
+    ['Close or complete these contracts, or use an addendum to adjust their dates, before ', { bold: tillDate }, '.'],
+    ['On ', { bold: tillDate }, ', any contract still active will be terminated and the company will be made inactive on this property.'],
   ]
+}
+
+/** The same body as plain strings. */
+export function foEmailBody(data: FoEmailData): string[] {
+  return foEmailBodyRich(data).map((paragraph) =>
+    paragraph.map((segment) => (typeof segment === 'string' ? segment : segment.bold)).join(''),
+  )
 }
 
 /**
