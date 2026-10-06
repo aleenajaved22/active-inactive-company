@@ -188,7 +188,7 @@ export function MobileSwitchCompanyScreen({
         className="no-scrollbar absolute inset-0 overflow-y-auto"
         style={{ paddingTop: 100, paddingBottom: MOBILE_ACTION_FOOTER_HEIGHT + 24 }}
       >
-        <div className="flex flex-col gap-5 px-4 pt-5">
+        <div className="flex flex-col gap-8 px-4 pt-6">
           <section className="flex flex-col gap-2">
             {isMakeActive ? (
               <MobileTextField
@@ -230,22 +230,26 @@ export function MobileSwitchCompanyScreen({
             </MobileOccupancyFields>
           </section>
 
-          <section className="flex flex-col gap-2">
-            <MobileDateField
-              label={COMPANY_AT_PROPERTY.effectiveDateLabel}
-              required
-              value={effectiveDate}
-              onChange={setEffectiveDate}
-              error={showErrors ? errors.effectiveDateError : null}
-            />
-            <MobileFieldHint>{EFFECTIVE_DATE_DESCRIPTION}</MobileFieldHint>
-            <MobileDateField
-              label={COMPANY_AT_PROPERTY.tillDateLabel}
-              value={cutOffDate}
-              onChange={setCutOffDate}
-              error={showErrors ? errors.endDateError : null}
-            />
-            <MobileFieldHint>{TILL_DATE_DESCRIPTION}</MobileFieldHint>
+          <section className="flex flex-col gap-8">
+            <div className="flex flex-col gap-2">
+              <MobileDateField
+                label={COMPANY_AT_PROPERTY.effectiveDateLabel}
+                required
+                value={effectiveDate}
+                onChange={setEffectiveDate}
+                error={showErrors ? errors.effectiveDateError : null}
+              />
+              <MobileFieldHint>{EFFECTIVE_DATE_DESCRIPTION}</MobileFieldHint>
+            </div>
+            <div className="flex flex-col gap-2">
+              <MobileDateField
+                label={COMPANY_AT_PROPERTY.tillDateLabel}
+                value={cutOffDate}
+                onChange={setCutOffDate}
+                error={showErrors ? errors.endDateError : null}
+              />
+              <MobileFieldHint>{TILL_DATE_DESCRIPTION}</MobileFieldHint>
+            </div>
           </section>
 
           <section className="flex flex-col gap-2">

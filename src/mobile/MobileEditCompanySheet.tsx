@@ -112,7 +112,7 @@ export function MobileEditCompanySheet({
 
   return (
     <MobileSheet open={open} onClose={onClose} title={`Edit ${companyName}`}>
-      <div className="no-scrollbar flex min-h-0 flex-col gap-5 overflow-y-auto px-4 pb-8">
+      <div className="no-scrollbar flex min-h-0 flex-col gap-8 overflow-y-auto px-4 pb-8">
         <div className="flex flex-col gap-2">
           <p className="text-sm font-medium leading-5 text-[#262527]">Property Affiliation *</p>
           <MobileChoiceChips
