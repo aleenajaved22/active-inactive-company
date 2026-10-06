@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-export type ActionMenuIconName = 'switch' | 'edit' | 'activate'
+export type ActionMenuIconName = 'switch' | 'edit' | 'activate' | 'remove'
 
 const iconPaths: Record<ActionMenuIconName, ReactNode> = {
   // Two arrows chasing each other: swap the company on a space.
@@ -15,6 +15,14 @@ const iconPaths: Record<ActionMenuIconName, ReactNode> = {
     <>
       <circle cx="8" cy="8" r="6.25" />
       <path d="M5.5 8.25L7.25 10L10.5 6.5" />
+    </>
+  ),
+  // A person with a minus: take someone off this property.
+  remove: (
+    <>
+      <circle cx="6" cy="5" r="2.5" />
+      <path d="M1.5 13.5C1.5 11 3.5 9.5 6 9.5C8.5 9.5 10.5 11 10.5 13.5" />
+      <path d="M11.5 6H14.5" />
     </>
   ),
 }

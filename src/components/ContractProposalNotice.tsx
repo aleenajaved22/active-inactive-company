@@ -2,15 +2,17 @@ import { contractProposalNotice } from '../data/companyAtPropertyCopy'
 import { formatShortDate } from '../data/dateFormat'
 
 /**
- * Shown while a contract is being set up for a company that has a leaving date
- * recorded against it.
+ * The leaving-date message for the contract proposal page: shown for a company
+ * that has a Company at Property - Till Date, so the user sees the limit while
+ * they are still choosing the contract's dates.
  *
  * Informational only: nothing is blocked here and there is nothing to
- * acknowledge, so it is an inline note rather than a modal. It rests at the foot
- * of the company panel, in view while the contract is set up without
- * interrupting the tabs — the create-time validation still catches a date that
- * goes past the till date, and this note is only there so the user does not
- * reach that point unaware.
+ * acknowledge, so it is an inline note rather than a modal. It belongs at the
+ * top of the proposal form, above the date fields, and shows for End Date and
+ * Renewal Date contracts alike. The blocking check on create is a separate
+ * error against the date field itself.
+ *
+ * The date is shown as MM/DD/YY, the app's short date format.
  *
  * Renders nothing when the company has no till date, which is most contracts.
  */

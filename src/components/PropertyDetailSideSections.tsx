@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import detailContactMail from '../assets/detail-contact-mail.svg'
-import detailReferredUser from '../assets/detail-referred-user.svg'
 import detailRowDivider from '../assets/detail-row-divider.svg'
 import detailSectionIcon from '../assets/detail-section-icon.svg'
 import detailSectionIconExpanded from '../assets/detail-section-icon-expanded.svg'
@@ -40,7 +39,7 @@ function DetailLabelValueRow({
   const valueContent = Array.isArray(value) ? value : [value]
   return (
     <div className={`flex gap-6 ${multiline ? 'items-start' : 'items-center'}`}>
-      <p className="w-[114px] shrink-0 text-sm leading-6 tracking-[0.25px] text-[#262527]">{label}</p>
+      <p className="w-[140px] shrink-0 text-sm leading-6 tracking-[0.25px] text-[#262527]">{label}</p>
       <div className="min-w-0 flex-1 text-sm leading-6 tracking-[0.25px] text-[#86868b]">
         {valueContent.map((line) => (
           <p key={line}>{line}</p>
@@ -52,36 +51,16 @@ function DetailLabelValueRow({
 
 function PropertyDetailsPanelContent() {
   return (
-    <div className="max-h-[280px] overflow-y-auto pb-3">
+    <div className="pb-3">
       <div className="flex flex-col gap-1">
-        {propertyDetailsPanelData.rows.map((row) => {
-          if ('referral' in row && row.referral) {
-            return (
-              <div key={row.label} className="flex gap-6">
-                <p className="w-[114px] shrink-0 text-sm leading-6 text-[#262527]">{row.label}</p>
-                <div className="min-w-0 flex-1 text-sm text-[#86868b]">
-                  <p className="leading-6 tracking-[0.25px]">{row.value}</p>
-                  <div className="mt-0.5 flex items-center gap-2">
-                    <span className="flex size-5 items-center justify-center rounded-full border border-white bg-[#cfefff]">
-                      <img alt="" className="size-2.5" src={detailReferredUser} />
-                    </span>
-                    <p className="leading-6 tracking-[0.25px]">{row.referral.name}</p>
-                  </div>
-                  <p className="leading-5">{row.referral.email}</p>
-                  <p className="leading-5">{row.referral.phone}</p>
-                </div>
-              </div>
-            )
-          }
-          return (
-            <DetailLabelValueRow
-              key={row.label}
-              label={row.label}
-              value={row.value}
-              multiline={row.label === 'Address' || row.label === 'Name'}
-            />
-          )
-        })}
+        {propertyDetailsPanelData.rows.map((row) => (
+          <DetailLabelValueRow
+            key={row.label}
+            label={row.label}
+            value={row.value}
+            multiline={row.label === 'Address' || row.label === 'Name'}
+          />
+        ))}
       </div>
     </div>
   )
@@ -93,7 +72,7 @@ function FranchiseAssociatedPanelContent() {
     <div className="flex flex-col gap-1 pb-3">
       <DetailLabelValueRow label="Name" value={nameLines} multiline />
       <div className="flex items-center gap-6">
-        <p className="w-[114px] shrink-0 text-sm leading-6 tracking-[0.25px] text-[#262527]">Email</p>
+        <p className="w-[140px] shrink-0 text-sm leading-6 tracking-[0.25px] text-[#262527]">Email</p>
         <div className="flex min-w-0 flex-1 items-center gap-1.5">
           <p className="text-sm leading-5 text-primary">{email}</p>
           <button

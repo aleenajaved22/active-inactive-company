@@ -1,13 +1,8 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import detailChevronSm from '../assets/detail-chevron-sm.svg'
 import detailDividerH from '../assets/detail-divider-h.svg'
 import detailEdit from '../assets/detail-edit.svg'
-import detailPlus from '../assets/detail-plus.svg'
 import detailPropertyPhoto from '../assets/detail-property-photo.png'
-import detailStageApproved from '../assets/detail-stage-approved.svg'
-import detailStageApprovedReadonly from '../assets/detail-stage-approved-readonly.svg'
-import detailStageDefault from '../assets/detail-stage-default.svg'
-import detailStageLast from '../assets/detail-stage-last.svg'
 import { AppHeader } from '../components/AppHeader'
 import { ResizeHandle } from '../components/ResizeHandle'
 import { SidePanelToggle } from '../components/SidePanelToggle'
@@ -15,8 +10,8 @@ import { CompanyListingPanel } from '../components/CompanyListingPanel'
 import { useCompanyActions } from '../components/companyActions'
 import { EditDealDrawer } from '../components/EditDealDrawer'
 import { PropertyDetailSideSections } from '../components/PropertyDetailSideSections'
+import { PropertyStagesPanel } from '../components/PropertyStagesPanel'
 import { PropertyDetailCompanyHeader } from '../components/PropertyDetailCompanyHeader'
-import { mainPanelLinkClass } from '../components/mainPanelReadOnlyStyles'
 import { PropertyLeadActivities } from '../components/PropertyLeadActivities'
 import { SidebarNavigation } from '../components/SidebarNavigation'
 import { INACTIVE_BANNER, PENDING_BANNER } from '../data/companyAtPropertyCopy'
@@ -26,15 +21,15 @@ import { affiliationsToBadges } from '../components/switchCompanyTypes'
 import type { PropertyModal } from '../prototype/screenLinks'
 import { formatPropertyTitle, type PropertyRow } from '../data/properties'
 
-const stageSteps = ['Discovery', 'Qualified', 'Needs Assessment']
-
 // Drag limits: panels resize within these bounds and collapse to a slim rail instead of disappearing.
 const DETAILS_MIN_WIDTH = 260
 const DETAILS_MAX_WIDTH = 520
-const DETAILS_DEFAULT_WIDTH = 320
+const DETAILS_DEFAULT_WIDTH = 380
 const COMPANIES_MIN_WIDTH = 280
 const COMPANIES_MAX_WIDTH = 420
 const COMPANIES_DEFAULT_WIDTH = 320
+
+const NARROW_QUERY = '(max-width: 1239px)'
 
 const clampWidth = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
 
@@ -73,7 +68,18 @@ export function PropertyDetailPage({
   // Parent Company is blank on some records; once set here it behaves as a HubSpot value.
   const [parentCompanyOverrides, setParentCompanyOverrides] = useState<Record<string, string>>({})
   const [detailsWidth, setDetailsWidth] = useState(DETAILS_DEFAULT_WIDTH)
-  const [companiesPanelOpen, setCompaniesPanelOpen] = useState(true)
+  // Three side-by-side panels need about 1240px. Narrower than that the company
+  // panel would be squeezed to a sliver and its header would be lost, so the
+  // companies list starts collapsed there (and collapses if the window is narrowed).
+  const [companiesPanelOpen, setCompaniesPanelOpen] = useState(() => !window.matchMedia(NARROW_QUERY).matches)
+  useEffect(() => {
+    const query = window.matchMedia(NARROW_QUERY)
+    const onChange = (event: MediaQueryListEvent) => {
+      if (event.matches) setCompaniesPanelOpen(false)
+    }
+    query.addEventListener('change', onChange)
+    return () => query.removeEventListener('change', onChange)
+  }, [])
   const [companiesWidth, setCompaniesWidth] = useState(COMPANIES_DEFAULT_WIDTH)
   const resizeStart = useRef(0)
   // Pending is no longer disabled: the user can prepare for the incoming
@@ -113,6 +119,10 @@ export function PropertyDetailPage({
                 <p>{property.address}</p>
               </div>
             </div>
+            <div className="my-4 px-8">
+              <img alt="" className="block w-full max-w-none" src={detailDividerH} />
+            </div>
+            <PropertyStagesPanel />
             <div className="my-4 px-8">
               <img alt="" className="block w-full max-w-none" src={detailDividerH} />
             </div>
@@ -204,66 +214,8 @@ export function PropertyDetailPage({
                 </p>
               </div>
             ) : null}
-            <div className="border-b border-[#e6e6e7] px-8 py-5">
-              <div className="mb-2 flex items-start justify-between">
-                <p className="text-sm font-bold leading-5 text-[#262527]">Property Stages</p>
-                <button
-                  type="button"
-                  className={`flex items-center gap-1 text-sm font-medium leading-5 ${mainPanelLinkClass(mainPanelReadOnly)}`}
-                >
-                  <span className="relative size-4">
-                    <img alt="" className="absolute inset-0 block size-full max-w-none" src={detailPlus} />
-                  </span>
-                  Mark stage as Completed
-                </button>
-              </div>
-              <div className="flex w-full">
-                <div className="relative h-9 min-w-0 flex-1">
-                  <img
-                    alt=""
-                    className="absolute inset-0 block size-full max-w-none"
-                    src={mainPanelReadOnly ? detailStageApprovedReadonly : detailStageApproved}
-                  />
-                  <span
-                    className={`absolute inset-0 flex items-center justify-center text-sm leading-5 ${
-                      mainPanelReadOnly ? 'font-medium text-white' : 'font-bold text-white'
-                    }`}
-                  >
-                    Approved
-                  </span>
-                </div>
-                {stageSteps.slice(0, 2).map((stage) => (
-                  <button key={stage} type="button" className="relative h-9 min-w-0 flex-1">
-                    <img alt="" className="absolute inset-0 block size-full max-w-none" src={detailStageDefault} />
-                    <span
-                      className={`absolute inset-0 flex items-center justify-center text-sm leading-5 ${
-                        mainPanelReadOnly ? 'text-[#86868b]' : 'text-[#5b5b5f]'
-                      }`}
-                    >
-                      {stage}
-                    </span>
-                  </button>
-                ))}
-                <button type="button" className="relative h-9 min-w-0 flex-1">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="h-full w-full -scale-x-100">
-                      <img alt="" className="block size-full max-w-none" src={detailStageLast} />
-                    </div>
-                  </div>
-                  <span
-                    className={`absolute inset-0 flex items-center justify-center text-sm leading-5 ${
-                      mainPanelReadOnly ? 'text-[#86868b]' : 'text-[#5b5b5f]'
-                    }`}
-                  >
-                    Needs Assessment
-                  </span>
-                </button>
-              </div>
-            </div>
-
             <PropertyDetailCompanyHeader
               companyName={selectedCompany.name}
-              actions={menuItemsFor(selectedAssociation)}
               companyHref={companyHref?.(selectedCompany.id)}
               spaceLabel={spaceLabelOf(selectedAssociation)}
               listStatus={listStatus}

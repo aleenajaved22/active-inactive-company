@@ -18,24 +18,38 @@ export type CompanyAffiliationBadge = {
   text: string
 }
 
+/**
+ * The Property Details accordion: the record's own fields, in the order the
+ * design lists them. Anything that belongs to a company on the property (its
+ * industry vertical, say) is shown with that company instead, since a property
+ * can have several. The name and address match the listing; fields with no value
+ * show N/A, as they do in the product.
+ */
 export const propertyDetailsPanelData = {
   rows: [
     { label: 'Name', value: 'Elm Avenue Plaza' },
-    { label: 'Industry vertical', value: 'Warehouse' },
-    {
-      label: 'Referred by',
-      value: '402 - Valencia Town',
-      referral: {
-        name: 'Mike Smith',
-        email: 'mike-smith@signal.com',
-        phone: '719-345-9821',
-      },
-    },
-    { label: 'Parent Company', value: 'Costco' },
-    { label: 'Address', value: '456 Elm Ave, Westport Idencia, Kansas City, Kansas, 64030' },
-    { label: 'Management Company', value: 'Costco' },
-    { label: 'Tenancy', value: 'Multi' },
-    { label: 'Amenities', value: '5' },
+    { label: 'Referred By', value: 'N/A' },
+    { label: 'Parent Company', value: 'N/A' },
+    { label: 'Created By', value: 'Moiz Qureshi' },
+    { label: 'Creation Date', value: '10/06/2026' },
+    { label: 'Last Updated', value: '10/06/2026' },
+    { label: 'No. of units', value: 'N/A' },
+    { label: 'Occupancy Rate', value: 'N/A' },
+    { label: 'Avg. rent', value: 'N/A' },
+    { label: 'Address', value: '456 Elm Ave, Omaha, Nebraska, 68010' },
+    { label: 'Annual Revenue', value: 'N/A' },
+    { label: 'Created Source', value: 'N/A' },
+    { label: 'Last Modified By', value: 'N/A' },
+    { label: 'Last Modified Source', value: 'N/A' },
+    { label: 'Last Cleaned', value: 'N/A' },
+    { label: 'Last Enriched', value: 'N/A' },
+    { label: 'Square Footage', value: 'N/A' },
+    { label: 'Parking Spaces', value: 'N/A' },
+    { label: 'Building Class', value: 'N/A' },
+    { label: 'Tenancy', value: 'N/A' },
+    { label: 'Amenities', value: 'N/A' },
+    { label: 'Number of Buildings', value: 'N/A' },
+    { label: 'Lot Number', value: 'N/A' },
   ],
 }
 

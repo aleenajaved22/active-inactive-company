@@ -27,9 +27,12 @@ import { initialSpaceAssociations } from '../data/propertySpaceAssociations'
 import { validateOccupancy } from '../data/propertyOccupancy'
 import { companyParents, type SpaceType } from '../data/propertySpaces'
 import { CreateCompanyModal } from './CreateCompanyModal'
+import { propertyContactsFeed } from '../data/leadActivities'
+import { ContactsTable } from './ContactsTable'
 import { InfoTooltip } from './InfoTooltip'
 import { ModalDateInput } from './ModalDateInput'
 import { SpaceFields } from './PropertySpaceFields'
+import { useContactsEditor } from './useContactsEditor'
 
 type CreatePropertyDrawerProps = {
   open: boolean
@@ -175,6 +178,7 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
   const [supervisor, setSupervisor] = useState('')
   const [submitAttempted, setSubmitAttempted] = useState(false)
   const [createCompanyOpen, setCreateCompanyOpen] = useState(false)
+  const contactsEditor = useContactsEditor(propertyContactsFeed.slice(0, 1))
   const spaceFieldRef = useRef<HTMLDivElement>(null)
   const suiteUnitNumberRef = useRef<HTMLInputElement>(null)
 
@@ -213,6 +217,7 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
     setSupervisor('')
     setSubmitAttempted(false)
     setCreateCompanyOpen(false)
+    contactsEditor.reset()
   }, [open])
 
   const toggleAffiliation = (label: Affiliation) => {
@@ -404,12 +409,12 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                   <SectionHeading title="Property Details" />
                   <div className="grid grid-cols-2 items-start gap-6">
                     <div className="flex min-w-0 flex-col gap-1.5">
-                      <DrawerLabel>Location / Property Name</DrawerLabel>
+                      <DrawerLabel>Property Name</DrawerLabel>
                       <DrawerTextInput
                         id="create-property-name"
                         value={propertyName}
                         onChange={setPropertyName}
-                        placeholder="Add Location / Property Name"
+                        placeholder="Add Property Name"
                       />
                     </div>
                     <div className="flex min-w-0 flex-col gap-1.5">
@@ -509,6 +514,33 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                       </div>
                     )}
                   </div>
+                </section>
+
+                <SectionDivider />
+
+                <section className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <SectionHeading title="Contacts" />
+                    <button
+                      type="button"
+                      onClick={contactsEditor.openAdd}
+                      className="flex items-center gap-1 text-sm font-medium text-primary"
+                    >
+                      <span className="relative size-5 shrink-0" aria-hidden>
+                        <img alt="" className="absolute inset-0 block size-full max-w-none" src={detailPlus} />
+                      </span>
+                      Add Contact
+                    </button>
+                  </div>
+                  <div className="overflow-hidden rounded-lg border border-[#e6e6e7]">
+                    <ContactsTable
+                      dense
+                      contacts={contactsEditor.contacts}
+                      onEdit={contactsEditor.onEdit}
+                      onRemove={contactsEditor.onRemove}
+                    />
+                  </div>
+                  {contactsEditor.dialogs}
                 </section>
               </div>
             </div>

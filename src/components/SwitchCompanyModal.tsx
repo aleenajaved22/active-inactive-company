@@ -340,8 +340,8 @@ export function SwitchCompanyModal({
             label="Company"
             description={
               isMakeActive
-                ? 'This company is being made active again on this property.'
-                : 'Select the company that should be associated with this property.'
+                ? 'This company is being made active again on this property'
+                : 'Select the company that should be associated with this property'
             }
             required
           >
@@ -529,7 +529,7 @@ export function SwitchCompanyModal({
 
           <ModalFormRow
             label="Assign to"
-            description="Every property and company needs an assignee. Add a supervisor when one is needed."
+            description="Every property and company needs an assignee. Add a supervisor when one is needed"
             required
           >
             <AssigneeFields

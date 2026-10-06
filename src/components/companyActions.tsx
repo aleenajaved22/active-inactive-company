@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import detailCompanyMenu from '../assets/detail-company-menu.svg'
 import {
   associationToSpaceFields,
@@ -20,58 +21,113 @@ import type {
 } from './switchCompanyTypes'
 
 export type ActionMenuIcon = ActionMenuIconName
-export type ActionMenuItem = { label: string; icon?: ActionMenuIcon; onSelect: () => void }
+export type ActionMenuItem = {
+  label: string
+  icon?: ActionMenuIcon
+  onSelect: () => void
+  /** Styled red, for an action that removes something. */
+  destructive?: boolean
+}
 
-/** ⋮ button with a small menu; used on company rows and in the company header. */
+/**
+ * ⋮ button with a small menu; used on company rows and on contacts.
+ *
+ * The menu is portalled and positioned from the button, because it is opened
+ * inside scrolling tables and panels that would otherwise clip it, and flips
+ * above the button when there is no room below.
+ */
 export function ActionMenu({ label, items }: { label: string; items: ActionMenuItem[] }) {
-  const rootRef = useRef<HTMLDivElement>(null)
-  const [open, setOpen] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const [position, setPosition] = useState<{ top: number; right: number; above: boolean } | null>(null)
+  const open = position !== null
+
+  const openMenu = () => {
+    const rect = buttonRef.current?.getBoundingClientRect()
+    if (!rect) return
+    // Two or three items fit in about 120px; flip when that would run off the bottom.
+    const above = window.innerHeight - rect.bottom < 140
+    setPosition({
+      top: above ? rect.top - 4 : rect.bottom + 4,
+      right: window.innerWidth - rect.right,
+      above,
+    })
+  }
+  const close = () => setPosition(null)
 
   useEffect(() => {
     if (!open) return
     const closeOnOutside = (event: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false)
+      const target = event.target as Node
+      if (buttonRef.current?.contains(target) || menuRef.current?.contains(target)) return
+      close()
+    }
+    const closeOnKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') close()
     }
     document.addEventListener('mousedown', closeOnOutside)
-    return () => document.removeEventListener('mousedown', closeOnOutside)
+    document.addEventListener('keydown', closeOnKey)
+    window.addEventListener('scroll', close, true)
+    window.addEventListener('resize', close)
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutside)
+      document.removeEventListener('keydown', closeOnKey)
+      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('resize', close)
+    }
   }, [open])
 
   if (items.length === 0) return null
 
   return (
-    <div ref={rootRef} className="relative shrink-0">
+    <div className="relative shrink-0">
       <button
+        ref={buttonRef}
         type="button"
         aria-label={label}
         aria-expanded={open}
         aria-haspopup="menu"
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => (open ? close() : openMenu())}
         className="flex size-7 items-center justify-center rounded-lg hover:bg-[#e6e6e7]/60"
       >
         <img alt="" className="size-4 max-w-none" src={detailCompanyMenu} />
       </button>
-      {open && (
-        <div
-          role="menu"
-          className="absolute right-0 top-full z-20 mt-1 min-w-[160px] rounded-lg border border-[#e6e6e7] bg-white py-1 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
-        >
-          {items.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                setOpen(false)
-                item.onSelect()
-              }}
-              className="flex w-full items-center gap-2 whitespace-nowrap px-3 py-2 text-left text-sm leading-5 text-[#262527] hover:bg-[#f5f5f6]"
-            >
-              {item.icon && <ActionMenuIcon icon={item.icon} className="text-[#6a6a70]" />}
-              {item.label}
-            </button>
-          ))}
-        </div>
-      )}
+      {position &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            style={{
+              position: 'fixed',
+              right: position.right,
+              top: position.top,
+              transform: position.above ? 'translateY(-100%)' : undefined,
+              zIndex: 70,
+            }}
+            className="min-w-[160px] rounded-lg border border-[#e6e6e7] bg-white py-1 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
+          >
+            {items.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  close()
+                  item.onSelect()
+                }}
+                className={`flex w-full items-center gap-2 whitespace-nowrap px-3 py-2 text-left text-sm leading-5 hover:bg-[#f5f5f6] ${
+                  item.destructive ? 'text-[#b32318]' : 'text-[#262527]'
+                }`}
+              >
+                {item.icon && (
+                  <ActionMenuIcon icon={item.icon} className={item.destructive ? 'text-[#b32318]' : 'text-[#6a6a70]'} />
+                )}
+                {item.label}
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
     </div>
   )
 }

@@ -12,12 +12,9 @@ import type { IndustryVertical } from '../data/industryVerticals'
 import { AssigneeDrawer } from './AssigneeDrawer'
 import { FormSelect } from './AssigneeFields'
 import { PendingStatusBadge } from './PendingStatusBadge'
-import { ActionMenu, type ActionMenuItem } from './companyActions'
 
 type PropertyDetailCompanyHeaderProps = {
   companyName: string
-  /** Same ⋮ actions as this company's row in the Companies panel. */
-  actions?: ActionMenuItem[]
   /** Opens the company detail page when set. */
   companyHref?: string
   /** The suite, unit or floor this company holds on the property. */
@@ -153,6 +150,15 @@ function AffiliationOverflow({ items }: { items: CompanyAffiliationBadge[] }) {
   )
 }
 
+/** The blue ↗ that marks a name as a link to its own page. */
+function LinkArrow({ size }: { size: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden className="shrink-0 text-primary">
+      <path d="M4.5 11.5L11.5 4.5M5.75 4.5H11.5V10.25" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 /** A slight rule between attributes, short enough to read as a separator, not a border. */
 function HeaderDivider() {
   return <span aria-hidden className="h-8 w-px shrink-0 bg-[#e6e6e7]" />
@@ -255,7 +261,6 @@ function HeaderEditDialog({
 
 export function PropertyDetailCompanyHeader({
   companyName,
-  actions = [],
   companyHref,
   spaceLabel,
   listStatus,
@@ -299,19 +304,10 @@ export function PropertyDetailCompanyHeader({
               <a
                 href={companyHref}
                 title={`Open ${companyName}`}
-                className="group flex min-w-0 items-center gap-1 text-xl font-bold leading-7 text-[#262527] hover:text-primary"
+                className="group flex min-w-0 items-center gap-1.5 text-xl font-bold leading-7 text-[#262527]"
               >
                 <span className="truncate group-hover:underline">{companyName}</span>
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  aria-hidden
-                  className="shrink-0 text-[#86868b] group-hover:text-primary"
-                >
-                  <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <LinkArrow size={18} />
               </a>
             ) : (
               <p className="truncate text-xl font-bold leading-7 text-[#262527]">{companyName}</p>
@@ -382,19 +378,10 @@ export function PropertyDetailCompanyHeader({
                   <a
                     href={parentCompanyHref}
                     title={`Open ${parentCompany}`}
-                    className="group flex min-w-0 items-center gap-0.5 text-sm font-medium leading-6 text-[#262527] hover:text-primary"
+                    className="group flex min-w-0 items-center gap-1.5 text-sm font-medium leading-6 text-[#262527]"
                   >
                     <span className="truncate group-hover:underline">{parentCompany}</span>
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      aria-hidden
-                      className="shrink-0 text-[#86868b] group-hover:text-primary"
-                    >
-                      <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                    <LinkArrow size={16} />
                   </a>
                 ) : (
                   <span className="truncate text-sm font-medium leading-6 text-[#262527]" title={parentCompany}>
@@ -443,7 +430,6 @@ export function PropertyDetailCompanyHeader({
         </div>
         </div>
 
-        <ActionMenu label={`Actions for ${companyName}`} items={actions} />
       </div>
 
       <AssigneeDrawer

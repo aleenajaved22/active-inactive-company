@@ -1,16 +1,31 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import modalClose from '../assets/modal-close.svg'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
+import { toContactRole } from '../data/contactDirectory'
+import type { PropertyContactRole } from '../data/leadActivities'
 import { contactRoles } from '../data/propertyFormOptions'
 
 type AddContactModalProps = {
   open: boolean
   onClose: () => void
+  /** Called with each label that has someone chosen against it. */
+  onAdd: (additions: { role: PropertyContactRole; user: string }[]) => void
 }
 
 /** Adds contacts by label, mirroring the Associated Contacts grid from property creation. */
-export function AddContactModal({ open, onClose }: AddContactModalProps) {
+export function AddContactModal({ open, onClose, onAdd }: AddContactModalProps) {
+  const [chosen, setChosen] = useState<Record<string, string>>({})
+
+  // Each opening starts clean rather than from the last attempt.
+  useEffect(() => {
+    if (open) setChosen({})
+  }, [open])
+
+  const additions = contactRoles
+    .filter((role) => chosen[role.label])
+    .map((role) => ({ role: toContactRole(role.label), user: chosen[role.label] }))
+
   useEffect(() => {
     if (!open) return
     document.body.style.overflow = 'hidden'
@@ -53,7 +68,7 @@ export function AddContactModal({ open, onClose }: AddContactModalProps) {
             <span className="text-xs font-medium leading-[18px] text-[#5b5b5f]">Users</span>
           </div>
           <div className="divide-y divide-[#e6e6e7] border-b border-[#e6e6e7]">
-            {contactRoles.map((role, index) => (
+            {contactRoles.map((role) => (
               <div key={role.label} className="grid grid-cols-[180px_1fr] items-center gap-4 py-3">
                 <span
                   className="w-fit rounded-full px-2.5 py-1 text-xs font-medium leading-[18px]"
@@ -63,13 +78,14 @@ export function AddContactModal({ open, onClose }: AddContactModalProps) {
                 </span>
                 <div className="relative">
                   <select
-                    defaultValue={index === 0 ? 'Henry Micheal' : ''}
+                    value={chosen[role.label] ?? ''}
+                    onChange={(event) => setChosen((prev) => ({ ...prev, [role.label]: event.target.value }))}
                     className={`h-10 w-full appearance-none rounded-lg border border-[#e6e6e7] bg-white pl-3.5 pr-10 text-sm leading-5 outline-none focus:border-primary ${
-                      index === 0 ? 'text-[#262527]' : 'text-[#ccc]'
+                      chosen[role.label] ? 'text-[#262527]' : 'text-[#ccc]'
                     }`}
                   >
                     <option value="">Select Contact</option>
-                    <option value="Henry Micheal">Henry Micheal henrymicheal23@signal.com</option>
+                    <option value="Henry Micheal">Henry Micheal</option>
                     <option value="Jerome Bell">Jerome Bell</option>
                   </select>
                   <span className="pointer-events-none absolute right-3 top-1/2 size-5 -translate-y-1/2" aria-hidden>
@@ -91,11 +107,12 @@ export function AddContactModal({ open, onClose }: AddContactModalProps) {
           </button>
           <button
             type="button"
+            disabled={additions.length === 0}
             onClick={() => {
-              window.alert('Contact added (prototype)')
+              onAdd(additions)
               onClose()
             }}
-            className="rounded-lg border border-primary bg-primary px-3.5 py-2 text-sm font-medium leading-5 text-white"
+            className="rounded-lg border border-primary bg-primary px-3.5 py-2 text-sm font-medium leading-5 text-white disabled:cursor-not-allowed disabled:border-[#e6e6e7] disabled:bg-[#e6e6e7] disabled:text-[#86868b]"
           >
             Add Contact
           </button>

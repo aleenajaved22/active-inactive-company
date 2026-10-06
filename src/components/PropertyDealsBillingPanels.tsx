@@ -103,7 +103,7 @@ function BillingInfoField({ label, value, className }: { label: string; value: s
   )
 }
 
-function stageBadgeClass(stage: string): string {
+export function stageBadgeClass(stage: string): string {
   const normalized = stage.toLowerCase()
   if (normalized.includes('proposal')) return 'bg-[#e5f6ff] text-[#146dff]'
   if (normalized.includes('closed won')) return 'bg-[#eff8ef] text-[#2e964b]'

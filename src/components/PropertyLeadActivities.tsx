@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { AddContactModal } from './AddContactModal'
+import { ContactsTable } from './ContactsTable'
+import { useContactsEditor } from './useContactsEditor'
 import activityChevron from '../assets/activity-chevron.svg'
 import activityPhone from '../assets/activity-phone.svg'
 import activityTask from '../assets/activity-task.svg'
@@ -11,7 +12,6 @@ import notesView from '../assets/notes-view.svg'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
 import tablePlus from '../assets/table-plus.svg'
 import tableSearch from '../assets/table-search.svg'
-import contactTableMoreVert from '../assets/contacts/table-more-vert.svg'
 import paginationChevronLeft from '../assets/pagination-chevron-left.svg'
 import paginationChevronRight from '../assets/pagination-chevron-right.svg'
 import {
@@ -22,7 +22,6 @@ import {
   notesFeed,
   propertyContactsFeed,
   type LeadActivityTab,
-  type PropertyContactRole,
 } from '../data/leadActivities'
 import { formatShortDate } from '../data/dateFormat'
 import type { PropertyCompany, PropertyCompanyListStatus } from '../data/propertyCompanies'
@@ -83,16 +82,8 @@ function ActivityPanel() {
   )
 }
 
-const contactRoleBadgeStyles: Record<PropertyContactRole, { bg: string; text: string }> = {
-  'Decision Maker': { bg: '#f4edfd', text: '#9747ff' },
-  'End user': { bg: '#e5f6ff', text: '#146dff' },
-  Billing: { bg: '#eff8ef', text: '#2e964b' },
-  Blocker: { bg: '#fef0c7', text: '#f4780b' },
-  Influencer: { bg: '#ffeed4', text: '#ef5c07' },
-}
-
 function ContactsPanel({ readOnly = false }: { readOnly?: boolean }) {
-  const [addContactOpen, setAddContactOpen] = useState(false)
+  const { contacts, openAdd, onEdit, onRemove, dialogs } = useContactsEditor(propertyContactsFeed)
   return (
     <div className="mt-6 flex min-h-0 flex-1 flex-col gap-6 pb-6">
       <div className="flex w-full items-center justify-between gap-3">
@@ -104,7 +95,7 @@ function ContactsPanel({ readOnly = false }: { readOnly?: boolean }) {
         </label>
         <button
           type="button"
-          onClick={() => setAddContactOpen(true)}
+          onClick={openAdd}
           className={`h-9 ${mainPanelPrimaryButtonClass(readOnly, 'filled')}`}
         >
           <span className="relative size-4">
@@ -113,76 +104,11 @@ function ContactsPanel({ readOnly = false }: { readOnly?: boolean }) {
           Add Contact
         </button>
       </div>
-      <AddContactModal open={addContactOpen} onClose={() => setAddContactOpen(false)} />
+      {dialogs}
 
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="overflow-x-auto border-t border-[#e6e6e7]">
-          <table className="min-w-full border-collapse text-left text-sm">
-            <thead className="bg-white">
-              <tr className="border-b border-[#e6e6e7]">
-                {['Name', 'Email', 'Phone no.', 'Labels', ''].map((header) => (
-                  <th
-                    key={header || 'actions'}
-                    className="whitespace-nowrap px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f]"
-                  >
-                    {header}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {propertyContactsFeed.map((contact) => (
-                <tr key={contact.id} className="border-b border-[#e6e6e7]">
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <img
-                        alt=""
-                        className="size-6 shrink-0 rounded-full object-cover"
-                        src={contact.avatarSrc}
-                        width={24}
-                        height={24}
-                      />
-                      <span className="font-medium leading-5 text-[#444446]">{contact.name}</span>
-                    </div>
-                  </td>
-                  <td className="max-w-[220px] truncate px-6 py-4 font-medium leading-5 text-[#86868b]">
-                    {contact.email}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 font-medium leading-5 text-[#86868b]">
-                    {contact.phone}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex max-w-md flex-wrap gap-1">
-                      {contact.roles.map((role) => (
-                        <span
-                          key={role}
-                          className="rounded-2xl px-2 py-0.5 text-xs font-medium leading-[18px]"
-                          style={{
-                            backgroundColor: contactRoleBadgeStyles[role].bg,
-                            color: contactRoleBadgeStyles[role].text,
-                          }}
-                        >
-                          {role}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-2 py-4 text-right">
-                    <button
-                      type="button"
-                      aria-label={`Actions for ${contact.name}`}
-                      onClick={() => window.alert(`Contact actions: ${contact.name} (prototype)`)}
-                      className="inline-flex size-10 items-center justify-center rounded-lg hover:bg-[#f5f5f6]"
-                    >
-                      <span className="relative size-5">
-                        <img alt="" className="absolute inset-0 block size-full max-w-none" src={contactTableMoreVert} />
-                      </span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <ContactsTable contacts={contacts} onEdit={onEdit} onRemove={onRemove} />
         </div>
 
         <div className="flex h-14 items-center justify-end gap-6 border-t border-[#e6e6e7] px-6">

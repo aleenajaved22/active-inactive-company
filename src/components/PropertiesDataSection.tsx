@@ -133,19 +133,20 @@ function CompaniesCell({ companies }: { companies: string[] }) {
   )
 }
 
-function PropertyNameCell({ name, sync, starred }: { name: string; sync?: boolean; starred?: boolean }) {
+/** The address, with the property's follow-up and star markers beside it. */
+function PropertyAddressCell({ address, sync, starred }: { address: string; sync?: boolean; starred?: boolean }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm leading-5 text-[#444446]">{name}</span>
+      <span className="text-sm font-medium leading-5 text-[#444446]">{address}</span>
       {sync && (
-        <span className="flex size-4 items-center justify-center rounded bg-[#146dff]">
+        <span className="flex size-4 items-center justify-center rounded bg-[#146dff]" title="Follow up">
           <span className="relative size-2.5">
             <img alt="" className="absolute inset-0 block size-full max-w-none" src={tableRepeat} />
           </span>
         </span>
       )}
       {starred && (
-        <span className="flex size-4 items-center justify-center rounded bg-[#fe7711]">
+        <span className="flex size-4 items-center justify-center rounded bg-[#fe7711]" title="Starred">
           <span className="relative size-2.5">
             <img alt="" className="absolute inset-0 block size-full max-w-none" src={tableStar} />
           </span>
@@ -263,10 +264,7 @@ export function PropertiesDataSection({ onSelectProperty }: PropertiesDataSectio
                 <th className="sticky left-0 z-20 w-[64px] min-w-[64px] border-t border-[#e6e6e7] bg-white px-6 py-3">
                   <CheckboxCell />
                 </th>
-                <th className="sticky left-[64px] z-20 w-[96px] min-w-[96px] whitespace-nowrap border-t border-[#e6e6e7] bg-white px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f]">
-                  ID
-                </th>
-                <th className="sticky left-[160px] z-20 min-w-[340px] whitespace-nowrap border-t border-[#e6e6e7] bg-white px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f] shadow-[6px_0_6px_-4px_rgba(0,0,0,0.08)]">
+                <th className="sticky left-[64px] z-20 min-w-[380px] whitespace-nowrap border-t border-r border-[#e6e6e7] bg-white px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f] shadow-[6px_0_6px_-4px_rgba(0,0,0,0.08)]">
                   Property Address
                 </th>
                 <th className="min-w-[240px] whitespace-nowrap border-t border-[#e6e6e7] px-6 py-3 text-xs font-medium leading-[18px] text-[#5b5b5f]">
@@ -299,14 +297,11 @@ export function PropertiesDataSection({ onSelectProperty }: PropertiesDataSectio
                   >
                     <CheckboxCell />
                   </td>
-                  <td className="sticky left-[64px] z-20 w-[96px] whitespace-nowrap bg-white px-6 py-4 text-sm font-medium leading-5 text-[#444446] group-hover:bg-[#f5f5f6]">
-                    {row.id}
+                  <td className="sticky left-[64px] z-20 min-w-[380px] whitespace-nowrap border-r border-[#e6e6e7] bg-white px-6 py-4 group-hover:bg-[#f5f5f6] shadow-[6px_0_6px_-4px_rgba(0,0,0,0.08)]">
+                    <PropertyAddressCell address={row.address} sync={row.sync} starred={row.starred} />
                   </td>
-                  <td className="sticky left-[160px] z-20 min-w-[340px] whitespace-nowrap bg-white px-6 py-4 text-sm font-medium leading-5 text-[#444446] group-hover:bg-[#f5f5f6] shadow-[6px_0_6px_-4px_rgba(0,0,0,0.08)]">
-                    {row.address}
-                  </td>
-                  <td className="min-w-[240px] whitespace-nowrap px-6 py-4">
-                    <PropertyNameCell name={row.name} sync={row.sync} starred={row.starred} />
+                  <td className="min-w-[240px] whitespace-nowrap px-6 py-4 text-sm leading-5 text-[#444446]">
+                    {row.name}
                   </td>
                   <td className="px-6 py-4">
                     <CompaniesCell companies={row.companies} />

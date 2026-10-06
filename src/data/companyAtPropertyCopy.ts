@@ -15,7 +15,7 @@ export const COMPANY_AT_PROPERTY = {
 
 /** On the modals the effective date explains what happens when it arrives. */
 export const EFFECTIVE_DATE_DESCRIPTION =
-  'On the Company at Property - Effective Date, this property is associated with the selected company and becomes active.'
+  'On the Company at Property - Effective Date, this property is associated with the selected company and becomes active'
 
 /** Create Property shows the till-date rule in a tooltip rather than inline. */
 export const TILL_DATE_TOOLTIP =
@@ -27,13 +27,13 @@ export const TILL_DATE_DESCRIPTION =
 
 /** Edit Company sits the rule under the field as helper text. */
 export const TILL_DATE_HELPER =
-  'On this date, the company is dissociated from this property. Leave empty for no till date.'
+  'On this date, the company is dissociated from this property. Leave empty for no till date'
 
 export const OCCUPANCY_LABEL = 'Property Occupancy'
 
 /** Two sentences: what the fields are for, then the one-company-per-space rule. */
 export const OCCUPANCY_DESCRIPTION =
-  'The floor, suite, unit or apartment for this company. Cannot occupy the same space as another company.'
+  'The floor, suite, unit or apartment for this company. Cannot occupy the same space as another company'
 
 export const OCCUPANCY_PLACEHOLDERS = {
   floor: '5 or 1,3-5',
@@ -70,6 +70,7 @@ export const DISCARD_SWITCH = {
 /**
  * Contract proposal page notice. Informational only — it is shown before the
  * dates are set so the user does not reach the create-time error unaware.
+ * `tillDate` arrives already formatted as MM/DD/YY.
  */
 export function contractProposalNotice(tillDate: string): string {
   return `This company’s association with this property ends on ${tillDate}. Contracts cannot extend beyond this date, and any contract still active will be terminated.`
