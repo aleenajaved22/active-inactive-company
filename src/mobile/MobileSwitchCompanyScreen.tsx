@@ -7,6 +7,8 @@ import {
 } from '../data/companyAssociation'
 import {
   COMPANY_AT_PROPERTY,
+  EFFECTIVE_DATE_DESCRIPTION,
+  TILL_DATE_DESCRIPTION,
   DISCARD_SWITCH,
 } from '../data/companyAtPropertyCopy'
 import type { OccupantSpaces } from '../data/propertyOccupancy'
@@ -186,25 +188,32 @@ export function MobileSwitchCompanyScreen({
         className="no-scrollbar absolute inset-0 overflow-y-auto"
         style={{ paddingTop: 100, paddingBottom: MOBILE_ACTION_FOOTER_HEIGHT + 24 }}
       >
-        <div className="flex flex-col gap-5 px-4 pt-5">
-          {isMakeActive ? (
-            <MobileTextField
-              label="Company"
-              required
-              disabled
-              value={selectedCompany?.name ?? ''}
-              onChange={() => {}}
-            />
-          ) : (
-            <MobilePickerField
-              label="Company"
-              required
-              value={selectedCompany?.name ?? ''}
-              placeholder="Search by company name"
-              onOpen={() => setPickerOpen(true)}
-              error={showErrors ? errors.companyError : null}
-            />
-          )}
+        <div className="flex flex-col gap-6 px-4 pt-5">
+          <div className="flex flex-col gap-1.5">
+            {isMakeActive ? (
+              <MobileTextField
+                label="Company"
+                required
+                disabled
+                value={selectedCompany?.name ?? ''}
+                onChange={() => {}}
+              />
+            ) : (
+              <MobilePickerField
+                label="Company"
+                required
+                value={selectedCompany?.name ?? ''}
+                placeholder="Search by company name"
+                onOpen={() => setPickerOpen(true)}
+                error={showErrors ? errors.companyError : null}
+              />
+            )}
+            <MobileFieldHint>
+              {isMakeActive
+                ? 'This company is being made active again on this property'
+                : 'Select the company that should be associated with this property'}
+            </MobileFieldHint>
+          </div>
 
           <MobileOccupancyFields
             compact
@@ -220,7 +229,7 @@ export function MobileSwitchCompanyScreen({
             {showErrors && errors.spaceError && <MobileFieldError>{errors.spaceError}</MobileFieldError>}
           </MobileOccupancyFields>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1.5">
             <MobileDateField
               label={COMPANY_AT_PROPERTY.effectiveDateLabel}
               required
@@ -228,16 +237,26 @@ export function MobileSwitchCompanyScreen({
               onChange={setEffectiveDate}
               error={showErrors ? errors.effectiveDateError : null}
             />
+            <MobileFieldHint>{EFFECTIVE_DATE_DESCRIPTION}</MobileFieldHint>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
             <MobileDateField
               label={COMPANY_AT_PROPERTY.tillDateLabel}
               value={cutOffDate}
               onChange={setCutOffDate}
               error={showErrors ? errors.endDateError : null}
             />
+            <MobileFieldHint>{TILL_DATE_DESCRIPTION}</MobileFieldHint>
           </div>
 
           <div className="flex flex-col gap-2">
-            <MobileGroupLabel>Property Affiliation *</MobileGroupLabel>
+            <div className="flex flex-col gap-0.5">
+              <MobileGroupLabel>Property Affiliation *</MobileGroupLabel>
+              <p className="px-1 text-xs leading-4 text-[#86868b]">
+                Select one or more affiliation types that apply to this property
+              </p>
+            </div>
             <MobileChoiceChips
               options={propertyAffiliationOptions}
               selected={affiliations}
@@ -249,7 +268,12 @@ export function MobileSwitchCompanyScreen({
           </div>
 
           <div className="flex flex-col gap-2">
-            <MobileGroupLabel>Assign to</MobileGroupLabel>
+            <div className="flex flex-col gap-0.5">
+              <MobileGroupLabel>Assign to</MobileGroupLabel>
+              <p className="px-1 text-xs leading-4 text-[#86868b]">
+                Every property and company needs an assignee. Add a supervisor when one is needed
+              </p>
+            </div>
             <MobileAssigneeFields value={assignee} onChange={setAssignee} error={assigneeError} />
           </div>
 
