@@ -103,18 +103,17 @@ export function PropertyDetailPage({
           >
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto py-6" style={{ width: detailsWidth }}>
             <div className="flex flex-col gap-5 px-8">
+              <PropertyStageActions
+                canGoNext={stageNav.canGoNext}
+                onBack={onBack}
+                onNext={stageNav.goNext}
+                onEdit={() => setEditDealOpen(true)}
+              />
               <div className="flex items-start gap-2">
                 <img alt="" className="size-[50px] shrink-0 rounded object-cover" height={50} src={detailPropertyPhoto} width={50} />
                 <h1 title={title} className="line-clamp-2 min-w-0 flex-1 break-words text-xl font-bold leading-7 text-[#262527]">
                   {title}
                 </h1>
-                <PropertyStageActions
-                  canGoBack={stageNav.canGoBack}
-                  canGoNext={stageNav.canGoNext}
-                  onBack={stageNav.goBack}
-                  onNext={stageNav.goNext}
-                  onEdit={() => setEditDealOpen(true)}
-                />
               </div>
               <div className="flex flex-col gap-2 text-sm leading-5 text-[#6a6a70]">
                 <p>{property.address}</p>

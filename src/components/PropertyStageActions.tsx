@@ -47,7 +47,7 @@ function StageActionMenu({ items }: { items: StageAction[] }) {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => (open ? close() : openMenu())}
-        className="flex items-center gap-1 text-sm font-medium leading-5 text-primary"
+        className="flex items-center gap-1 text-sm font-semibold leading-5 text-[#262527]"
       >
         Action
         <svg
@@ -97,30 +97,26 @@ function StageActionMenu({ items }: { items: StageAction[] }) {
 }
 
 /**
- * Back and Action for the property, at the top right of the property column
- * where the edit pencil used to be. Back steps the stage to the one before;
- * Action moves it to the next stage, or edits the property.
+ * The property column's toolbar: Back to the property list on the left, Action on
+ * the right. Action moves the property to its next stage, or edits it.
  */
 export function PropertyStageActions({
-  canGoBack,
   canGoNext,
   onBack,
   onNext,
   onEdit,
 }: {
-  canGoBack: boolean
   canGoNext: boolean
   onBack: () => void
   onNext: () => void
   onEdit: () => void
 }) {
   return (
-    <div className="flex shrink-0 items-center gap-3">
+    <div className="flex items-center justify-between">
       <button
         type="button"
-        disabled={!canGoBack}
         onClick={onBack}
-        className="flex items-center gap-0.5 text-sm font-medium leading-5 text-[#6a6a70] disabled:cursor-not-allowed disabled:text-[#b5b5ba]"
+        className="flex items-center gap-0.5 text-sm font-semibold leading-5 text-[#6a6a70] hover:text-[#262527]"
       >
         <svg
           width="16"
