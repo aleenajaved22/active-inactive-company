@@ -23,13 +23,13 @@ function FieldLabel({ children, required }: { children: ReactNode; required?: bo
 
 /** Helper line under a field, for the hints the web app shows in a tooltip. */
 export function MobileFieldHint({ children }: { children: ReactNode }) {
-  return <p className="px-4 text-xs leading-4 text-[#86868b]">{children}</p>
+  return <p className="text-xs leading-4 text-[#86868b]">{children}</p>
 }
 
 /** Validation message, matching the web app's field error. */
 export function MobileFieldError({ id, children }: { id?: string; children: ReactNode }) {
   return (
-    <p id={id} className="flex items-start gap-1.5 px-4 text-xs leading-4 text-[#d92d20]">
+    <p id={id} className="flex items-start gap-1.5 text-xs leading-4 text-[#d92d20]">
       <IconAlert size={14} className="mt-px shrink-0" />
       <span>{children}</span>
     </p>
