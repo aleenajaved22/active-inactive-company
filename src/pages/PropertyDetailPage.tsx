@@ -109,7 +109,7 @@ export function PropertyDetailPage({
                 onNext={stageNav.goNext}
                 onEdit={() => setEditDealOpen(true)}
               />
-              <div className="flex items-start gap-2">
+              <div className="flex items-center gap-2">
                 <img alt="" className="size-[50px] shrink-0 rounded object-cover" height={50} src={detailPropertyPhoto} width={50} />
                 <h1 title={title} className="line-clamp-2 min-w-0 flex-1 break-words text-xl font-bold leading-7 text-[#262527]">
                   {title}
