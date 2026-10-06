@@ -16,7 +16,16 @@ const SEAM = 3
  * segments size to their labels and share any spare width, so the pill always
  * fills its row.
  */
-export function StagePill({ stages, size = 'md' }: { stages: StagePillStage[]; size?: StagePillSize }) {
+export function StagePill({
+  stages,
+  size = 'md',
+  onSelect,
+}: {
+  stages: StagePillStage[]
+  size?: StagePillSize
+  /** Makes each stage pickable, for editing which stage the property is at. */
+  onSelect?: (index: number) => void
+}) {
   const { height, arrow, font, edge } = dimensions[size]
   const radius = height / 2
   const total = stages.length
@@ -45,8 +54,23 @@ export function StagePill({ stages, size = 'md' }: { stages: StagePillStage[]; s
         return (
           <li
             key={stage.label}
+            role={onSelect ? 'button' : undefined}
+            tabIndex={onSelect ? 0 : undefined}
+            onClick={onSelect ? () => onSelect(index) : undefined}
+            onKeyDown={
+              onSelect
+                ? (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      onSelect(index)
+                    }
+                  }
+                : undefined
+            }
             aria-current={stage.reached && !stages[index + 1]?.reached ? 'step' : undefined}
             className={`flex min-w-0 flex-auto items-center justify-center whitespace-nowrap font-semibold ${font} ${
+              onSelect ? 'cursor-pointer hover:brightness-95' : ''
+            } ${
               stage.reached ? 'bg-[#4c9f5b] text-white' : 'bg-[#e9eaef] text-[#6a6a70]'
             }`}
             style={{
