@@ -3,18 +3,18 @@ import headerBell from '../assets/header-bell.svg'
 import headerChevronDown from '../assets/header-chevron-down.svg'
 import headerChevronDownSm from '../assets/header-chevron-down-sm.svg'
 import headerMapPin from '../assets/header-map-pin.svg'
+import { formatPropertyTitle } from '../data/properties'
 
 type AppHeaderProps = {
-  /** The property is identified by its address; its name is secondary. */
-  propertyAddress?: string
+  propertyName?: string
   onNavigateProperties?: () => void
   /** Adds a third breadcrumb level; the property crumb then links back to it. */
   companyName?: string
   onNavigateProperty?: () => void
 }
 
-export function AppHeader({ propertyAddress, onNavigateProperties, companyName, onNavigateProperty }: AppHeaderProps) {
-  const breadcrumbTitle = propertyAddress ?? null
+export function AppHeader({ propertyName, onNavigateProperties, companyName, onNavigateProperty }: AppHeaderProps) {
+  const breadcrumbTitle = propertyName ? formatPropertyTitle(propertyName) : null
 
   return (
     <header className="flex h-[50px] shrink-0 items-center gap-8 border-b border-[#e6e6e7] bg-white px-8 py-[9px]">

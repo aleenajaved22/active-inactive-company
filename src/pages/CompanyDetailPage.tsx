@@ -30,7 +30,7 @@ export function CompanyDetailPage({
       <SidebarNavigation />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <AppHeader
-          propertyAddress={property.address}
+          propertyName={property.name}
           onNavigateProperties={onBackToListing}
           companyName={name}
           onNavigateProperty={onBackToProperty}
