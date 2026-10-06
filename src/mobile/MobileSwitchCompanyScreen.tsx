@@ -18,13 +18,15 @@ import type {
 } from '../components/switchCompanyTypes'
 import { MobileActionFooter, MOBILE_ACTION_FOOTER_HEIGHT } from './MobileActionFooter'
 import { MobileCompanyPickerSheet } from './MobileCompanyPickerSheet'
-import { GuideProvider, GuideToggle, GuidedField, GuidedGroup } from './MobileFieldGuide'
+import { GuideBar, GuideProvider, GuideTarget, type GuideStep } from './MobileFieldGuide'
+import { occupancyGuideSteps } from './guideSteps'
 import { MobileOccupancyFields } from './MobileOccupancyFields'
 import {
   MobileChoiceChips,
   MobileDateField,
   MobileFieldError,
   MobileFieldHint,
+  MobileGroupLabel,
   MobilePickerField,
   MobileTextField,
 } from './MobileFields'
@@ -188,29 +190,41 @@ export function MobileSwitchCompanyScreen({
     setConfirmOpen(true)
   }
 
-  return (
-    <div className="absolute inset-0 z-50 flex flex-col overflow-hidden bg-white">
-      <div
-        className="no-scrollbar absolute inset-0 overflow-y-auto"
-        style={{
-          paddingTop: 100,
-          paddingBottom: MOBILE_ACTION_FOOTER_HEIGHT + 24,
-        }}
-      >
-        <GuideProvider>
-          <div className="flex flex-col gap-5 px-4 pt-4">
-            <GuideToggle />
+  const guideSteps: GuideStep[] = [
+    {
+      id: 'company',
+      title: 'Company',
+      text: isMakeActive
+        ? 'This company is being made active again on this property'
+        : 'Select the company that should be associated with this property',
+    },
+    ...occupancyGuideSteps,
+    { id: 'effective-date', title: COMPANY_AT_PROPERTY.effectiveDateLabel, text: EFFECTIVE_DATE_DESCRIPTION },
+    { id: 'till-date', title: COMPANY_AT_PROPERTY.tillDateLabel, text: TILL_DATE_DESCRIPTION },
+    {
+      id: 'affiliation',
+      title: 'Property Affiliation',
+      text: 'Select one or more affiliation types that apply to this property',
+    },
+    {
+      id: 'assignee',
+      title: 'Assign to',
+      text: 'Every property and company needs an assignee. Add a supervisor when one is needed',
+    },
+  ]
 
-            <GuidedField
-              id="company"
-              label="Company"
-              hasTrailingIcon={!isMakeActive}
-              hint={
-                isMakeActive
-                  ? 'This company is being made active again on this property'
-                  : 'Select the company that should be associated with this property'
-              }
-            >
+  return (
+    <GuideProvider steps={guideSteps}>
+      <div className="absolute inset-0 z-50 flex flex-col overflow-hidden bg-white">
+        <div
+          className="no-scrollbar absolute inset-0 overflow-y-auto"
+          style={{
+            paddingTop: 100,
+            paddingBottom: MOBILE_ACTION_FOOTER_HEIGHT + 104,
+          }}
+        >
+          <div className="flex flex-col gap-5 px-4 pt-4">
+            <GuideTarget id="company">
               {isMakeActive ? (
                 <MobileTextField
                   label="Company"
@@ -229,7 +243,7 @@ export function MobileSwitchCompanyScreen({
                   error={showErrors ? errors.companyError : null}
                 />
               )}
-            </GuidedField>
+            </GuideTarget>
 
             <MobileOccupancyFields
               compact
@@ -245,11 +259,7 @@ export function MobileSwitchCompanyScreen({
               {showErrors && errors.spaceError && <MobileFieldError>{errors.spaceError}</MobileFieldError>}
             </MobileOccupancyFields>
 
-            <GuidedField
-              id="effective-date"
-              label={COMPANY_AT_PROPERTY.effectiveDateLabel}
-              hint={EFFECTIVE_DATE_DESCRIPTION}
-            >
+            <GuideTarget id="effective-date">
               <MobileDateField
                 label={COMPANY_AT_PROPERTY.effectiveDateLabel}
                 required
@@ -257,43 +267,37 @@ export function MobileSwitchCompanyScreen({
                 onChange={setEffectiveDate}
                 error={showErrors ? errors.effectiveDateError : null}
               />
-            </GuidedField>
+            </GuideTarget>
 
-            <GuidedField
-              id="till-date"
-              label={COMPANY_AT_PROPERTY.tillDateLabel}
-              hint={TILL_DATE_DESCRIPTION}
-            >
+            <GuideTarget id="till-date">
               <MobileDateField
                 label={COMPANY_AT_PROPERTY.tillDateLabel}
                 value={cutOffDate}
                 onChange={setCutOffDate}
                 error={showErrors ? errors.endDateError : null}
               />
-            </GuidedField>
+            </GuideTarget>
 
-            <GuidedGroup
-              id="affiliation"
-              label="Property Affiliation *"
-              hint="Select one or more affiliation types that apply to this property"
-            >
-              <MobileChoiceChips
-                options={propertyAffiliationOptions}
-                selected={affiliations}
-                onToggle={toggleAffiliation}
-              />
-              {showErrors && errors.affiliationError && (
-                <MobileFieldError>{errors.affiliationError}</MobileFieldError>
-              )}
-            </GuidedGroup>
+            <GuideTarget id="affiliation">
+              <div className="flex flex-col gap-2">
+                <MobileGroupLabel>Property Affiliation *</MobileGroupLabel>
+                <MobileChoiceChips
+                  options={propertyAffiliationOptions}
+                  selected={affiliations}
+                  onToggle={toggleAffiliation}
+                />
+                {showErrors && errors.affiliationError && (
+                  <MobileFieldError>{errors.affiliationError}</MobileFieldError>
+                )}
+              </div>
+            </GuideTarget>
 
-            <GuidedGroup
-              id="assignee"
-              label="Assign to"
-              hint="Every property and company needs an assignee. Add a supervisor when one is needed"
-            >
-              <MobileAssigneeFields value={assignee} onChange={setAssignee} error={assigneeError} />
-            </GuidedGroup>
+            <GuideTarget id="assignee">
+              <div className="flex flex-col gap-2">
+                <MobileGroupLabel>Assign to</MobileGroupLabel>
+                <MobileAssigneeFields value={assignee} onChange={setAssignee} error={assigneeError} />
+              </div>
+            </GuideTarget>
 
             {isEditMode && associationId && onRevertPending && (
               <button
@@ -305,81 +309,85 @@ export function MobileSwitchCompanyScreen({
               </button>
             )}
           </div>
-        </GuideProvider>
+        </div>
+
+        <MobilePageHeader title={actionLabel} onBack={onClose} />
+        <GuideBar
+          className="absolute inset-x-4 z-10 shadow-[0_2px_12px_rgba(0,0,0,0.08)]"
+          style={{ bottom: MOBILE_ACTION_FOOTER_HEIGHT + 10 }}
+        />
+        <MobileActionFooter label={isEditMode ? 'Update' : actionLabel} onClick={submit} />
+
+        <MobileCompanyPickerSheet
+          open={pickerOpen}
+          selectedId={companyId}
+          onSelect={setCompanyId}
+          onClose={() => setPickerOpen(false)}
+          onCreateCompany={() => {
+            setPickerOpen(false)
+            onCreateCompany()
+          }}
+        />
+
+        {/* Creating a pending association changes who holds the space, so it confirms. */}
+        <MobileSheet open={confirmOpen} onClose={() => setConfirmOpen(false)} title={`${actionLabel}?`}>
+          <div className="flex flex-col gap-4 px-4 pb-8">
+            <p className="text-sm leading-5 text-[#6a6a70]">
+              <span className="font-medium text-[#262527]">{selectedCompany?.name}</span> will take over{' '}
+              <span className="font-medium text-[#262527]">
+                {selectedSpace?.label ?? describeSpaceInput(spaceFields)}
+              </span>{' '}
+              on {formatShortDate(effectiveDate)}.
+              {selectedSpace?.currentCompanyName
+                ? ` ${selectedSpace.currentCompanyName} stays active until then.`
+                : ''}{' '}
+              Do you want to continue?
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                onConfirm(payload())
+                setConfirmOpen(false)
+                onClose()
+              }}
+              className="flex h-12 w-full items-center justify-center rounded-lg bg-[#146dff] text-base font-medium leading-5 text-white"
+            >
+              {actionLabel}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmOpen(false)}
+              className="flex h-12 w-full items-center justify-center rounded-lg bg-[#f6f6f8] text-base font-medium leading-5 text-[#444446]"
+            >
+              Cancel
+            </button>
+          </div>
+        </MobileSheet>
+
+        <MobileSheet open={revertOpen} onClose={() => setRevertOpen(false)} title={DISCARD_SWITCH.heading}>
+          <div className="flex flex-col gap-4 px-4 pb-8">
+            <p className="text-sm leading-5 text-[#6a6a70]">{DISCARD_SWITCH.body}</p>
+            <button
+              type="button"
+              onClick={() => {
+                if (associationId) onRevertPending?.(associationId)
+                setRevertOpen(false)
+                onClose()
+              }}
+              className="flex h-12 w-full items-center justify-center rounded-lg bg-[#b32318] text-base font-medium leading-5 text-white"
+            >
+              {DISCARD_SWITCH.confirm}
+            </button>
+            <button
+              type="button"
+              onClick={() => setRevertOpen(false)}
+              className="flex h-12 w-full items-center justify-center rounded-lg bg-[#f6f6f8] text-base font-medium leading-5 text-[#444446]"
+            >
+              Cancel
+            </button>
+          </div>
+        </MobileSheet>
       </div>
-
-      <MobilePageHeader title={actionLabel} onBack={onClose} />
-      <MobileActionFooter label={isEditMode ? 'Update' : actionLabel} onClick={submit} />
-
-      <MobileCompanyPickerSheet
-        open={pickerOpen}
-        selectedId={companyId}
-        onSelect={setCompanyId}
-        onClose={() => setPickerOpen(false)}
-        onCreateCompany={() => {
-          setPickerOpen(false)
-          onCreateCompany()
-        }}
-      />
-
-      {/* Creating a pending association changes who holds the space, so it confirms. */}
-      <MobileSheet open={confirmOpen} onClose={() => setConfirmOpen(false)} title={`${actionLabel}?`}>
-        <div className="flex flex-col gap-4 px-4 pb-8">
-          <p className="text-sm leading-5 text-[#6a6a70]">
-            <span className="font-medium text-[#262527]">{selectedCompany?.name}</span> will take over{' '}
-            <span className="font-medium text-[#262527]">
-              {selectedSpace?.label ?? describeSpaceInput(spaceFields)}
-            </span>{' '}
-            on {formatShortDate(effectiveDate)}.
-            {selectedSpace?.currentCompanyName
-              ? ` ${selectedSpace.currentCompanyName} stays active until then.`
-              : ''}{' '}
-            Do you want to continue?
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              onConfirm(payload())
-              setConfirmOpen(false)
-              onClose()
-            }}
-            className="flex h-12 w-full items-center justify-center rounded-lg bg-[#146dff] text-base font-medium leading-5 text-white"
-          >
-            {actionLabel}
-          </button>
-          <button
-            type="button"
-            onClick={() => setConfirmOpen(false)}
-            className="flex h-12 w-full items-center justify-center rounded-lg bg-[#f6f6f8] text-base font-medium leading-5 text-[#444446]"
-          >
-            Cancel
-          </button>
-        </div>
-      </MobileSheet>
-
-      <MobileSheet open={revertOpen} onClose={() => setRevertOpen(false)} title={DISCARD_SWITCH.heading}>
-        <div className="flex flex-col gap-4 px-4 pb-8">
-          <p className="text-sm leading-5 text-[#6a6a70]">{DISCARD_SWITCH.body}</p>
-          <button
-            type="button"
-            onClick={() => {
-              if (associationId) onRevertPending?.(associationId)
-              setRevertOpen(false)
-              onClose()
-            }}
-            className="flex h-12 w-full items-center justify-center rounded-lg bg-[#b32318] text-base font-medium leading-5 text-white"
-          >
-            {DISCARD_SWITCH.confirm}
-          </button>
-          <button
-            type="button"
-            onClick={() => setRevertOpen(false)}
-            className="flex h-12 w-full items-center justify-center rounded-lg bg-[#f6f6f8] text-base font-medium leading-5 text-[#444446]"
-          >
-            Cancel
-          </button>
-        </div>
-      </MobileSheet>
-    </div>
+    </GuideProvider>
   )
 }

@@ -1,190 +1,114 @@
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
-import { IconAlert } from './MobileIcons'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react'
+import { IconAlert, IconChevronLeft, IconChevronRight } from './MobileIcons'
 
 /**
- * Progressive disclosure for the descriptions on a long mobile form.
+ * A coach strip for the long mobile forms.
  *
- * Every field keeps its agreed description, but the description waits behind a
- * small ⓘ beside the field's label instead of sitting under every field. One
- * "Show all hints" control opens every description at once, for a first read of
- * the form, and remembers the choice. Each ⓘ still overrides it for its own field.
+ * The form itself stays a clean stack of fields. Each field keeps its agreed
+ * description, but the descriptions live in one strip pinned above the action
+ * button, which follows the field being used: touch or focus a field and the
+ * strip shows that field's copy. The arrows step through all of it in form
+ * order, so nothing is hidden, only held until it is relevant.
  */
 
-const STORAGE_KEY = 'mobile-form-hints'
-
-function readStored(): boolean {
-  try {
-    return window.localStorage.getItem(STORAGE_KEY) === 'all'
-  } catch {
-    return false
-  }
-}
-
-function writeStored(all: boolean) {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, all ? 'all' : 'none')
-  } catch {
-    // The preference is a convenience; the form works without it.
-  }
+export type GuideStep = {
+  id: string
+  title: string
+  text: ReactNode
 }
 
 type GuideState = {
-  all: boolean
-  isOpen: (id: string) => boolean
-  toggle: (id: string) => void
-  toggleAll: () => void
+  steps: GuideStep[]
+  index: number
+  select: (id: string) => void
+  step: (delta: number) => void
 }
 
 const GuideContext = createContext<GuideState | null>(null)
 
-export function GuideProvider({ children }: { children: ReactNode }) {
-  const [all, setAll] = useState(readStored)
-  // Fields the user opened or closed by hand, which win over the "all" setting.
-  const [overrides, setOverrides] = useState<Record<string, boolean>>({})
+export function GuideProvider({ steps, children }: { steps: GuideStep[]; children: ReactNode }) {
+  const [index, setIndex] = useState(0)
+  const safeIndex = Math.min(index, steps.length - 1)
 
-  const isOpen = useCallback((id: string) => overrides[id] ?? all, [overrides, all])
-  const toggle = useCallback(
-    (id: string) => setOverrides((prev) => ({ ...prev, [id]: !(prev[id] ?? all) })),
-    [all],
+  const select = useCallback(
+    (id: string) => {
+      const next = steps.findIndex((item) => item.id === id)
+      if (next >= 0) setIndex(next)
+    },
+    [steps],
   )
-  const toggleAll = useCallback(() => {
-    const next = !all
-    setAll(next)
-    setOverrides({})
-    writeStored(next)
-  }, [all])
-
-  return <GuideContext.Provider value={{ all, isOpen, toggle, toggleAll }}>{children}</GuideContext.Provider>
-}
-
-/** The one control that opens or closes every description on the form. */
-export function GuideToggle() {
-  const guide = useContext(GuideContext)
-  if (!guide) return null
-  return (
-    <div className="flex justify-end px-1">
-      <button
-        type="button"
-        onClick={guide.toggleAll}
-        aria-pressed={guide.all}
-        className="flex items-center gap-1 text-xs font-medium leading-4 text-[#146dff]"
-      >
-        <IconAlert size={14} />
-        {guide.all ? 'Hide all hints' : 'Show all hints'}
-      </button>
-    </div>
+  const step = useCallback(
+    (delta: number) => setIndex((current) => (current + delta + steps.length) % steps.length),
+    [steps.length],
   )
-}
 
-/** Open state for one description; falls back to local state outside a provider. */
-function useGuideItem(id: string) {
-  const guide = useContext(GuideContext)
-  const [local, setLocal] = useState(false)
-  return guide
-    ? { open: guide.isOpen(id), toggle: () => guide.toggle(id) }
-    : { open: local, toggle: () => setLocal((value) => !value) }
-}
-
-function InfoButton({
-  open,
-  onToggle,
-  label,
-  className = '',
-}: {
-  open: boolean
-  onToggle: () => void
-  label: string
-  className?: string
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={`${open ? 'Hide' : 'Show'} hint: ${label}`}
-      aria-expanded={open}
-      onClick={onToggle}
-      className={`flex size-7 items-center justify-center rounded-full ${
-        open ? 'text-[#146dff]' : 'text-[#86868b]'
-      } ${className}`}
-    >
-      <IconAlert size={16} />
-    </button>
-  )
-}
-
-/** The description itself: slides open under its field in the form's soft-blue note. */
-function GuideNote({ open, children }: { open: boolean; children: ReactNode }) {
-  return (
-    <div
-      aria-hidden={!open}
-      className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out ${
-        open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-      }`}
-    >
-      <div className="overflow-hidden">
-        <div className="mt-1.5 flex flex-col gap-2 rounded-lg bg-[#eff4fd] px-3 py-2.5 text-xs leading-4 text-[#3c3c3d]">
-          {children}
-        </div>
-      </div>
-    </div>
-  )
+  const value = useMemo(() => ({ steps, index: safeIndex, select, step }), [steps, safeIndex, select, step])
+  return <GuideContext.Provider value={value}>{children}</GuideContext.Provider>
 }
 
 /**
- * A field with its description on demand. The ⓘ sits on the field's label line,
- * clear of the chevron or calendar at its right edge.
+ * Marks the part of the form a step describes. Touching or focusing anything
+ * inside it brings that step up in the strip; the wrapper adds no layout of its own.
  */
-export function GuidedField({
-  id,
-  label,
-  hint,
-  hasTrailingIcon = true,
-  children,
-}: {
-  id: string
-  label: string
-  hint: ReactNode
-  /** Pickers and date fields end in an icon; the ⓘ steps in from it. */
-  hasTrailingIcon?: boolean
-  children: ReactNode
-}) {
-  const { open, toggle } = useGuideItem(id)
+export function GuideTarget({ id, children }: { id: string; children: ReactNode }) {
+  const guide = useContext(GuideContext)
+  if (!guide) return <>{children}</>
   return (
-    <div>
-      <div className="relative">
-        {children}
-        <InfoButton
-          open={open}
-          onToggle={toggle}
-          label={label}
-          className={`absolute top-1 ${hasTrailingIcon ? 'right-11' : 'right-2'}`}
-        />
-      </div>
-      <GuideNote open={open}>{hint}</GuideNote>
+    <div onFocusCapture={() => guide.select(id)} onPointerDownCapture={() => guide.select(id)}>
+      {children}
     </div>
   )
 }
 
-/** A labelled group (occupancy, affiliation, assignee) with its description on demand. */
-export function GuidedGroup({
-  id,
-  label,
-  hint,
-  children,
-}: {
-  id: string
-  label: ReactNode
-  hint: ReactNode
-  children: ReactNode
-}) {
-  const { open, toggle } = useGuideItem(id)
+/** The strip. Rendered by the screen, above its action button. */
+export function GuideBar({ className = '', style }: { className?: string; style?: CSSProperties }) {
+  const guide = useContext(GuideContext)
+  if (!guide) return null
+  const current = guide.steps[guide.index]
+
   return (
-    <div>
-      <div className="flex items-center gap-0.5">
-        <h2 className="pl-1 text-sm font-semibold leading-5 text-[#262527]">{label}</h2>
-        <InfoButton open={open} onToggle={toggle} label={typeof label === 'string' ? label : id} />
+    <div
+      role="status"
+      aria-live="polite"
+      style={style}
+      className={`flex items-start gap-2.5 rounded-xl bg-[#eff4fd] py-2.5 pl-3 pr-1.5 ${className}`}
+    >
+      <IconAlert size={16} className="mt-0.5 shrink-0 text-[#146dff]" />
+      <div className="min-w-0 flex-1 text-xs leading-4 text-[#3c3c3d]">
+        <p className="font-semibold text-[#262527]">{current.title}</p>
+        <div className="mt-0.5">{current.text}</div>
       </div>
-      <GuideNote open={open}>{hint}</GuideNote>
-      <div className="mt-1.5 flex flex-col gap-1.5">{children}</div>
+      <div className="flex shrink-0 flex-col items-center">
+        <div className="flex items-center">
+          <button
+            type="button"
+            aria-label="Previous hint"
+            onClick={() => guide.step(-1)}
+            className="flex size-7 items-center justify-center rounded-full text-[#5b5b5f]"
+          >
+            <IconChevronLeft size={16} />
+          </button>
+          <button
+            type="button"
+            aria-label="Next hint"
+            onClick={() => guide.step(1)}
+            className="flex size-7 items-center justify-center rounded-full text-[#5b5b5f]"
+          >
+            <IconChevronRight size={16} />
+          </button>
+        </div>
+        <span className="text-[10px] font-medium leading-3 text-[#86868b]">
+          {guide.index + 1} / {guide.steps.length}
+        </span>
+      </div>
     </div>
   )
 }

@@ -9,8 +9,9 @@ import {
   type OccupantSpaces,
 } from '../data/propertyOccupancy'
 import { MobileAssigneeFields, emptyMobileAssignee, type MobileAssigneeValue } from './MobileAssigneeFields'
-import { MobileChoiceChips, MobileDateField, MobileFieldError, MobileSectionHeading } from './MobileFields'
-import { GuideProvider, GuideToggle, GuidedField } from './MobileFieldGuide'
+import { MobileChoiceChips, MobileDateField, MobileFieldError, MobileGroupLabel } from './MobileFields'
+import { GuideBar, GuideProvider, GuideTarget, type GuideStep } from './MobileFieldGuide'
+import { occupancyGuideSteps } from './guideSteps'
 import { MobileOccupancyFields } from './MobileOccupancyFields'
 import { MobileSheet } from './MobileSheet'
 
@@ -112,20 +113,36 @@ export function MobileEditCompanySheet({
     onClose()
   }
 
+  const guideSteps: GuideStep[] = [
+    {
+      id: 'affiliation',
+      title: 'Property Affiliation',
+      text: 'Select one or more affiliation types that apply to this property',
+    },
+    ...occupancyGuideSteps,
+    { id: 'till-date', title: COMPANY_AT_PROPERTY.tillDateLabel, text: TILL_DATE_HELPER },
+    {
+      id: 'assignee',
+      title: 'Assign to',
+      text: 'Every property and company needs an assignee. Add a supervisor when one is needed',
+    },
+  ]
+
   return (
     <MobileSheet open={open} onClose={onClose} title={`Edit ${companyName}`}>
-      <div className="no-scrollbar flex min-h-0 flex-col gap-5 overflow-y-auto px-4 pb-8">
-        <GuideProvider>
-          <GuideToggle />
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium leading-5 text-[#262527]">Property Affiliation *</p>
-            <MobileChoiceChips
-              options={propertyAffiliationOptions}
-              selected={affiliations}
-              onToggle={toggle}
-            />
-            {submitAttempted && affiliationError && <MobileFieldError>{affiliationError}</MobileFieldError>}
-          </div>
+      <GuideProvider steps={guideSteps}>
+        <div className="no-scrollbar flex min-h-0 flex-col gap-5 overflow-y-auto px-4 pb-4">
+          <GuideTarget id="affiliation">
+            <div className="flex flex-col gap-2">
+              <MobileGroupLabel>Property Affiliation *</MobileGroupLabel>
+              <MobileChoiceChips
+                options={propertyAffiliationOptions}
+                selected={affiliations}
+                onToggle={toggle}
+              />
+              {submitAttempted && affiliationError && <MobileFieldError>{affiliationError}</MobileFieldError>}
+            </div>
+          </GuideTarget>
 
           <MobileOccupancyFields
             compact
@@ -137,20 +154,25 @@ export function MobileEditCompanySheet({
             {submitAttempted && missingOccupancy && <MobileFieldError>{missingOccupancy}</MobileFieldError>}
           </MobileOccupancyFields>
 
-          <GuidedField id="till-date" label={COMPANY_AT_PROPERTY.tillDateLabel} hint={TILL_DATE_HELPER}>
+          <GuideTarget id="till-date">
             <MobileDateField
               label={COMPANY_AT_PROPERTY.tillDateLabel}
               value={endDate}
               onChange={setEndDate}
               error={submitAttempted ? endDateError : null}
             />
-          </GuidedField>
+          </GuideTarget>
 
-          <div className="flex flex-col gap-2">
-            <MobileSectionHeading>Assign to</MobileSectionHeading>
-            <MobileAssigneeFields value={assignee} onChange={setAssignee} error={assigneeError} />
-          </div>
+          <GuideTarget id="assignee">
+            <div className="flex flex-col gap-2">
+              <MobileGroupLabel>Assign to</MobileGroupLabel>
+              <MobileAssigneeFields value={assignee} onChange={setAssignee} error={assigneeError} />
+            </div>
+          </GuideTarget>
+        </div>
 
+        <div className="flex flex-col gap-3 px-4 pb-8 pt-2">
+          <GuideBar />
           <button
             type="button"
             onClick={save}
@@ -158,8 +180,8 @@ export function MobileEditCompanySheet({
           >
             Save
           </button>
-        </GuideProvider>
-      </div>
+        </div>
+      </GuideProvider>
     </MobileSheet>
   )
 }
