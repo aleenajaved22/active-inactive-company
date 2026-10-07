@@ -146,9 +146,7 @@ export function PropertyDetailPage({
                 </span>
               </div>
             </div>
-            <div className="my-4 px-8">
-              <img alt="" className="block w-full max-w-none" src={detailDividerH} />
-            </div>
+            <div className="h-5" aria-hidden />
             <PropertyDetailSideSections />
             </div>
           </aside>
