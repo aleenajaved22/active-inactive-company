@@ -119,9 +119,7 @@ export function PropertyDetailPage({
                 <p>{property.address}</p>
               </div>
             </div>
-            <div className="my-4 px-8">
-              <img alt="" className="block w-full max-w-none" src={detailDividerH} />
-            </div>
+            <div className="h-5" aria-hidden />
             <PropertyStagesPanel stages={stageNav.stages} />
             <div className="my-4 px-8">
               <img alt="" className="block w-full max-w-none" src={detailDividerH} />
@@ -146,7 +144,9 @@ export function PropertyDetailPage({
                 </span>
               </div>
             </div>
-            <div className="h-5" aria-hidden />
+            <div className="my-4 px-8">
+              <img alt="" className="block w-full max-w-none" src={detailDividerH} />
+            </div>
             <PropertyDetailSideSections />
             </div>
           </aside>
