@@ -4,7 +4,9 @@ import modalClose from '../assets/modal-close.svg'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
 import detailPlus from '../assets/detail-plus.svg'
 import tableAlertCircleWarn from '../assets/table-alert-circle-warn.svg'
+import { AffiliationSelect } from './AffiliationSelect'
 import { CreateCompanyModal } from './CreateCompanyModal'
+import { InfoTooltip } from './InfoTooltip'
 import { ModalDateInput } from './ModalDateInput'
 import {
   deriveSpaceKey,
@@ -25,7 +27,6 @@ import { propertyCompanies } from '../data/propertyCompanies'
 import { AssigneeFields, emptyAssignee, type AssigneeValue } from './AssigneeFields'
 import { SpaceFields, emptySpaceFields, type SpaceFieldsValue } from './PropertySpaceFields'
 import {
-  propertyAffiliationOptions,
   type PropertyAffiliation,
   type SwitchCompanyFormValues,
   type SwitchCompanySubmitPayload,
@@ -68,11 +69,13 @@ function ModalFormRow({
   return (
     <div className={`grid gap-x-8 gap-y-3 py-5 ${stacked ? 'grid-cols-1' : 'grid-cols-2'}`}>
       <div className="min-w-0">
-        <p className="text-sm font-bold leading-5 text-[#262527]">
-          {label}
-          {required && <span className="text-[#b32318]"> *</span>}
-        </p>
-        <p className="mt-1 text-sm leading-5 text-[#86868b]">{description}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-sm font-bold leading-5 text-[#262527]">
+            {label}
+            {required && <span className="text-[#b32318]"> *</span>}
+          </p>
+          <InfoTooltip label={`${label} information`} text={description} />
+        </div>
       </div>
       <div className="min-w-0">{children}</div>
     </div>
@@ -134,15 +137,6 @@ export function SwitchCompanyModal({
   const comboboxRef = useRef<HTMLDivElement>(null)
   const spacesRef = useRef(spaces)
   spacesRef.current = spaces
-
-  const toggleAffiliation = (label: PropertyAffiliation) => {
-    setPendingAffiliations((prev) => {
-      const next = new Set(prev)
-      if (next.has(label)) next.delete(label)
-      else next.add(label)
-      return next
-    })
-  }
 
   const pendingCompany = useMemo(
     () => propertyCompanies.find((company) => company.id === pendingId),
@@ -320,8 +314,8 @@ export function SwitchCompanyModal({
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="switch-company-title">
       <button type="button" className="absolute inset-0 bg-[#262527]/40" aria-label="Close dialog" onClick={closeModal} />
-      <div className="relative flex w-full max-w-[960px] flex-col overflow-visible rounded-xl border border-[#e6e6e7] bg-white p-6 shadow-[0px_20px_24px_-4px_rgba(16,24,40,0.1),0px_8px_8px_-4px_rgba(16,24,40,0.04)]">
-        <div className="mb-2 flex w-full flex-col gap-1 border-b border-[#e6e6e7] pb-4">
+      <div className="relative flex max-h-[calc(100vh-2rem)] w-full max-w-[960px] flex-col rounded-xl border border-[#e6e6e7] bg-white p-6 shadow-[0px_20px_24px_-4px_rgba(16,24,40,0.1),0px_8px_8px_-4px_rgba(16,24,40,0.04)]">
+        <div className="mb-2 flex w-full shrink-0 flex-col gap-1 border-b border-[#e6e6e7] pb-4">
           <div className="flex w-full items-start gap-1">
             <h2
               id="switch-company-title"
@@ -335,7 +329,7 @@ export function SwitchCompanyModal({
           </div>
         </div>
 
-        <div className="flex flex-col">
+        <div className="-mx-2 flex min-h-0 flex-1 flex-col overflow-y-auto px-2">
           <ModalFormRow
             label="Company"
             description={
@@ -503,26 +497,12 @@ export function SwitchCompanyModal({
             required
           >
             <div className="flex flex-col gap-1.5">
-            <div className="flex flex-wrap items-center gap-2">
-              {propertyAffiliationOptions.map((label) => {
-                const selected = pendingAffiliations.has(label)
-                return (
-                  <button
-                    key={label}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => toggleAffiliation(label)}
-                    className={`rounded-2xl border px-3 py-1 text-sm leading-5 ${
-                      selected
-                        ? 'border-primary bg-primary-subtle font-medium text-primary'
-                        : 'border-[#e6e6e7] bg-white font-normal text-[#262527]'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                )
-              })}
-            </div>
+            <AffiliationSelect
+              id="switch-company-affiliation"
+              value={pendingAffiliations}
+              onChange={setPendingAffiliations}
+              invalid={showErrors && Boolean(affiliationError)}
+            />
             {showErrors && affiliationError && <ModalFieldError>{affiliationError}</ModalFieldError>}
             </div>
           </ModalFormRow>
@@ -541,7 +521,7 @@ export function SwitchCompanyModal({
           </ModalFormRow>
         </div>
 
-        <div className="mt-2 flex items-center justify-between gap-3 border-t border-[#e6e6e7] pt-4">
+        <div className="mt-2 flex shrink-0 items-center justify-between gap-3 border-t border-[#e6e6e7] pt-4">
           {isEditMode && associationId && onRevertPending ? (
             <button
               type="button"

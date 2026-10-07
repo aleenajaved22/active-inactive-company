@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
+import { useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
 /**
@@ -13,7 +13,7 @@ export function InfoTooltip({
 }: {
   /** Named for screen readers, e.g. "Floor information". */
   label: string
-  text: string
+  text: ReactNode
   id?: string
 }) {
   const triggerRef = useRef<HTMLButtonElement>(null)
@@ -66,8 +66,9 @@ export function InfoTooltip({
         onClick={(event) => event.preventDefault()}
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+          <circle cx="8" cy="8" r="6.6667" stroke="currentColor" strokeWidth="1.5" />
           <path
-            d="M8 5.33333V8M8 10.6667H8.00667M14.6667 8C14.6667 11.6819 11.6819 14.6667 8 14.6667C4.3181 14.6667 1.33333 11.6819 1.33333 8C1.33333 4.3181 4.3181 1.33333 8 1.33333C11.6819 1.33333 14.6667 4.3181 14.6667 8Z"
+            d="M8 7.33333V10.6667M8 5.33333H8.00667"
             stroke="currentColor"
             strokeWidth="1.5"
             strokeLinecap="round"

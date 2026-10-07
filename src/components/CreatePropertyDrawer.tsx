@@ -6,7 +6,6 @@ import modalClose from '../assets/modal-close.svg'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
 import tableSearch from '../assets/table-search.svg'
 import {
-  affiliationOptions,
   assigneeOptions,
   associatedFranchiseOptions,
   companyOptions,
@@ -26,13 +25,12 @@ import { buildOccupants } from '../data/companyAssociation'
 import { initialSpaceAssociations } from '../data/propertySpaceAssociations'
 import { validateOccupancy } from '../data/propertyOccupancy'
 import { companyParents, type SpaceType } from '../data/propertySpaces'
+import { AffiliationSelect } from './AffiliationSelect'
 import { CreateCompanyModal } from './CreateCompanyModal'
-import { propertyContactsFeed } from '../data/leadActivities'
-import { ContactsTable } from './ContactsTable'
+import { ContactTitleGrid } from './ContactTitleGrid'
 import { InfoTooltip } from './InfoTooltip'
 import { ModalDateInput } from './ModalDateInput'
 import { SpaceFields } from './PropertySpaceFields'
-import { useContactsEditor } from './useContactsEditor'
 
 type CreatePropertyDrawerProps = {
   open: boolean
@@ -178,7 +176,7 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
   const [supervisor, setSupervisor] = useState('')
   const [submitAttempted, setSubmitAttempted] = useState(false)
   const [createCompanyOpen, setCreateCompanyOpen] = useState(false)
-  const contactsEditor = useContactsEditor(propertyContactsFeed.slice(0, 1))
+  const [contacts, setContacts] = useState<Record<string, string>>({})
   const spaceFieldRef = useRef<HTMLDivElement>(null)
   const suiteUnitNumberRef = useRef<HTMLInputElement>(null)
 
@@ -217,17 +215,8 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
     setSupervisor('')
     setSubmitAttempted(false)
     setCreateCompanyOpen(false)
-    contactsEditor.reset()
+    setContacts({})
   }, [open])
-
-  const toggleAffiliation = (label: Affiliation) => {
-    setAffiliations((prev) => {
-      const next = new Set(prev)
-      if (next.has(label)) next.delete(label)
-      else next.add(label)
-      return next
-    })
-  }
 
   const selectCompany = (value: string) => {
     setCompany(value)
@@ -446,28 +435,14 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                       />
                     </div>
                   </div>
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-1.5">
                     <DrawerLabel>Affiliation</DrawerLabel>
-                    <div className="flex flex-wrap gap-2">
-                      {affiliationOptions.map((label) => {
-                        const selected = affiliations.has(label)
-                        return (
-                          <button
-                            key={label}
-                            type="button"
-                            aria-pressed={selected}
-                            onClick={() => toggleAffiliation(label)}
-                            className={`rounded-[40px] border px-3 py-1.5 text-sm leading-5 ${
-                              selected
-                                ? 'border-[1.5px] border-primary bg-white text-[#262527]'
-                                : 'border border-[#e6e6e7] bg-white text-[#262527]'
-                            }`}
-                          >
-                            {label}
-                          </button>
-                        )
-                      })}
-                    </div>
+                    <AffiliationSelect
+                      id="create-property-affiliation"
+                      size="md"
+                      value={affiliations}
+                      onChange={setAffiliations}
+                    />
                   </div>
                 </section>
 
@@ -519,28 +494,8 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                 <SectionDivider />
 
                 <section className="flex flex-col gap-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <SectionHeading title="Contacts" />
-                    <button
-                      type="button"
-                      onClick={contactsEditor.openAdd}
-                      className="flex items-center gap-1 text-sm font-medium text-primary"
-                    >
-                      <span className="relative size-5 shrink-0" aria-hidden>
-                        <img alt="" className="absolute inset-0 block size-full max-w-none" src={detailPlus} />
-                      </span>
-                      Add Contact
-                    </button>
-                  </div>
-                  <div className="overflow-hidden rounded-lg border border-[#e6e6e7]">
-                    <ContactsTable
-                      dense
-                      contacts={contactsEditor.contacts}
-                      onEdit={contactsEditor.onEdit}
-                      onRemove={contactsEditor.onRemove}
-                    />
-                  </div>
-                  {contactsEditor.dialogs}
+                  <SectionHeading title="Contacts" />
+                  <ContactTitleGrid chosen={contacts} onChange={setContacts} />
                 </section>
               </div>
             </div>

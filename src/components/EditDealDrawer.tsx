@@ -174,9 +174,7 @@ export function EditDealDrawer({ open, onClose }: EditDealDrawerProps) {
             <div className="flex max-w-[748px] flex-col gap-5">
               <div className="grid grid-cols-2 gap-6">
                 <div className="flex flex-col gap-1.5">
-                  <DrawerLabel required variant="regular">
-                    Property / Property Name
-                  </DrawerLabel>
+                  <DrawerLabel variant="regular">Property Name</DrawerLabel>
                   <DrawerTextInput id="edit-property-name" value={propertyName} onChange={setPropertyName} />
                 </div>
                 <div className="flex flex-col gap-1.5">
