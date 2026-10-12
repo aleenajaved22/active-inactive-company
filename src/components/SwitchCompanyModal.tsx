@@ -6,7 +6,6 @@ import detailPlus from '../assets/detail-plus.svg'
 import tableAlertCircleWarn from '../assets/table-alert-circle-warn.svg'
 import { AffiliationSelect } from './AffiliationSelect'
 import { CreateCompanyModal } from './CreateCompanyModal'
-import { InfoTooltip } from './InfoTooltip'
 import { ModalDateInput } from './ModalDateInput'
 import {
   deriveSpaceKey,
@@ -69,13 +68,11 @@ function ModalFormRow({
   return (
     <div className={`grid gap-x-8 gap-y-3 py-5 ${stacked ? 'grid-cols-1' : 'grid-cols-2'}`}>
       <div className="min-w-0">
-        <div className="flex items-center gap-1.5">
-          <p className="text-sm font-bold leading-5 text-[#262527]">
-            {label}
-            {required && <span className="text-[#b32318]"> *</span>}
-          </p>
-          <InfoTooltip label={`${label} information`} text={description} />
-        </div>
+        <p className="text-sm font-bold leading-5 text-[#262527]">
+          {label}
+          {required && <span className="text-[#b32318]"> *</span>}
+        </p>
+        <p className="mt-1 text-sm leading-5 text-[#86868b]">{description}</p>
       </div>
       <div className="min-w-0">{children}</div>
     </div>
