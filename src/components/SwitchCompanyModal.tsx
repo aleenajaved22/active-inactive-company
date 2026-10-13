@@ -55,18 +55,15 @@ function ModalFormRow({
   label,
   description,
   required,
-  stacked,
   children,
 }: {
   label: string
   description: string
   required?: boolean
-  /** Puts the fields under the label at full width, for rows that need more room. */
-  stacked?: boolean
   children: ReactNode
 }) {
   return (
-    <div className={`grid gap-x-8 gap-y-3 py-5 ${stacked ? 'grid-cols-1' : 'grid-cols-2'}`}>
+    <div className="grid grid-cols-2 items-start gap-x-8 gap-y-3 py-5">
       <div className="min-w-0">
         <p className="text-sm font-bold leading-5 text-[#262527]">
           {label}
@@ -439,34 +436,38 @@ export function SwitchCompanyModal({
           </ModalFormRow>
 
           <ModalFormRow label={OCCUPANCY_LABEL} description={OCCUPANCY_DESCRIPTION}>
-            {spaceLocked && selectedSpace ? (
-              <div className="flex flex-col gap-2">
+            <div className="ml-auto flex w-fit max-w-full flex-col items-end gap-2">
+              {spaceLocked && selectedSpace ? (
+                <>
+                  <SpaceFields
+                    idPrefix="switch-company-locked"
+                    size="sm"
+                    layout="weighted"
+                    disabled
+                    value={lockedSpaceFields(selectedSpace)}
+                    onChange={() => {}}
+                  />
+                  {selectedSpace.currentCompanyName && (
+                    <p className="w-full text-right text-sm leading-5 text-[#86868b]">
+                      Current: {selectedSpace.currentCompanyName}
+                    </p>
+                  )}
+                </>
+              ) : (
                 <SpaceFields
-                  idPrefix="switch-company-locked"
+                  idPrefix="switch-company"
                   size="sm"
-                  layout="stacked"
-                  disabled
-                  value={lockedSpaceFields(selectedSpace)}
-                  onChange={() => {}}
+                  layout="weighted"
+                  value={spaceFields}
+                  onChange={setSpaceFields}
+                  errors={{
+                    floor: showErrors ? floorError : null,
+                    suiteUnit: showErrors ? suiteUnitError : null,
+                  }}
                 />
-                {selectedSpace.currentCompanyName && (
-                  <p className="text-sm leading-5 text-[#86868b]">Current: {selectedSpace.currentCompanyName}</p>
-                )}
-              </div>
-            ) : (
-              <SpaceFields
-                idPrefix="switch-company"
-                size="sm"
-                layout="stacked"
-                value={spaceFields}
-                onChange={setSpaceFields}
-                errors={{
-                  floor: showErrors ? floorError : null,
-                  suiteUnit: showErrors ? suiteUnitError : null,
-                }}
-              />
-            )}
-            {showErrors && spaceError && <ModalFieldError>{spaceError}</ModalFieldError>}
+              )}
+              {showErrors && spaceError && <ModalFieldError>{spaceError}</ModalFieldError>}
+            </div>
           </ModalFormRow>
 
           <ModalFormRow

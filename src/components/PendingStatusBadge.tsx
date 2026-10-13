@@ -21,15 +21,12 @@ function PendingEffectiveDateInfo({
       const trigger = triggerRef.current
       if (!trigger) return
       const rect = trigger.getBoundingClientRect()
-      const width = Math.min(240, window.innerWidth - 24)
-      let left = rect.left + rect.width / 2 - width / 2
-      left = Math.max(12, Math.min(left, window.innerWidth - width - 12))
       setStyle({
         position: 'fixed',
-        left,
+        left: rect.left + rect.width / 2,
         top: rect.top - 6,
-        width,
-        transform: 'translateY(-100%)',
+        transform: 'translate(-50%, -100%)',
+        maxWidth: Math.min(320, window.innerWidth - 24),
         zIndex: 80,
       })
     }

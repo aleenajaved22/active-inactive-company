@@ -2,9 +2,6 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import modalClose from '../assets/modal-close.svg'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
-import { ModalDateInput } from './ModalDateInput'
-import { COMPANY_AT_PROPERTY } from '../data/companyAtPropertyCopy'
-
 type EditDealDrawerProps = {
   open: boolean
   onClose: () => void
@@ -122,7 +119,6 @@ export function EditDealDrawer({ open, onClose }: EditDealDrawerProps) {
   const [parkingSpaces, setParkingSpaces] = useState('')
   const [avgRent, setAvgRent] = useState('')
   const [buildingClass, setBuildingClass] = useState('')
-  const [companyAssociationEndDate, setCompanyAssociationEndDate] = useState('')
 
   useEffect(() => {
     if (!open) return
@@ -228,15 +224,6 @@ export function EditDealDrawer({ open, onClose }: EditDealDrawerProps) {
                 <MetricField id="edit-property-building-class" label="Building Class" value={buildingClass} onChange={setBuildingClass} />
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <DrawerLabel variant="regular">{COMPANY_AT_PROPERTY.tillDateLabel}</DrawerLabel>
-                <ModalDateInput
-                  id="edit-deal-company-till-date"
-                  value={companyAssociationEndDate}
-                  onChange={setCompanyAssociationEndDate}
-                  variant="drawer"
-                />
-              </div>
             </div>
           </div>
 

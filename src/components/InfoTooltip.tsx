@@ -29,15 +29,12 @@ export function InfoTooltip({
       const trigger = triggerRef.current
       if (!trigger) return
       const rect = trigger.getBoundingClientRect()
-      const width = Math.min(320, window.innerWidth - 24)
-      let left = rect.left + rect.width / 2 - width / 2
-      left = Math.max(12, Math.min(left, window.innerWidth - width - 12))
       setStyle({
         position: 'fixed',
-        left,
+        left: rect.left + rect.width / 2,
         top: rect.top - 6,
-        width,
-        transform: 'translateY(-100%)',
+        transform: 'translate(-50%, -100%)',
+        maxWidth: Math.min(320, window.innerWidth - 24),
         zIndex: 80,
       })
     }
@@ -82,7 +79,7 @@ export function InfoTooltip({
             id={tooltipId}
             role="tooltip"
             style={style}
-            className="pointer-events-none rounded-lg bg-[#262527] p-3 text-sm leading-5 text-white shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
+            className="pointer-events-none w-max max-w-[min(320px,calc(100vw-24px))] rounded-lg bg-[#262527] p-3 text-sm leading-5 text-white shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
           >
             {text}
           </div>,

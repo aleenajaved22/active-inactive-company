@@ -1,14 +1,126 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
+import { createPortal } from 'react-dom'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
-import { propertyAffiliationOptions, type PropertyAffiliation } from './switchCompanyTypes'
+import {
+  affiliationBadgeStyles,
+  propertyAffiliationOptions,
+  type PropertyAffiliation,
+} from './switchCompanyTypes'
+
+const MAX_VISIBLE_PILLS = 4
+
+function AffiliationPill({ label }: { label: PropertyAffiliation }) {
+  const { bg, text } = affiliationBadgeStyles[label]
+  return (
+    <span
+      className="inline-flex max-w-[140px] shrink-0 items-center truncate rounded-2xl px-2 py-0.5 text-xs font-medium leading-[18px]"
+      style={{ backgroundColor: bg, color: text }}
+    >
+      {label}
+    </span>
+  )
+}
+
+function MoreAffiliationsPill({ labels }: { labels: PropertyAffiliation[] }) {
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const tooltipId = useId()
+  const [visible, setVisible] = useState(false)
+  const [style, setStyle] = useState<CSSProperties>({})
+
+  useLayoutEffect(() => {
+    if (!visible || !triggerRef.current) return
+
+    const updatePosition = () => {
+      const trigger = triggerRef.current
+      if (!trigger) return
+      const rect = trigger.getBoundingClientRect()
+      setStyle({
+        position: 'fixed',
+        left: rect.left + rect.width / 2,
+        top: rect.top - 6,
+        transform: 'translate(-50%, -100%)',
+        maxWidth: Math.min(320, window.innerWidth - 24),
+        zIndex: 80,
+      })
+    }
+
+    updatePosition()
+    window.addEventListener('scroll', updatePosition, true)
+    window.addEventListener('resize', updatePosition)
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true)
+      window.removeEventListener('resize', updatePosition)
+    }
+  }, [visible])
+
+  const hiddenLabel = labels.join(', ')
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-describedby={visible ? tooltipId : undefined}
+        aria-label={`${labels.length} more affiliations: ${hiddenLabel}`}
+        className="inline-flex shrink-0 items-center rounded-2xl bg-[#f5f5f6] px-2 py-0.5 text-xs font-medium leading-[18px] text-[#5b5b5f] hover:bg-[#ececed]"
+        onMouseEnter={() => setVisible(true)}
+        onMouseLeave={() => setVisible(false)}
+        onFocus={() => setVisible(true)}
+        onBlur={() => setVisible(false)}
+        onClick={(event) => {
+          event.stopPropagation()
+          event.preventDefault()
+        }}
+      >
+        +{labels.length} more
+      </button>
+      {visible &&
+        createPortal(
+          <div
+            id={tooltipId}
+            role="tooltip"
+            style={style}
+            className="pointer-events-none w-max max-w-[min(320px,calc(100vw-24px))] rounded-lg bg-[#262527] p-3 text-sm leading-5 text-white shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
+          >
+            <div className="flex flex-wrap gap-1.5">
+              {labels.map((label) => (
+                <AffiliationPill key={label} label={label} />
+              ))}
+            </div>
+          </div>,
+          document.body,
+        )}
+    </>
+  )
+}
+
+function CheckboxMark({ checked }: { checked: boolean }) {
+  return (
+    <span
+      className={`flex size-4 shrink-0 items-center justify-center rounded border ${
+        checked ? 'border-primary bg-primary' : 'border-[#d0d0d4] bg-white'
+      }`}
+      aria-hidden
+    >
+      {checked && (
+        <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+          <path
+            d="M1 4L3.5 6.5L9 1"
+            stroke="white"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+    </span>
+  )
+}
 
 /**
- * Property Affiliation as a plain multi-select dropdown: ordinary text options
- * with a check against each one chosen, and the choices listed as text in the
- * field. The affiliations wear their coloured pills where they are displayed;
- * the control used to pick them stays quiet. Wherever a company's affiliation is
- * chosen it is chosen here, so it reads the same in the Add / Switch / Edit
- * company modals and the Create Property drawer.
+ * Property Affiliation multi-select: checkbox list in the dropdown; selected
+ * affiliations appear as coloured pills in the field, with "+N more" and a
+ * tooltip when they do not all fit.
  */
 export function AffiliationSelect({
   id,
@@ -28,7 +140,6 @@ export function AffiliationSelect({
   const listRef = useRef<HTMLUListElement>(null)
   const [open, setOpen] = useState(false)
 
-  // Opened near the bottom of a scrolling form, bring the whole list into view.
   useEffect(() => {
     if (open) listRef.current?.scrollIntoView({ block: 'nearest' })
   }, [open])
@@ -55,6 +166,8 @@ export function AffiliationSelect({
   }, [open])
 
   const selectedList = propertyAffiliationOptions.filter((label) => value.has(label))
+  const visiblePills = selectedList.slice(0, MAX_VISIBLE_PILLS)
+  const hiddenPills = selectedList.slice(MAX_VISIBLE_PILLS)
   const text = size === 'md' ? 'text-base leading-6' : 'text-sm leading-5'
 
   const toggle = (label: PropertyAffiliation) => {
@@ -73,18 +186,23 @@ export function AffiliationSelect({
         aria-expanded={open}
         aria-haspopup="listbox"
         onClick={() => setOpen((prev) => !prev)}
-        className={`flex w-full items-center gap-2 rounded-lg border bg-white px-3.5 text-left outline-none ${
-          size === 'md' ? 'h-11' : 'h-10'
+        className={`flex w-full min-h-10 items-center gap-2 rounded-lg border bg-white px-3.5 py-1.5 text-left outline-none ${
+          size === 'md' ? 'min-h-11' : ''
         } ${invalid ? 'border-[#b32318]' : open ? 'border-primary' : 'border-[#e6e6e7]'}`}
       >
-        <span
-          className={`min-w-0 flex-1 truncate ${text} ${
-            selectedList.length === 0 ? (size === 'md' ? 'text-[#ccc]' : 'text-[#6a6a70]') : 'text-[#262527]'
-          }`}
-        >
-          {selectedList.length === 0 ? 'Select Option' : selectedList.join(', ')}
+        <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+          {selectedList.length === 0 ? (
+            <span className={`${text} ${size === 'md' ? 'text-[#ccc]' : 'text-[#6a6a70]'}`}>Select Option</span>
+          ) : (
+            <>
+              {visiblePills.map((label) => (
+                <AffiliationPill key={label} label={label} />
+              ))}
+              {hiddenPills.length > 0 && <MoreAffiliationsPill labels={hiddenPills} />}
+            </>
+          )}
         </span>
-        <span className="relative size-5 shrink-0">
+        <span className="relative size-5 shrink-0 self-center">
           <img
             alt=""
             className={`absolute inset-0 block size-full max-w-none transition-transform ${open ? 'rotate-180' : ''}`}
@@ -106,26 +224,12 @@ export function AffiliationSelect({
                 <button
                   type="button"
                   onClick={() => toggle(label)}
-                  className={`flex w-full items-center justify-between gap-2 px-3.5 py-2.5 text-left ${text} hover:bg-[#f5f5f6] ${
-                    selected ? 'font-medium text-primary' : 'text-[#262527]'
+                  className={`flex w-full items-center gap-3 px-3.5 py-2.5 text-left ${text} hover:bg-[#f5f5f6] ${
+                    selected ? 'text-[#262527]' : 'text-[#262527]'
                   }`}
                 >
-                  {label}
-                  {selected && (
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.75"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden
-                    >
-                      <path d="M3.5 8.5L6.5 11.5L12.5 4.5" />
-                    </svg>
-                  )}
+                  <CheckboxMark checked={selected} />
+                  <span className="min-w-0 flex-1">{label}</span>
                 </button>
               </li>
             )

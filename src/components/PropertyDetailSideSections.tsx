@@ -154,7 +154,7 @@ export function PropertyDetailSideSections() {
         const title = propertyDetailSectionTitles[id]
         return (
           <div key={id} className="px-8">
-            <div className={`flex w-full items-center gap-2 ${expanded ? 'pt-3' : ''}`}>
+            <div className="flex w-full items-center gap-2">
               <button
                 type="button"
                 onClick={() => toggle(id)}
@@ -173,7 +173,9 @@ export function PropertyDetailSideSections() {
                 </button>
               )}
             </div>
-            {expanded && sectionContent(id)}
+            {expanded && (
+              <div className="max-h-[280px] overflow-y-auto">{sectionContent(id)}</div>
+            )}
           </div>
         )
       })}

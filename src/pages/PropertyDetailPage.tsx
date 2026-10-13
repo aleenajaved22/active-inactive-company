@@ -101,53 +101,57 @@ export function PropertyDetailPage({
             style={{ width: detailsWidth }}
             className="flex shrink-0 flex-col overflow-hidden border-r border-[#e6e6e7] bg-white"
           >
-            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto py-6" style={{ width: detailsWidth }}>
-            <div className="flex flex-col gap-5 px-8">
-              <PropertyStageActions
-                nextStageLabel={stageNav.nextStageLabel}
-                onBack={onBack}
-                onNext={stageNav.goNext}
-                onEdit={() => setEditDealOpen(true)}
-              />
-              <div className="flex items-center gap-2">
-                <img alt="" className="size-[50px] shrink-0 rounded object-cover" height={50} src={detailPropertyPhoto} width={50} />
-                <h1 title={title} className="line-clamp-2 min-w-0 flex-1 break-words text-xl font-bold leading-7 text-[#262527]">
-                  {title}
-                </h1>
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden py-6">
+              <div className="shrink-0">
+                <div className="flex flex-col gap-5 px-8">
+                  <PropertyStageActions
+                    nextStageLabel={stageNav.nextStageLabel}
+                    onBack={onBack}
+                    onNext={stageNav.goNext}
+                    onEdit={() => setEditDealOpen(true)}
+                  />
+                  <div className="flex items-start gap-2">
+                    <img alt="" className="size-[50px] shrink-0 rounded object-cover" height={50} src={detailPropertyPhoto} width={50} />
+                    <div className="min-w-0 flex-1">
+                      <h1 title={title} className="line-clamp-2 break-words text-xl font-bold leading-7 text-[#262527]">
+                        {title}
+                      </h1>
+                      <p className="mt-1 text-sm leading-5 text-[#6a6a70]">{property.address}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="h-5" aria-hidden />
+                <PropertyStagesPanel stages={stageNav.stages} />
+                <div className="my-4 px-8">
+                  <img alt="" className="block w-full max-w-none" src={detailDividerH} />
+                </div>
+                <div className="flex flex-col gap-1.5 px-5">
+                  <div className="flex items-center justify-between rounded-[82px] bg-white px-3 py-1.5">
+                    <span className="text-sm leading-5 text-primary">Level</span>
+                    <span className="flex items-center gap-2 text-sm leading-5 text-[#6a6a70]">
+                      2 ($10k/month)
+                      <span className="relative h-1 w-2">
+                        <img alt="" className="absolute inset-0 block size-full max-w-none" src={detailChevronSm} />
+                      </span>
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg bg-white px-3 py-1.5">
+                    <span className="text-sm leading-5 text-primary">Linked Franchise</span>
+                    <span className="flex items-center gap-2 text-sm leading-5 text-[#6a6a70]">
+                      Select Franchise
+                      <span className="relative h-1 w-2">
+                        <img alt="" className="absolute inset-0 block size-full max-w-none" src={detailChevronSm} />
+                      </span>
+                    </span>
+                  </div>
+                </div>
+                <div className="my-4 px-8">
+                  <img alt="" className="block w-full max-w-none" src={detailDividerH} />
+                </div>
               </div>
-              <div className="flex flex-col gap-2 text-sm leading-5 text-[#6a6a70]">
-                <p>{property.address}</p>
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <PropertyDetailSideSections />
               </div>
-            </div>
-            <div className="h-5" aria-hidden />
-            <PropertyStagesPanel stages={stageNav.stages} />
-            <div className="my-4 px-8">
-              <img alt="" className="block w-full max-w-none" src={detailDividerH} />
-            </div>
-            <div className="flex flex-col gap-1.5 px-5">
-              <div className="flex items-center justify-between rounded-[82px] bg-white px-3 py-1.5">
-                <span className="text-sm leading-5 text-primary">Level</span>
-                <span className="flex items-center gap-2 text-sm leading-5 text-[#6a6a70]">
-                  2 ($10k/month)
-                  <span className="relative h-1 w-2">
-                    <img alt="" className="absolute inset-0 block size-full max-w-none" src={detailChevronSm} />
-                  </span>
-                </span>
-              </div>
-              <div className="flex items-center justify-between rounded-lg bg-white px-3 py-1.5">
-                <span className="text-sm leading-5 text-primary">Linked Franchise</span>
-                <span className="flex items-center gap-2 text-sm leading-5 text-[#6a6a70]">
-                  Select Franchise
-                  <span className="relative h-1 w-2">
-                    <img alt="" className="absolute inset-0 block size-full max-w-none" src={detailChevronSm} />
-                  </span>
-                </span>
-              </div>
-            </div>
-            <div className="my-4 px-8">
-              <img alt="" className="block w-full max-w-none" src={detailDividerH} />
-            </div>
-            <PropertyDetailSideSections />
             </div>
           </aside>
           <ResizeHandle

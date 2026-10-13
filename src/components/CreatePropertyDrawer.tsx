@@ -16,11 +16,7 @@ import {
   supervisorOptions,
   type Affiliation,
 } from '../data/propertyFormOptions'
-import {
-  COMPANY_AT_PROPERTY,
-  HUBSPOT_STAGE_LABEL,
-  TILL_DATE_TOOLTIP,
-} from '../data/companyAtPropertyCopy'
+import { HUBSPOT_STAGE_LABEL } from '../data/companyAtPropertyCopy'
 import { buildOccupants } from '../data/companyAssociation'
 import { initialSpaceAssociations } from '../data/propertySpaceAssociations'
 import { validateOccupancy } from '../data/propertyOccupancy'
@@ -28,8 +24,6 @@ import { companyParents, type SpaceType } from '../data/propertySpaces'
 import { AffiliationSelect } from './AffiliationSelect'
 import { CreateCompanyModal } from './CreateCompanyModal'
 import { ContactTitleGrid } from './ContactTitleGrid'
-import { InfoTooltip } from './InfoTooltip'
-import { ModalDateInput } from './ModalDateInput'
 import { SpaceFields } from './PropertySpaceFields'
 
 type CreatePropertyDrawerProps = {
@@ -43,25 +37,6 @@ function DrawerLabel({ children, required }: { children: ReactNode; required?: b
       {children}
       {required && <span className="text-[#b32318]"> *</span>}
     </p>
-  )
-}
-
-function DrawerLabelWithInfo({
-  children,
-  required,
-  tooltip,
-  tooltipId,
-}: {
-  children: ReactNode
-  required?: boolean
-  tooltip: string
-  tooltipId: string
-}) {
-  return (
-    <div className="flex items-center gap-1">
-      <DrawerLabel required={required}>{children}</DrawerLabel>
-      <InfoTooltip id={tooltipId} label={`${children} information`} text={tooltip} />
-    </div>
   )
 }
 
@@ -168,7 +143,6 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
   const [addressNotes, setAddressNotes] = useState('')
   const [company, setCompany] = useState('Costco Wholesale')
   const [parentCompany, setParentCompany] = useState(companyParents['Costco Wholesale'] ?? '')
-  const [cutOffDate, setCutOffDate] = useState('')
   const [hubspotStage, setHubspotStage] = useState('')
   const [affiliations, setAffiliations] = useState<Set<Affiliation>>(new Set(defaultAffiliations))
   const [assignee, setAssignee] = useState('')
@@ -207,7 +181,6 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
     setAddressNotes('')
     setCompany('Costco Wholesale')
     setParentCompany(companyParents['Costco Wholesale'] ?? '')
-    setCutOffDate('')
     setHubspotStage('')
     setAffiliations(new Set(defaultAffiliations))
     setAssignee('')
@@ -322,37 +295,22 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                       />
                     </div>
                   </div>
-                  {/* Till Date takes the left column; Floor and Suite / Unit / Apartment
-                      share the right one, lining up with Company and Parent Company above. */}
-                  <div className="grid grid-cols-2 items-start gap-6">
-                    <div className="flex min-w-0 flex-col gap-1.5">
-                      <DrawerLabelWithInfo tooltip={TILL_DATE_TOOLTIP} tooltipId="create-property-cut-off-date-help">
-                        {COMPANY_AT_PROPERTY.tillDateLabel}
-                      </DrawerLabelWithInfo>
-                      <ModalDateInput
-                        id="create-property-cut-off-date"
-                        variant="drawer"
-                        value={cutOffDate}
-                        onChange={setCutOffDate}
-                      />
-                    </div>
-                    <div ref={spaceFieldRef} className="min-w-0">
-                      <SpaceFields
-                        layout="compact"
-                        idPrefix="create-property"
-                        value={{ floor, suiteUnitType, suiteUnitNumber }}
-                        onChange={(next) => {
-                          setFloor(next.floor)
-                          setSuiteUnitType(next.suiteUnitType)
-                          setSuiteUnitNumber(next.suiteUnitNumber)
-                        }}
-                        errors={{
-                          floor: submitAttempted ? floorError : null,
-                          suiteUnit: submitAttempted ? suiteUnitError : null,
-                        }}
-                        suiteUnitNumberRef={suiteUnitNumberRef}
-                      />
-                    </div>
+                  <div ref={spaceFieldRef} className="min-w-0">
+                    <SpaceFields
+                      layout="weighted"
+                      idPrefix="create-property"
+                      value={{ floor, suiteUnitType, suiteUnitNumber }}
+                      onChange={(next) => {
+                        setFloor(next.floor)
+                        setSuiteUnitType(next.suiteUnitType)
+                        setSuiteUnitNumber(next.suiteUnitNumber)
+                      }}
+                      errors={{
+                        floor: submitAttempted ? floorError : null,
+                        suiteUnit: submitAttempted ? suiteUnitError : null,
+                      }}
+                      suiteUnitNumberRef={suiteUnitNumberRef}
+                    />
                   </div>
                 </section>
 
