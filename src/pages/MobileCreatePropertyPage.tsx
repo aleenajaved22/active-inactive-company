@@ -180,6 +180,7 @@ export function MobileCreatePropertyPage({ onBack, onSubmit }: MobileCreatePrope
               <div ref={spaceFieldRef}>
                 <MobileOccupancyFields
                   hideHeading
+                  suiteUnitNumberOnly
                   value={{ floor, suiteUnitType, suiteUnitNumber }}
                   onChange={(next) => {
                     setFloor(next.floor)

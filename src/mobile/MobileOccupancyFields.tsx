@@ -4,6 +4,7 @@ import {
   OCCUPANCY_LABEL,
   OCCUPANCY_PLACEHOLDERS,
   OCCUPANCY_TOOLTIPS,
+  SUITE_UNIT_LABEL,
 } from '../data/companyAtPropertyCopy'
 import { suiteUnitTypes } from '../data/propertySpaces'
 import {
@@ -34,6 +35,7 @@ export function MobileOccupancyFields({
   numberRef,
   hideHeading,
   children,
+  suiteUnitNumberOnly = false,
 }: {
   value: MobileOccupancyValue
   onChange: (next: MobileOccupancyValue) => void
@@ -45,6 +47,8 @@ export function MobileOccupancyFields({
   hideHeading?: boolean
   /** Extra lines under the fields, e.g. a conflict message. */
   children?: React.ReactNode
+  /** Create Property: number only, no Suite / Unit / Apartment type picker. */
+  suiteUnitNumberOnly?: boolean
 }) {
   return (
     <div className="flex flex-col gap-6">
@@ -68,16 +72,29 @@ export function MobileOccupancyFields({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <MobileSuiteUnitField
-          typeValue={value.suiteUnitType || 'Suite'}
-          onTypeChange={(suiteUnitType) => onChange({ ...value, suiteUnitType })}
-          typeOptions={suiteUnitTypes}
-          numberValue={value.suiteUnitNumber}
-          onNumberChange={(suiteUnitNumber) => onChange({ ...value, suiteUnitNumber })}
-          numberRef={numberRef}
-          disabled={disabled}
-          error={suiteUnitError}
-        />
+        {suiteUnitNumberOnly ? (
+          <MobileTextField
+            id="mobile-create-property-suite-unit-number"
+            label={SUITE_UNIT_LABEL}
+            value={value.suiteUnitNumber}
+            disabled={disabled}
+            onChange={(suiteUnitNumber) => onChange({ ...value, suiteUnitNumber })}
+            placeholder={OCCUPANCY_PLACEHOLDERS.suiteUnit}
+            error={suiteUnitError}
+            inputRef={numberRef}
+          />
+        ) : (
+          <MobileSuiteUnitField
+            typeValue={value.suiteUnitType || 'Suite'}
+            onTypeChange={(suiteUnitType) => onChange({ ...value, suiteUnitType })}
+            typeOptions={suiteUnitTypes}
+            numberValue={value.suiteUnitNumber}
+            onNumberChange={(suiteUnitNumber) => onChange({ ...value, suiteUnitNumber })}
+            numberRef={numberRef}
+            disabled={disabled}
+            error={suiteUnitError}
+          />
+        )}
         <MobileFieldHint>{OCCUPANCY_TOOLTIPS.suiteUnit}</MobileFieldHint>
       </div>
 

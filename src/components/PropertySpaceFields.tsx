@@ -281,6 +281,7 @@ export function SpaceFields({
   suiteUnitNumberRef,
   disabled,
   layout = 'weighted',
+  suiteUnitNumberOnly = false,
 }: {
   value: SpaceFieldsValue
   onChange: (next: SpaceFieldsValue) => void
@@ -293,6 +294,8 @@ export function SpaceFields({
   suiteUnitNumberRef?: RefObject<HTMLInputElement | null>
   /** Read-only display, e.g. when the space is locked to an existing one. */
   disabled?: boolean
+  /** Create Property: number only, no Suite / Unit / Apartment type dropdown. */
+  suiteUnitNumberOnly?: boolean
 }) {
   const suiteUnitInvalid = Boolean(errors?.suiteUnit) || invalidField === 'suiteUnit'
   // In a shared row the messages go beneath both fields, not inside each one.
@@ -312,41 +315,66 @@ export function SpaceFields({
         invalid={invalidField === 'floor' || (messagesBelow && Boolean(errors?.floor))}
         disabled={disabled}
       />
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor={`${idPrefix}-suite-unit-type`}>
-          <FieldLabel tooltip={OCCUPANCY_TOOLTIPS.suiteUnit} tooltipLabel={`${SUITE_UNIT_LABEL} format`}>
-            {SUITE_UNIT_LABEL}
-          </FieldLabel>
-        </label>
-        <div
-          className={`flex ${fieldHeight[size]} rounded-lg border ${disabled ? 'bg-[#f5f5f6]' : 'bg-white'} ${
-            suiteUnitInvalid ? 'border-[#d92d20]' : 'border-[#e6e6e7] focus-within:border-primary'
-          }`}
-        >
-          <SuiteUnitTypeMenu
-            id={`${idPrefix}-suite-unit-type`}
-            value={value.suiteUnitType}
-            onChange={(suiteUnitType) => onChange({ ...value, suiteUnitType })}
-            invalid={suiteUnitInvalid}
-            disabled={disabled}
-            size={size}
-          />
-          <div className="my-2.5 w-px shrink-0 bg-[#e6e6e7]" aria-hidden />
+      {suiteUnitNumberOnly ? (
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor={`${idPrefix}-suite-unit-number`}>
+            <FieldLabel tooltip={OCCUPANCY_TOOLTIPS.suiteUnit} tooltipLabel={`${SUITE_UNIT_LABEL} format`}>
+              {SUITE_UNIT_LABEL}
+            </FieldLabel>
+          </label>
           <input
             ref={suiteUnitNumberRef}
             id={`${idPrefix}-suite-unit-number`}
             type="text"
-            aria-label={value.suiteUnitType ? `${value.suiteUnitType} number` : 'Suite or unit number'}
+            aria-label="Suite or unit number"
             aria-invalid={suiteUnitInvalid || undefined}
             value={value.suiteUnitNumber}
             disabled={disabled}
             onChange={(event) => onChange({ ...value, suiteUnitNumber: event.target.value })}
             placeholder={OCCUPANCY_PLACEHOLDERS.suiteUnit}
-            className={`min-w-0 flex-1 rounded-r-lg bg-transparent px-3.5 text-[#262527] outline-none text-ellipsis ${fieldText[size]}`}
+            className={`${fieldHeight[size]} w-full rounded-lg border ${disabled ? 'bg-[#f5f5f6]' : 'bg-white'} px-3.5 text-[#262527] outline-none text-ellipsis ${fieldText[size]} ${
+              suiteUnitInvalid ? 'border-[#d92d20]' : 'border-[#e6e6e7] focus:border-primary'
+            }`}
           />
+          {!messagesBelow && errors?.suiteUnit && <FieldError>{errors.suiteUnit}</FieldError>}
         </div>
-        {!messagesBelow && errors?.suiteUnit && <FieldError>{errors.suiteUnit}</FieldError>}
-      </div>
+      ) : (
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor={`${idPrefix}-suite-unit-type`}>
+            <FieldLabel tooltip={OCCUPANCY_TOOLTIPS.suiteUnit} tooltipLabel={`${SUITE_UNIT_LABEL} format`}>
+              {SUITE_UNIT_LABEL}
+            </FieldLabel>
+          </label>
+          <div
+            className={`flex ${fieldHeight[size]} rounded-lg border ${disabled ? 'bg-[#f5f5f6]' : 'bg-white'} ${
+              suiteUnitInvalid ? 'border-[#d92d20]' : 'border-[#e6e6e7] focus-within:border-primary'
+            }`}
+          >
+            <SuiteUnitTypeMenu
+              id={`${idPrefix}-suite-unit-type`}
+              value={value.suiteUnitType}
+              onChange={(suiteUnitType) => onChange({ ...value, suiteUnitType })}
+              invalid={suiteUnitInvalid}
+              disabled={disabled}
+              size={size}
+            />
+            <div className="my-2.5 w-px shrink-0 bg-[#e6e6e7]" aria-hidden />
+            <input
+              ref={suiteUnitNumberRef}
+              id={`${idPrefix}-suite-unit-number`}
+              type="text"
+              aria-label={value.suiteUnitType ? `${value.suiteUnitType} number` : 'Suite or unit number'}
+              aria-invalid={suiteUnitInvalid || undefined}
+              value={value.suiteUnitNumber}
+              disabled={disabled}
+              onChange={(event) => onChange({ ...value, suiteUnitNumber: event.target.value })}
+              placeholder={OCCUPANCY_PLACEHOLDERS.suiteUnit}
+              className={`min-w-0 flex-1 rounded-r-lg bg-transparent px-3.5 text-[#262527] outline-none text-ellipsis ${fieldText[size]}`}
+            />
+          </div>
+          {!messagesBelow && errors?.suiteUnit && <FieldError>{errors.suiteUnit}</FieldError>}
+        </div>
+      )}
     </div>
     {messagesBelow && (errors?.floor || errors?.suiteUnit) && (
       <div className="mt-1.5 flex flex-col gap-1">

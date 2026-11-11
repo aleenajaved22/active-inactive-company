@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ReactNode, RefObject } from 'react'
 import { OCCUPANCY_PLACEHOLDERS, SUITE_UNIT_LABEL } from '../data/companyAtPropertyCopy'
 import { IconAlert, IconChevronDown } from './MobileIcons'
 
@@ -129,6 +129,7 @@ type TextFieldProps = FieldBaseProps & {
   placeholder?: string
   inputMode?: 'text' | 'numeric'
   disabled?: boolean
+  inputRef?: RefObject<HTMLInputElement | null>
 }
 
 export function MobileTextField({
@@ -142,12 +143,14 @@ export function MobileTextField({
   inputMode = 'text',
   disabled,
   invalid,
+  inputRef,
 }: TextFieldProps) {
   return (
     <div className="flex w-full flex-col gap-1">
       <FieldShell invalid={Boolean(error) || invalid} disabled={disabled}>
         <FieldLabel required={required}>{label}</FieldLabel>
         <input
+          ref={inputRef}
           id={id}
           type="text"
           inputMode={inputMode}
