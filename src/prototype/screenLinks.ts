@@ -14,7 +14,7 @@ export type PrototypeScreen =
 export const prototypeScreenCatalog: { label: string; screen: PrototypeScreen }[] = [
   { label: 'Property listing', screen: { screen: 'listing' } },
   { label: 'Property detail', screen: { screen: 'property', propertyIndex: 0 } },
-  { label: 'Switch company', screen: { screen: 'property', propertyIndex: 0, modal: 'switch-company' } },
+  { label: 'Change company', screen: { screen: 'property', propertyIndex: 0, modal: 'switch-company' } },
   { label: 'Create company', screen: { screen: 'property', propertyIndex: 0, modal: 'create-company' } },
   { label: 'Mobile — Property listing', screen: { screen: 'mobile-listing' } },
   { label: 'Mobile — Create property', screen: { screen: 'mobile-create-property' } },

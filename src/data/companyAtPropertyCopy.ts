@@ -21,13 +21,18 @@ export const EFFECTIVE_DATE_DESCRIPTION =
 export const TILL_DATE_TOOLTIP =
   'On the Company at Property - End Date, the selected company is dissociated from this property'
 
-/** Add / Switch / Make active state the same rule inline, under the label. */
+/** Add / Change / Make active state the same rule inline, under the label. */
 export const TILL_DATE_DESCRIPTION =
   'On the Company at Property - End Date, the selected company is dissociated from this property. A company with active contracts cannot be dissociated; close or complete them first'
 
 /** Edit Company sits the rule under the field as helper text. */
 export const TILL_DATE_HELPER =
   'On this date, the company is dissociated from this property. Leave empty for no end date'
+
+export const PROPERTY_AFFILIATION_LABEL = 'Property Affiliation'
+
+export const PROPERTY_AFFILIATION_DESCRIPTION =
+  'Select one or more affiliation types that apply to this property'
 
 export const OCCUPANCY_LABEL = 'Property Occupancy'
 
@@ -64,11 +69,11 @@ export const PENDING_BANNER =
 /** Right panel banner once a company has left the property. */
 export const INACTIVE_BANNER = 'This company has left the property, so its data is read-only'
 
-/** Discarding a scheduled switch: nothing has taken effect, so it is cancelled rather than reverted. */
+/** Discarding a scheduled change: nothing has taken effect, so it is cancelled rather than reverted. */
 export const DISCARD_SWITCH = {
-  action: 'Discard Switch',
-  heading: 'Discard Switch?',
-  body: 'This will cancel the pending switch. The company will be made inactive on this property, and any data added will be retained.',
+  action: 'Discard change',
+  heading: 'Discard change?',
+  body: 'This will cancel the pending change. The company will be made inactive on this property, and any data added will be retained.',
   confirm: 'Discard',
   cancel: 'Cancel',
 } as const

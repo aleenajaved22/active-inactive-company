@@ -7,6 +7,11 @@ import { validateCompanyEndDate } from '../data/companyAssociation'
 import {
   COMPANY_AT_PROPERTY,
   ERRORS,
+  OCCUPANCY_DESCRIPTION,
+  OCCUPANCY_LABEL,
+  PROPERTY_AFFILIATION_DESCRIPTION,
+  PROPERTY_AFFILIATION_LABEL,
+  SWITCH_SUITE_LABEL,
   TILL_DATE_HELPER,
 } from '../data/companyAtPropertyCopy'
 import {
@@ -14,11 +19,10 @@ import {
   validateOccupancy,
   type OccupantSpaces,
 } from '../data/propertyOccupancy'
-import { AssigneeFields, emptyAssignee, type AssigneeValue } from './AssigneeFields'
-import { InfoTooltip } from './InfoTooltip'
+import { assigneeOptions } from '../data/propertyFormOptions'
 import { ModalDateInput } from './ModalDateInput'
 import { AffiliationSelect } from './AffiliationSelect'
-import { OccupancyGroup } from './OccupancyGroup'
+import { ModalFormRow } from './ModalFormRow'
 import { SpaceFields, emptySpaceFields, type SpaceFieldsValue } from './PropertySpaceFields'
 import type { PropertyAffiliation } from './switchCompanyTypes'
 
@@ -86,12 +90,6 @@ export function EditCompanyModal({
   const [spaceFields, setSpaceFields] = useState<SpaceFieldsValue>(
     () => initialSpaceFields ?? emptySpaceFields(),
   )
-  const [assignee, setAssignee] = useState<AssigneeValue>(() => ({
-    ...emptyAssignee(),
-    assignee: initialAssignee,
-    assignSupervisor: Boolean(initialSupervisor),
-    supervisor: initialSupervisor ?? '',
-  }))
   const [submitAttempted, setSubmitAttempted] = useState(false)
 
   const endDateError = validateCompanyEndDate({ endDate, effectiveDate, nextCompany })
@@ -105,18 +103,16 @@ export function EditCompanyModal({
     adding: false,
   })
   const affiliationError = affiliations.size === 0 ? ERRORS.affiliationRequired : null
-  const assigneeError = submitAttempted && !assignee.assignee ? 'Select an assignee.' : null
 
   const handleSave = () => {
     setSubmitAttempted(true)
     if (endDateError || occupancy.hasErrors || missingOccupancy || affiliationError) return
-    if (!assignee.assignee) return
     onSave({
       affiliations: [...affiliations],
       endDate: endDate.trim(),
       spaceFields,
-      assignee: assignee.assignee,
-      supervisor: assignee.assignSupervisor ? assignee.supervisor : undefined,
+      assignee: initialAssignee.trim() || assigneeOptions[0] || '',
+      supervisor: initialSupervisor,
     })
   }
 
@@ -139,7 +135,7 @@ export function EditCompanyModal({
       aria-labelledby="edit-company-title"
     >
       <button type="button" className="absolute inset-0 bg-[#262527]/40" aria-label="Close dialog" onClick={onClose} />
-      <div className="relative flex max-h-[calc(100vh-2rem)] w-full max-w-[640px] flex-col rounded-xl border border-[#e6e6e7] bg-white p-6 shadow-[0px_20px_24px_-4px_rgba(16,24,40,0.1),0px_8px_8px_-4px_rgba(16,24,40,0.04)]">
+      <div className="relative flex max-h-[calc(100vh-2rem)] w-full max-w-[960px] flex-col rounded-xl border border-[#e6e6e7] bg-white p-6 shadow-[0px_20px_24px_-4px_rgba(16,24,40,0.1),0px_8px_8px_-4px_rgba(16,24,40,0.04)]">
         <div className="mb-4 flex w-full shrink-0 items-start gap-2 border-b border-[#e6e6e7] pb-4">
           <h2 id="edit-company-title" className="min-w-0 flex-1 text-xl font-bold leading-7 text-[#262527]">
             Edit Company
@@ -154,50 +150,41 @@ export function EditCompanyModal({
           <p className="text-sm font-medium leading-5 text-[#262527]">{companyRecordLabel(company)}</p>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="edit-company-affiliation" className="text-sm font-medium leading-5 text-[#86868b]">
-            Property Affiliation
-            <span className="text-[#b32318]"> *</span>
-          </label>
-          <AffiliationSelect id="edit-company-affiliation" value={affiliations} onChange={setAffiliations} />
-          {submitAttempted && affiliationError && <ModalError>{affiliationError}</ModalError>}
-        </div>
-
-        <div className="mt-5 flex flex-col gap-2">
-          <OccupancyGroup>
-          <SpaceFields
-            layout="even"
-            idPrefix="edit-company"
-            size="sm"
-            value={spaceFields}
-            onChange={setSpaceFields}
-            errors={{
-              floor: submitAttempted ? occupancy.floorError : null,
-              suiteUnit: submitAttempted ? occupancy.suiteUnitError : null,
-            }}
-          />
-          </OccupancyGroup>
-          {submitAttempted && missingOccupancy && <ModalError>{missingOccupancy}</ModalError>}
-        </div>
-
-        <div className="mt-4 flex flex-col gap-1.5">
-          <div className="flex items-center gap-1.5">
-            <label htmlFor="edit-company-end-date" className="text-sm font-medium leading-5 text-[#86868b]">
-              {COMPANY_AT_PROPERTY.tillDateLabel}
-            </label>
-            <InfoTooltip label={`${COMPANY_AT_PROPERTY.tillDateLabel} information`} text={TILL_DATE_HELPER} />
+        <ModalFormRow
+          label={PROPERTY_AFFILIATION_LABEL}
+          description={PROPERTY_AFFILIATION_DESCRIPTION}
+          required
+        >
+          <div className="flex flex-col gap-1.5">
+            <AffiliationSelect id="edit-company-affiliation" value={affiliations} onChange={setAffiliations} />
+            {submitAttempted && affiliationError && <ModalError>{affiliationError}</ModalError>}
           </div>
-          <ModalDateInput id="edit-company-end-date" value={endDate} onChange={setEndDate} />
-          {submitAttempted && endDateError && <ModalError>{endDateError}</ModalError>}
-        </div>
+        </ModalFormRow>
 
-        <div className="mt-4 flex flex-col gap-1.5">
-          <p className="text-sm font-medium leading-5 text-[#86868b]">
-            Assign to
-            <span className="text-[#b32318]"> *</span>
-          </p>
-          <AssigneeFields idPrefix="edit-company" value={assignee} onChange={setAssignee} error={assigneeError} />
-        </div>
+        <ModalFormRow label={OCCUPANCY_LABEL} description={OCCUPANCY_DESCRIPTION}>
+          <div className="flex flex-col gap-1.5">
+            <SpaceFields
+              idPrefix="edit-company"
+              size="sm"
+              suiteUnitNumberOnly
+              suiteUnitOnlyLabel={SWITCH_SUITE_LABEL}
+              value={spaceFields}
+              onChange={setSpaceFields}
+              errors={{
+                suiteUnit: submitAttempted ? occupancy.suiteUnitError : null,
+              }}
+            />
+            {submitAttempted && missingOccupancy && <ModalError>{missingOccupancy}</ModalError>}
+          </div>
+        </ModalFormRow>
+
+        <ModalFormRow label={COMPANY_AT_PROPERTY.tillDateLabel} description={TILL_DATE_HELPER}>
+          <div className="flex flex-col gap-1.5">
+            <ModalDateInput id="edit-company-end-date" value={endDate} onChange={setEndDate} />
+            {submitAttempted && endDateError && <ModalError>{endDateError}</ModalError>}
+          </div>
+        </ModalFormRow>
+
         </div>
 
         <div className="mt-6 flex shrink-0 justify-end gap-3 border-t border-[#e6e6e7] pt-4">

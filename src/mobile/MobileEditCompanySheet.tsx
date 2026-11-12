@@ -4,6 +4,7 @@ import { validateCompanyEndDate } from '../data/companyAssociation'
 import {
   COMPANY_AT_PROPERTY,
   ERRORS,
+  SWITCH_SUITE_LABEL,
   TILL_DATE_HELPER,
 } from '../data/companyAtPropertyCopy'
 import {
@@ -12,13 +13,12 @@ import {
   type OccupancyFieldsValue,
   type OccupantSpaces,
 } from '../data/propertyOccupancy'
-import { MobileAssigneeFields, emptyMobileAssignee, type MobileAssigneeValue } from './MobileAssigneeFields'
+import { assigneeOptions } from '../data/propertyFormOptions'
 import {
   MobileChoiceChips,
   MobileDateField,
   MobileFieldError,
   MobileFieldHint,
-  MobileSectionHeading,
 } from './MobileFields'
 import { MobileOccupancyFields } from './MobileOccupancyFields'
 import { MobileSheet } from './MobileSheet'
@@ -68,12 +68,6 @@ export function MobileEditCompanySheet({
   const [spaceFields, setSpaceFields] = useState<OccupancyFieldsValue>(
     initialSpaceFields ?? { floor: '', suiteUnitType: 'Suite', suiteUnitNumber: '' },
   )
-  const [assignee, setAssignee] = useState<MobileAssigneeValue>(() => ({
-    ...emptyMobileAssignee(),
-    assignee: initialAssignee,
-    assignSupervisor: Boolean(initialSupervisor),
-    supervisor: initialSupervisor ?? '',
-  }))
   const [submitAttempted, setSubmitAttempted] = useState(false)
 
   const endDateError = validateCompanyEndDate({ endDate, effectiveDate, nextCompany })
@@ -85,7 +79,6 @@ export function MobileEditCompanySheet({
     adding: false,
   })
   const affiliationError = affiliations.size === 0 ? ERRORS.affiliationRequired : null
-  const assigneeError = submitAttempted && !assignee.assignee ? 'Select an assignee.' : null
 
   const toggle = (label: string) => {
     setAffiliations((prev) => {
@@ -99,13 +92,12 @@ export function MobileEditCompanySheet({
   const save = () => {
     setSubmitAttempted(true)
     if (endDateError || occupancy.hasErrors || missingOccupancy || affiliationError) return
-    if (!assignee.assignee) return
     onSave({
       affiliations: [...affiliations] as PropertyAffiliation[],
       endDate: endDate.trim(),
       spaceFields,
-      assignee: assignee.assignee,
-      supervisor: assignee.assignSupervisor ? assignee.supervisor : undefined,
+      assignee: initialAssignee.trim() || assigneeOptions[0] || '',
+      supervisor: initialSupervisor,
     })
     onClose()
   }
@@ -126,7 +118,8 @@ export function MobileEditCompanySheet({
         <MobileOccupancyFields
           value={spaceFields}
           onChange={setSpaceFields}
-          floorError={submitAttempted ? occupancy.floorError : null}
+          suiteUnitNumberOnly
+          suiteUnitOnlyLabel={SWITCH_SUITE_LABEL}
           suiteUnitError={submitAttempted ? occupancy.suiteUnitError : null}
         >
           {submitAttempted && missingOccupancy && <MobileFieldError>{missingOccupancy}</MobileFieldError>}
@@ -140,11 +133,6 @@ export function MobileEditCompanySheet({
             error={submitAttempted ? endDateError : null}
           />
           <MobileFieldHint>{TILL_DATE_HELPER}</MobileFieldHint>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <MobileSectionHeading>Assign to</MobileSectionHeading>
-          <MobileAssigneeFields value={assignee} onChange={setAssignee} error={assigneeError} />
         </div>
 
         <button

@@ -36,6 +36,7 @@ export function MobileOccupancyFields({
   hideHeading,
   children,
   suiteUnitNumberOnly = false,
+  suiteUnitOnlyLabel,
 }: {
   value: MobileOccupancyValue
   onChange: (next: MobileOccupancyValue) => void
@@ -49,7 +50,9 @@ export function MobileOccupancyFields({
   children?: React.ReactNode
   /** Create Property: number only, no Suite / Unit / Apartment type picker. */
   suiteUnitNumberOnly?: boolean
+  suiteUnitOnlyLabel?: string
 }) {
+  const suiteLabel = suiteUnitOnlyLabel ?? CREATE_PROPERTY_SUITE_LABEL
   return (
     <div className="flex flex-col gap-6">
       {!hideHeading && (
@@ -77,7 +80,7 @@ export function MobileOccupancyFields({
         {suiteUnitNumberOnly ? (
           <MobileTextField
             id="mobile-create-property-suite-unit-number"
-            label={CREATE_PROPERTY_SUITE_LABEL}
+            label={suiteLabel}
             value={value.suiteUnitNumber}
             disabled={disabled}
             onChange={(suiteUnitNumber) => onChange({ ...value, suiteUnitNumber })}

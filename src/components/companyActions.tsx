@@ -301,7 +301,7 @@ export function useCompanyActions({
       ]
     }
     if (association.status === 'Pending') {
-      return [{ label: 'Edit switch', icon: 'edit', onSelect: () => setEditPendingId(association.id) }]
+      return [{ label: 'Change company', icon: 'switch', onSelect: () => setEditPendingId(association.id) }]
     }
     // Bring a past company back onto the space it used to hold.
     return [

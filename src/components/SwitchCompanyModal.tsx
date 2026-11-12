@@ -5,6 +5,7 @@ import questionsChevronDown from '../assets/questions-chevron-down.svg'
 import detailPlus from '../assets/detail-plus.svg'
 import tableAlertCircleWarn from '../assets/table-alert-circle-warn.svg'
 import { CreateCompanyModal } from './CreateCompanyModal'
+import { ModalFormRow } from './ModalFormRow'
 import { ModalDateInput } from './ModalDateInput'
 import {
   deriveSpaceKey,
@@ -50,31 +51,6 @@ type SwitchCompanyModalProps = {
   onConfirm: (payload: SwitchCompanySubmitPayload) => void
   onRevertPending?: (associationId: string) => void
   onFlowChange?: (flow: 'switch-company' | 'create-company' | null) => void
-}
-
-function ModalFormRow({
-  label,
-  description,
-  required,
-  children,
-}: {
-  label: string
-  description: string
-  required?: boolean
-  children: ReactNode
-}) {
-  return (
-    <div className="grid grid-cols-2 items-start gap-x-8 gap-y-3 py-5">
-      <div className="min-w-0">
-        <p className="text-sm font-bold leading-5 text-[#262527]">
-          {label}
-          {required && <span className="text-[#b32318]"> *</span>}
-        </p>
-        <p className="mt-1 text-sm leading-5 text-[#86868b]">{description}</p>
-      </div>
-      <div className="min-w-0">{children}</div>
-    </div>
-  )
 }
 
 function ModalFieldError({ children }: { children: ReactNode }) {
@@ -227,15 +203,15 @@ export function SwitchCompanyModal({
   const spaceLocked = isEditMode || (Boolean(initialSpaceKey) && !isMakeActive)
   // Adding a company reuses the switch flow with no space preselected.
   const isAddMode = !isEditMode && !initialSpaceKey
-  // The row action that opens this says "Edit switch"; a bare "Edit" as a
+  // The row action that opens this says "Edit change"; a bare "Edit" as a
   // heading does not say what is being edited.
   const actionLabel = isEditMode
-    ? 'Edit Switch'
+    ? 'Edit Company'
     : isAddMode
       ? 'Add company'
       : isMakeActive
         ? 'Make active'
-        : 'Switch company'
+        : 'Change company'
 
   const effectiveSpaceKey = spaceLocked ? spaceKey : deriveSpaceKey(spaceFields)
   const addSpaceLabel = describeSpaceInput(spaceFields)
@@ -547,11 +523,11 @@ export function SwitchCompanyModal({
             onClick={() => setRevertConfirmOpen(false)}
           />
           <div className="relative w-full max-w-[480px] rounded-xl border border-[#e6e6e7] bg-white p-6 shadow-[0px_20px_24px_-4px_rgba(16,24,40,0.1),0px_8px_8px_-4px_rgba(16,24,40,0.04)]">
-            <div className="flex gap-3">
-              <span className="relative mt-0.5 size-10 shrink-0" aria-hidden>
+            <div className="flex flex-col gap-3">
+              <span className="relative size-10 shrink-0" aria-hidden>
                 <img alt="" className="absolute inset-0 block size-full max-w-none" src={tableAlertCircleWarn} />
               </span>
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0">
                 <h3 id="revert-pending-confirm-title" className="text-lg font-bold leading-7 text-[#262527]">
                   {DISCARD_SWITCH.heading}
                 </h3>

@@ -186,8 +186,8 @@ export function useMobileCompanyActions({
     if (association.status === 'Pending') {
       return [
         {
-          label: 'Edit switch',
-          icon: 'edit',
+          label: 'Change company',
+          icon: 'switch',
           onSelect: () =>
             openFlow({
               kind: 'switch',

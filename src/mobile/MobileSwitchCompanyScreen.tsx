@@ -118,15 +118,15 @@ export function MobileSwitchCompanyScreen({
   const selectedSpace = spaces.find((space) => space.key === spaceKey)
   const effectiveSpaceKey = spaceLocked ? spaceKey : deriveSpaceKey(spaceFields)
 
-  // The row action that opens this calls it "Edit switch"; a bare "Edit" as a
+  // The row action that opens this calls it "Edit change"; a bare "Edit" as a
   // screen title does not say what is being edited.
   const actionLabel = isEditMode
-    ? 'Edit Switch'
+    ? 'Edit Company'
     : isAddMode
       ? 'Add company'
       : isMakeActive
         ? 'Make active'
-        : 'Switch company'
+        : 'Change company'
 
   const errors = validateAssociationForm({
     spaces,
@@ -282,7 +282,7 @@ export function MobileSwitchCompanyScreen({
                 {DISCARD_SWITCH.action}
               </button>
               <p className="pt-2 text-center text-xs leading-4 text-[#86868b]">
-                Cancels the pending switch on this property
+                Cancels the pending change on this property
               </p>
             </div>
           )}

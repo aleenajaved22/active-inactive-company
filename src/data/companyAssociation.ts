@@ -227,7 +227,7 @@ export function validateAssociationForm({
   const spaceError =
     missingOccupancy ??
     (spaceLocked && selectedSpace && !isEditMode && selectedSpace.pendingCompanyName
-      ? `${selectedSpace.label} already has a pending switch to ${selectedSpace.pendingCompanyName}. Edit that switch instead.`
+      ? `${selectedSpace.label} already has a pending change to ${selectedSpace.pendingCompanyName}. Edit that change instead.`
       : null)
 
   const companyError = !companyId

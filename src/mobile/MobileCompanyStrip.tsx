@@ -46,7 +46,7 @@ export function MobileCompanyStrip({
       type="button"
       onClick={onClick}
       aria-haspopup="dialog"
-      aria-label={`Switch company — currently ${companyName}, ${status}, ${context}`}
+      aria-label={`Change company — currently ${companyName}, ${status}, ${context}`}
       className="flex w-full items-center gap-3 rounded-lg bg-[#f6f6f8] px-3 py-2.5 text-left"
     >
       <span className="relative flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#6a6a70]">
