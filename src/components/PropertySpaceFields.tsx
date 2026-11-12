@@ -8,6 +8,7 @@ import {
 } from 'react'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
 import {
+  CREATE_PROPERTY_SUITE_LABEL,
   OCCUPANCY_PLACEHOLDERS,
   OCCUPANCY_TOOLTIPS,
   SUITE_UNIT_LABEL,
@@ -282,6 +283,8 @@ export function SpaceFields({
   disabled,
   layout = 'weighted',
   suiteUnitNumberOnly = false,
+  suiteUnitOnlyLabel,
+  hideSuiteUnitTypeMenu = false,
 }: {
   value: SpaceFieldsValue
   onChange: (next: SpaceFieldsValue) => void
@@ -296,30 +299,24 @@ export function SpaceFields({
   disabled?: boolean
   /** Create Property: number only, no Suite / Unit / Apartment type dropdown. */
   suiteUnitNumberOnly?: boolean
+  /** Label when `suiteUnitNumberOnly` is set (defaults to create-property copy). */
+  suiteUnitOnlyLabel?: string
+  /** Switch company: floor + number input, without the Suite / Unit / Apartment type menu. */
+  hideSuiteUnitTypeMenu?: boolean
 }) {
   const suiteUnitInvalid = Boolean(errors?.suiteUnit) || invalidField === 'suiteUnit'
+  const suiteLabel = suiteUnitNumberOnly
+    ? (suiteUnitOnlyLabel ?? CREATE_PROPERTY_SUITE_LABEL)
+    : SUITE_UNIT_LABEL
   // In a shared row the messages go beneath both fields, not inside each one.
   const messagesBelow = layout === 'compact'
   return (
     <div>
-    <div className={`grid items-start ${layoutClass[layout]}`}>
-      <TextField
-        id={`${idPrefix}-floor`}
-        label="Floor"
-        value={value.floor}
-        onChange={(floor) => onChange({ ...value, floor })}
-        placeholder={OCCUPANCY_PLACEHOLDERS.floor}
-        tooltip={OCCUPANCY_TOOLTIPS.floor}
-        size={size}
-        error={messagesBelow ? undefined : errors?.floor}
-        invalid={invalidField === 'floor' || (messagesBelow && Boolean(errors?.floor))}
-        disabled={disabled}
-      />
-      {suiteUnitNumberOnly ? (
-        <div className="flex flex-col gap-1.5">
+    {suiteUnitNumberOnly ? (
+      <div className="flex flex-col gap-1.5">
           <label htmlFor={`${idPrefix}-suite-unit-number`}>
-            <FieldLabel tooltip={OCCUPANCY_TOOLTIPS.suiteUnit} tooltipLabel={`${SUITE_UNIT_LABEL} format`}>
-              {SUITE_UNIT_LABEL}
+            <FieldLabel tooltip={OCCUPANCY_TOOLTIPS.suiteUnit} tooltipLabel={`${suiteLabel} format`}>
+              {suiteLabel}
             </FieldLabel>
           </label>
           <input
@@ -336,46 +333,76 @@ export function SpaceFields({
               suiteUnitInvalid ? 'border-[#d92d20]' : 'border-[#e6e6e7] focus:border-primary'
             }`}
           />
-          {!messagesBelow && errors?.suiteUnit && <FieldError>{errors.suiteUnit}</FieldError>}
-        </div>
-      ) : (
+          {errors?.suiteUnit && <FieldError>{errors.suiteUnit}</FieldError>}
+      </div>
+    ) : (
+    <div className={`grid items-start ${layoutClass[layout]}`}>
+      <TextField
+        id={`${idPrefix}-floor`}
+        label="Floor"
+        value={value.floor}
+        onChange={(floor) => onChange({ ...value, floor })}
+        placeholder={OCCUPANCY_PLACEHOLDERS.floor}
+        tooltip={OCCUPANCY_TOOLTIPS.floor}
+        size={size}
+        error={messagesBelow ? undefined : errors?.floor}
+        invalid={invalidField === 'floor' || (messagesBelow && Boolean(errors?.floor))}
+        disabled={disabled}
+      />
         <div className="flex flex-col gap-1.5">
-          <label htmlFor={`${idPrefix}-suite-unit-type`}>
+          <label htmlFor={`${idPrefix}-suite-unit-number`}>
             <FieldLabel tooltip={OCCUPANCY_TOOLTIPS.suiteUnit} tooltipLabel={`${SUITE_UNIT_LABEL} format`}>
               {SUITE_UNIT_LABEL}
             </FieldLabel>
           </label>
-          <div
-            className={`flex ${fieldHeight[size]} rounded-lg border ${disabled ? 'bg-[#f5f5f6]' : 'bg-white'} ${
-              suiteUnitInvalid ? 'border-[#d92d20]' : 'border-[#e6e6e7] focus-within:border-primary'
-            }`}
-          >
-            <SuiteUnitTypeMenu
-              id={`${idPrefix}-suite-unit-type`}
-              value={value.suiteUnitType}
-              onChange={(suiteUnitType) => onChange({ ...value, suiteUnitType })}
-              invalid={suiteUnitInvalid}
-              disabled={disabled}
-              size={size}
-            />
-            <div className="my-2.5 w-px shrink-0 bg-[#e6e6e7]" aria-hidden />
+          {hideSuiteUnitTypeMenu ? (
             <input
               ref={suiteUnitNumberRef}
               id={`${idPrefix}-suite-unit-number`}
               type="text"
-              aria-label={value.suiteUnitType ? `${value.suiteUnitType} number` : 'Suite or unit number'}
+              aria-label="Suite or unit number"
               aria-invalid={suiteUnitInvalid || undefined}
               value={value.suiteUnitNumber}
               disabled={disabled}
               onChange={(event) => onChange({ ...value, suiteUnitNumber: event.target.value })}
               placeholder={OCCUPANCY_PLACEHOLDERS.suiteUnit}
-              className={`min-w-0 flex-1 rounded-r-lg bg-transparent px-3.5 text-[#262527] outline-none text-ellipsis ${fieldText[size]}`}
+              className={`${fieldHeight[size]} w-full rounded-lg border ${disabled ? 'bg-[#f5f5f6]' : 'bg-white'} px-3.5 text-[#262527] outline-none text-ellipsis ${fieldText[size]} ${
+                suiteUnitInvalid ? 'border-[#d92d20]' : 'border-[#e6e6e7] focus:border-primary'
+              }`}
             />
-          </div>
+          ) : (
+            <div
+              className={`flex ${fieldHeight[size]} rounded-lg border ${disabled ? 'bg-[#f5f5f6]' : 'bg-white'} ${
+                suiteUnitInvalid ? 'border-[#d92d20]' : 'border-[#e6e6e7] focus-within:border-primary'
+              }`}
+            >
+              <SuiteUnitTypeMenu
+                id={`${idPrefix}-suite-unit-type`}
+                value={value.suiteUnitType}
+                onChange={(suiteUnitType) => onChange({ ...value, suiteUnitType })}
+                invalid={suiteUnitInvalid}
+                disabled={disabled}
+                size={size}
+              />
+              <div className="my-2.5 w-px shrink-0 bg-[#e6e6e7]" aria-hidden />
+              <input
+                ref={suiteUnitNumberRef}
+                id={`${idPrefix}-suite-unit-number`}
+                type="text"
+                aria-label={value.suiteUnitType ? `${value.suiteUnitType} number` : 'Suite or unit number'}
+                aria-invalid={suiteUnitInvalid || undefined}
+                value={value.suiteUnitNumber}
+                disabled={disabled}
+                onChange={(event) => onChange({ ...value, suiteUnitNumber: event.target.value })}
+                placeholder={OCCUPANCY_PLACEHOLDERS.suiteUnit}
+                className={`min-w-0 flex-1 rounded-r-lg bg-transparent px-3.5 text-[#262527] outline-none text-ellipsis ${fieldText[size]}`}
+              />
+            </div>
+          )}
           {!messagesBelow && errors?.suiteUnit && <FieldError>{errors.suiteUnit}</FieldError>}
         </div>
-      )}
     </div>
+    )}
     {messagesBelow && (errors?.floor || errors?.suiteUnit) && (
       <div className="mt-1.5 flex flex-col gap-1">
         {errors?.floor && <FieldError>{errors.floor}</FieldError>}

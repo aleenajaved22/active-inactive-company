@@ -292,7 +292,7 @@ export function validateCompanyEndDate({
     return ERRORS.tillDateBeforeEffective
   }
   if (nextCompany && nextStart && (!end || end >= nextStart)) {
-    return `Select a Till Date before ${nextCompany.name} starts on ${formatShortDate(nextCompany.effectiveDate)}.`
+    return `Select an End Date before ${nextCompany.name} starts on ${formatShortDate(nextCompany.effectiveDate)}.`
   }
   return null
 }

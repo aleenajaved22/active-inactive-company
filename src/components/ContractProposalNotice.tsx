@@ -3,7 +3,7 @@ import { formatShortDate } from '../data/dateFormat'
 
 /**
  * The leaving-date message for the contract proposal page: shown for a company
- * that has a Company at Property - Till Date, so the user sees the limit while
+ * that has a Company at Property - End Date, so the user sees the limit while
  * they are still choosing the contract's dates.
  *
  * Informational only: nothing is blocked here and there is nothing to

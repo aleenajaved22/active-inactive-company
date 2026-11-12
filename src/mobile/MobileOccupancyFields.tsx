@@ -3,8 +3,8 @@ import {
   OCCUPANCY_DESCRIPTION,
   OCCUPANCY_LABEL,
   OCCUPANCY_PLACEHOLDERS,
+  CREATE_PROPERTY_SUITE_LABEL,
   OCCUPANCY_TOOLTIPS,
-  SUITE_UNIT_LABEL,
 } from '../data/companyAtPropertyCopy'
 import { suiteUnitTypes } from '../data/propertySpaces'
 import {
@@ -59,23 +59,25 @@ export function MobileOccupancyFields({
         </div>
       )}
 
-      <div className="flex flex-col gap-1.5">
-        <MobileTextField
-          label="Floor"
-          value={value.floor}
-          disabled={disabled}
-          onChange={(floor) => onChange({ ...value, floor })}
-          placeholder={OCCUPANCY_PLACEHOLDERS.floor}
-          error={floorError}
-        />
-        <MobileFieldHint>{OCCUPANCY_TOOLTIPS.floor}</MobileFieldHint>
-      </div>
+      {!suiteUnitNumberOnly && (
+        <div className="flex flex-col gap-1.5">
+          <MobileTextField
+            label="Floor"
+            value={value.floor}
+            disabled={disabled}
+            onChange={(floor) => onChange({ ...value, floor })}
+            placeholder={OCCUPANCY_PLACEHOLDERS.floor}
+            error={floorError}
+          />
+          <MobileFieldHint>{OCCUPANCY_TOOLTIPS.floor}</MobileFieldHint>
+        </div>
+      )}
 
       <div className="flex flex-col gap-1.5">
         {suiteUnitNumberOnly ? (
           <MobileTextField
             id="mobile-create-property-suite-unit-number"
-            label={SUITE_UNIT_LABEL}
+            label={CREATE_PROPERTY_SUITE_LABEL}
             value={value.suiteUnitNumber}
             disabled={disabled}
             onChange={(suiteUnitNumber) => onChange({ ...value, suiteUnitNumber })}

@@ -58,7 +58,7 @@ function Details({ data, valueFont }: { data: FoEmailData; valueFont?: string })
           <Value font={valueFont}>{data.propertyAddress}</Value>
         </div>
         <div className="col-span-2">
-          <Label>Company at Property - Till Date</Label>
+          <Label>Company at Property - End Date</Label>
           <Value font={valueFont}>{data.tillDate}</Value>
         </div>
       </div>

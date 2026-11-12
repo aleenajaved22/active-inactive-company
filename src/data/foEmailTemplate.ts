@@ -88,10 +88,10 @@ export function foEmailBody(data: FoEmailData): string[] {
  */
 export const foEmailSendingRules = [
   'Goes to the Franchise Owner only.',
-  'Sent daily, starting two months before the Company at Property - Till Date.',
-  'Only sent where at least one active contract runs past the Till Date.',
-  'Stops if the Till Date is cleared, or if no active contracts remain.',
-  'If the Till Date changes, the schedule recalculates against the new date.',
+  'Sent daily, starting two months before the Company at Property - End Date.',
+  'Only sent where at least one active contract runs past the End Date.',
+  'Stops if the End Date is cleared, or if no active contracts remain.',
+  'If the End Date changes, the schedule recalculates against the new date.',
   'One email per property + company, listing all the active contracts on it.',
 ]
 

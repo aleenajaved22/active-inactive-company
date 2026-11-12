@@ -4,7 +4,6 @@ import modalClose from '../assets/modal-close.svg'
 import questionsChevronDown from '../assets/questions-chevron-down.svg'
 import detailPlus from '../assets/detail-plus.svg'
 import tableAlertCircleWarn from '../assets/table-alert-circle-warn.svg'
-import { AffiliationSelect } from './AffiliationSelect'
 import { CreateCompanyModal } from './CreateCompanyModal'
 import { ModalDateInput } from './ModalDateInput'
 import {
@@ -18,12 +17,14 @@ import {
   EFFECTIVE_DATE_DESCRIPTION,
   OCCUPANCY_DESCRIPTION,
   OCCUPANCY_LABEL,
+  SWITCH_SUITE_LABEL,
   TILL_DATE_DESCRIPTION,
 } from '../data/companyAtPropertyCopy'
 import type { OccupantSpaces } from '../data/propertyOccupancy'
 import { formatShortDate, todayMMDDYYYY } from '../data/dateFormat'
+import { assigneeOptions, defaultAffiliations } from '../data/propertyFormOptions'
 import { propertyCompanies } from '../data/propertyCompanies'
-import { AssigneeFields, emptyAssignee, type AssigneeValue } from './AssigneeFields'
+import { emptyAssignee, type AssigneeValue } from './AssigneeFields'
 import { SpaceFields, emptySpaceFields, type SpaceFieldsValue } from './PropertySpaceFields'
 import {
   type PropertyAffiliation,
@@ -155,8 +156,12 @@ export function SwitchCompanyModal({
       setPendingId(targetCompanyId ?? '')
       setEffectiveDate(todayMMDDYYYY())
       setCutOffDate('')
-      setPendingAffiliations(new Set())
-      setAssignee(emptyAssignee())
+      setPendingAffiliations(new Set(defaultAffiliations))
+      setAssignee({
+        assignee: assigneeOptions[0] ?? '',
+        assignSupervisor: false,
+        supervisor: '',
+      })
     }
     const prefillSpace = !isEditMode && targetCompanyId ? spacesRef.current.find((space) => space.key === initialSpaceKey) : undefined
     setSpaceFields(prefillSpace ? lockedSpaceFields(prefillSpace) : emptySpaceFields())
@@ -239,9 +244,7 @@ export function SwitchCompanyModal({
     companyError,
     effectiveDateError,
     endDateError,
-    floorError,
     suiteUnitError,
-    affiliationError,
     hasErrors,
   } = validateAssociationForm({
     spaces,
@@ -259,8 +262,6 @@ export function SwitchCompanyModal({
     affiliations: [...pendingAffiliations],
   })
   const showErrors = submitAttempted
-  const assigneeError = submitAttempted && !assignee.assignee ? 'Select an assignee.' : null
-
   const closeModal = () => {
     setPendingSubmit(null)
     onFlowChange?.(null)
@@ -436,13 +437,14 @@ export function SwitchCompanyModal({
           </ModalFormRow>
 
           <ModalFormRow label={OCCUPANCY_LABEL} description={OCCUPANCY_DESCRIPTION}>
-            <div className="ml-auto flex w-fit max-w-full flex-col items-end gap-2">
+            <div className="ml-auto flex w-full max-w-full flex-col gap-2">
               {spaceLocked && selectedSpace ? (
                 <>
                   <SpaceFields
                     idPrefix="switch-company-locked"
                     size="sm"
-                    layout="weighted"
+                    suiteUnitNumberOnly
+                    suiteUnitOnlyLabel={SWITCH_SUITE_LABEL}
                     disabled
                     value={lockedSpaceFields(selectedSpace)}
                     onChange={() => {}}
@@ -457,11 +459,11 @@ export function SwitchCompanyModal({
                 <SpaceFields
                   idPrefix="switch-company"
                   size="sm"
-                  layout="weighted"
+                  suiteUnitNumberOnly
+                  suiteUnitOnlyLabel={SWITCH_SUITE_LABEL}
                   value={spaceFields}
                   onChange={setSpaceFields}
                   errors={{
-                    floor: showErrors ? floorError : null,
                     suiteUnit: showErrors ? suiteUnitError : null,
                   }}
                 />
@@ -489,34 +491,6 @@ export function SwitchCompanyModal({
             {showErrors && endDateError && <ModalFieldError>{endDateError}</ModalFieldError>}
           </ModalFormRow>
 
-          <ModalFormRow
-            label="Property Affiliation"
-            description="Select one or more affiliation types that apply to this property"
-            required
-          >
-            <div className="flex flex-col gap-1.5">
-            <AffiliationSelect
-              id="switch-company-affiliation"
-              value={pendingAffiliations}
-              onChange={setPendingAffiliations}
-              invalid={showErrors && Boolean(affiliationError)}
-            />
-            {showErrors && affiliationError && <ModalFieldError>{affiliationError}</ModalFieldError>}
-            </div>
-          </ModalFormRow>
-
-          <ModalFormRow
-            label="Assign to"
-            description="Every property and company needs an assignee. Add a supervisor when one is needed"
-            required
-          >
-            <AssigneeFields
-              idPrefix="switch-company"
-              value={assignee}
-              onChange={setAssignee}
-              error={assigneeError}
-            />
-          </ModalFormRow>
         </div>
 
         <div className="mt-2 flex shrink-0 items-center justify-between gap-3 border-t border-[#e6e6e7] pt-4">
@@ -543,7 +517,7 @@ export function SwitchCompanyModal({
               type="button"
               onClick={() => {
                 setSubmitAttempted(true)
-                if (hasErrors || !assignee.assignee) return
+                if (hasErrors) return
                 const payload = buildSubmitPayload()
                 if (isEditMode) {
                   completeSubmit(payload)

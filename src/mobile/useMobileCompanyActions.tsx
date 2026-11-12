@@ -168,18 +168,18 @@ export function useMobileCompanyActions({
     if (association.status === 'Active') {
       return [
         {
-          label: 'Switch company',
-          icon: 'switch',
-          onSelect: () =>
-            openFlow({ kind: 'switch', mode: 'switch', spaceKey: spaceKeyOf(association) }),
-        },
-        {
           label: 'Edit company',
           icon: 'edit',
           onSelect: () => {
             onFlowOpen?.()
             setEditAffiliationsId(association.id)
           },
+        },
+        {
+          label: 'Change company',
+          icon: 'switch',
+          onSelect: () =>
+            openFlow({ kind: 'switch', mode: 'switch', spaceKey: spaceKeyOf(association) }),
         },
       ]
     }

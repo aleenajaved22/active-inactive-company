@@ -5,29 +5,29 @@
  * wording signed off with the client, so the web modals, the mobile screens and
  * the email template all read from here rather than restating it. One rule runs
  * through all of it: the word "association" never appears in a user-facing
- * label — the field is "Company at Property - Till Date".
+ * label — the field is "Company at Property - End Date".
  */
 
 export const COMPANY_AT_PROPERTY = {
   effectiveDateLabel: 'Company at Property - Effective Date',
-  tillDateLabel: 'Company at Property - Till Date',
+  tillDateLabel: 'Company at Property - End Date',
 } as const
 
 /** On the modals the effective date explains what happens when it arrives. */
 export const EFFECTIVE_DATE_DESCRIPTION =
-  'On the Company at Property - Effective Date, this property is associated with the selected company and becomes active'
+  'This is the date when the company will be associated to the property. A deal with this company at this property can only be active on or after the Effective Date.'
 
 /** Create Property shows the till-date rule in a tooltip rather than inline. */
 export const TILL_DATE_TOOLTIP =
-  'On the Company at Property - Till Date, the selected company is dissociated from this property'
+  'On the Company at Property - End Date, the selected company is dissociated from this property'
 
 /** Add / Switch / Make active state the same rule inline, under the label. */
 export const TILL_DATE_DESCRIPTION =
-  'On the Company at Property - Till Date, the selected company is dissociated from this property. A company with active contracts cannot be dissociated; close or complete them first'
+  'On the Company at Property - End Date, the selected company is dissociated from this property. A company with active contracts cannot be dissociated; close or complete them first'
 
 /** Edit Company sits the rule under the field as helper text. */
 export const TILL_DATE_HELPER =
-  'On this date, the company is dissociated from this property. Leave empty for no till date'
+  'On this date, the company is dissociated from this property. Leave empty for no end date'
 
 export const OCCUPANCY_LABEL = 'Property Occupancy'
 
@@ -48,6 +48,12 @@ export const OCCUPANCY_TOOLTIPS = {
 } as const
 
 export const SUITE_UNIT_LABEL = 'Suite / Unit / Apartment'
+
+/** Create Property: single number field, no type picker and no separate floor field. */
+export const CREATE_PROPERTY_SUITE_LABEL = 'Suite / Apartment / Other'
+
+/** Switch / change company modal: suite number field without type picker or floor. */
+export const SWITCH_SUITE_LABEL = 'Suite / Apartment / Others'
 
 export const HUBSPOT_STAGE_LABEL = 'Choose a Hubspot Stage to Map'
 
@@ -89,8 +95,8 @@ export const ERRORS = {
     'Each active company on this property needs its own occupancy. Add a floor, suite, unit or apartment to continue.',
   invalidFormat: 'Enter a valid format. See the tooltip for accepted formats.',
   duplicateValues: 'Remove duplicate values to continue.',
-  tillDateBeforeEffective: 'Select a Till Date after the Effective Date.',
-  contractBeyondTillDate: 'Contract dates cannot go beyond the Company at Property - Till Date.',
+  tillDateBeforeEffective: 'Select an End Date after the Effective Date.',
+  contractBeyondTillDate: 'Contract dates cannot go beyond the Company at Property - End Date.',
   renewalWithinAYear:
     'Renewal is not available. This company leaves the property in less than a year.',
   affiliationRequired: 'Property Affiliation is required.',

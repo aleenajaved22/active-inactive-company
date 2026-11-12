@@ -205,7 +205,6 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
     value: { floor, suiteUnitType, suiteUnitNumber },
     occupants: buildOccupants(initialSpaceAssociations),
   })
-  const floorError = occupancy.floorError
   const suiteUnitError = occupancy.suiteUnitError
   const spaceConflict = occupancy.hasErrors
   const assigneeError = submitAttempted && !assignee ? 'Select an assignee.' : null
@@ -299,24 +298,6 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                       />
                     </div>
                   </div>
-                  <div ref={spaceFieldRef} className="min-w-0">
-                    <SpaceFields
-                      layout="even"
-                      suiteUnitNumberOnly
-                      idPrefix="create-property"
-                      value={{ floor, suiteUnitType, suiteUnitNumber }}
-                      onChange={(next) => {
-                        setFloor(next.floor)
-                        setSuiteUnitType(next.suiteUnitType)
-                        setSuiteUnitNumber(next.suiteUnitNumber)
-                      }}
-                      errors={{
-                        floor: submitAttempted ? floorError : null,
-                        suiteUnit: submitAttempted ? suiteUnitError : null,
-                      }}
-                      suiteUnitNumberRef={suiteUnitNumberRef}
-                    />
-                  </div>
                   <div className="grid grid-cols-2 items-start gap-6">
                     <div className="flex min-w-0 flex-col gap-1.5">
                       <div className="flex items-center gap-1">
@@ -356,6 +337,22 @@ export function CreatePropertyDrawer({ open, onClose }: CreatePropertyDrawerProp
                         className="min-w-0 flex-1 bg-transparent text-base leading-6 text-[#262527] outline-none placeholder:text-[#ccc]"
                       />
                     </div>
+                  </div>
+                  <div ref={spaceFieldRef} className="min-w-0">
+                    <SpaceFields
+                      suiteUnitNumberOnly
+                      idPrefix="create-property"
+                      value={{ floor, suiteUnitType, suiteUnitNumber }}
+                      onChange={(next) => {
+                        setFloor(next.floor)
+                        setSuiteUnitType(next.suiteUnitType)
+                        setSuiteUnitNumber(next.suiteUnitNumber)
+                      }}
+                      errors={{
+                        suiteUnit: submitAttempted ? suiteUnitError : null,
+                      }}
+                      suiteUnitNumberRef={suiteUnitNumberRef}
+                    />
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <DrawerLabel>Address Description</DrawerLabel>

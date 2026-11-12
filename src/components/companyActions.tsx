@@ -296,8 +296,8 @@ export function useCompanyActions({
   const menuItemsFor = (association: SpaceAssociation): ActionMenuItem[] => {
     if (association.status === 'Active') {
       return [
-        { label: 'Switch company', icon: 'switch', onSelect: () => openSwitch(spaceKeyOf(association)) },
         { label: 'Edit company', icon: 'edit', onSelect: () => setEditAffiliationsId(association.id) },
+        { label: 'Change company', icon: 'switch', onSelect: () => openSwitch(spaceKeyOf(association)) },
       ]
     }
     if (association.status === 'Pending') {
